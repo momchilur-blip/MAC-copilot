@@ -1,1 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ACLS Code Tracker</title>
+    <style>
+        :root {
+            var-danger-red: #ff4d4d; 
+            --warning-yellow: #ffc107; 
+            --alert-green: #28a745;    
+            --amio-blue: #007bff;  
+            --shock-orange: #ff9933;
+            --rosc-purple: #9c27b0;
+            
+            --bg-color: #121212;
+            --text-main: #e0e0e0;
+            --card-bg: #1e1e1e;
+            --border-color: #333;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h2, h3 { margin-top: 0; margin-bottom: 10px; }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        .top-bar { display: flex; justify-content: space-between; align-items: center; }
+
+        .code-clock {
+            font-size: 2.5em; font-weight: bold; color: var(--danger-red);
+            text-align: center; font-variant-numeric: tabular-nums; margin: 10px 0;
+        }
+
+        /* Buttons */
+        .btn {
+            display: block; width: 100%; padding: 14px; margin-top: 8px; border: none;
+            border-radius: 8px; font-weight: bold; font-size: 1.05em; cursor: pointer; color: white; transition: 0.2s;
+        }
+        .btn:active:not(:disabled) { transform: scale(0.98); }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        
+        .btn-cpr { background-color: var(--danger-red); font-size: 1.2em; padding: 20px;} 
+        .btn-epi { background-color: var(--warning-yellow); color: #000; } 
+        .btn-amio { background-color: var(--amio-blue); } 
+        .btn-shock { background-color: var(--shock-orange); color: #000; } 
+        .btn-rosc { background-color: var(--rosc-purple); }
+        .btn-outline { background-color: transparent; border: 2px solid var(--text-main); color: var(--text-main); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold;}
+        .btn-metronome { background-color: #444; border: 2px solid #666; margin-top: 15px;}
+        .btn-metronome.active { background-color: var(--alert-green); border-color: #fff; }
+
+        /* Timers */
+        .timer-wrapper { margin-top: 5px; margin-bottom: 15px; }
+        .progress-bar-bg { background: var(--border-color); height: 12px; border-radius: 6px; overflow: hidden; width: 100%; }
+        .progress-bar-fill { height: 100%; transition: width 1s linear, background-color 0.5s ease; }
+        
+        #cpr-timer-bar { background: var(--alert-green); width: 100%; }
+        #epi-timer-bar { background: var(--border-color); width: 0%; }
+        
+        .timer-text { font-size: 1.1em; color: var(--text-main); text-align: center; margin-top: 4px; font-weight: bold; font-variant-numeric: tabular-nums;}
+
+        /* Tracker */
+        .tracker {
+            display: grid; grid-template-columns: repeat(4, 1fr); text-align: center;
+            font-size: 0.85em; margin-top: 10px; padding-top: 15px; border-top: 1px solid var(--border-color);
+        }
+        .tracker-value { font-size: 1.5em; font-weight: bold; color: var(--text-main); margin-top: 4px; }
+        .tracker-total { font-size: 0.8em; font-weight: bold; background: var(--border-color); border-radius: 4px; padding: 4px 6px; margin-top: 6px; display: inline-block;}
+
+        @keyframes flash { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+        .flashing { animation: flash 1s infinite; color: #ff4d4d !important;}
+
+        @media (min-width: 600px) {
+            .container { grid-template-columns: 1fr 1fr; }
+            .header-card, .tracker-card { grid-column: span 2; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- Master Clock -->
+        <div class="card header-card">
+            <div class="top-bar">
+                <h2 style="margin:0;">ACLS Tracker</h2>
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn-outline" onclick="toggleROSC()" id="btn-rosc" style="display: none;">❤️ ROSC</button>
+                    <button class="btn-outline" onclick="toggleCode()" id="btn-start-code">▶ Start Code</button>
+                </div>
+            </div>
+            <div class="code-clock" id="master-clock">00:00</div>
+            <div style="text-align: center; font-size: 0.9em; opacity: 0.7;" id="status-text">Total Time Elapsed</div>
+        </div>
+
+        <!-- CPR & Shock -->
+        <div class="card">
+            <h3>CPR Cycle (2 Min)</h3>
+            <button class="btn btn-cpr" onclick="startCPRCycle()" id="btn-cpr" disabled>↻ Start 2-Min Cycle</button>
+            <div class="timer-wrapper">
+                <div class="progress-bar-bg"><div class="progress-bar-fill" id="cpr-timer-bar"></div></div>
+                <div class="timer-text" id="cpr-timer-text">Waiting to start...</div>
+            </div>
+            
+            <button class="btn btn-metronome" onclick="toggleMetronome()" id="btn-metro" disabled>🔊 Metronome (110 bpm) OFF</button>
+
+            <hr style="border-color: var(--border-color); margin: 20px 0;">
+
+            <h3>Defibrillation</h3>
+            <button class="btn btn-shock" onclick="logAction('shock')" disabled id="btn-shock">⚡ Deliver Shock</button>
+        </div>
+
+        <!-- Medications -->
+        <div class="card">
+            <h3>Medications</h3>
+            
+            <button class="btn btn-epi" onclick="logAction('epi')" disabled id="btn-epi">+ 1 mg Adrenaline (1 Ampule)</button>
+            <div class="timer-wrapper">
+                <div class="progress-bar-bg"><div class="progress-bar-fill" id="epi-timer-bar"></div></div>
+                <div class="timer-text" id="epi-timer-text">Every 3-5 minutes</div>
+            </div>
+
+            <button class="btn btn-amio" onclick="logAction('amio300')" disabled id="btn-amio300">+ 300 mg Amiodarone (2 Ampules)</button>
+            <button class="btn btn-amio" onclick="logAction('amio150')" disabled id="btn-amio150" style="background-color: #0056b3;">+ 150 mg Amiodarone (1 Ampule)</button>
+        </div>
+
+        <!-- Log -->
+        <div class="card tracker-card">
+            <div class="tracker">
+                <div><div>Shocks</div><div class="tracker-value" id="count-shock">0</div><div class="tracker-total">Events</div></div>
+                <div><div>Adrenaline</div><div class="tracker-value" id="count-epi">0</div><div class="tracker-total" id="total-epi">0 mg</div></div>
+                <div><div>Amiodarone</div><div class="tracker-value" id="count-amio">0</div><div class="tracker-total" id="total-amio">0 mg</div></div>
+                <div><div>Cycles</div><div class="tracker-value" id="count-cycles">0</div><div class="tracker-total">2-Min Blocks</div></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- STATE VARIABLES ---
+        let isCodeActive = false, isRosc = false;
+        let masterStartTime = 0, masterInterval = null;
+        let counts = { epi: 0, amio: 0, shock: 0, cycles: 0 };
+        
+        let cprTimerInterval = null, cprEndTime = 0, cprAlarmPlayed = false;
+        const CPR_DURATION = 120; 
+
+        let epiTimerInterval = null, epiStartTime = 0, epiAlarmPlayed = false;
+        const EPI_WARNING_START = 180; // 3 mins
+        const EPI_WARNING_CRITICAL = 300; // 5 mins
+
+        // --- AUDIO SYSTEM (Web Audio API) ---
+        let audioCtx;
+        let metronomeInterval = null;
+        let isMetronomeOn = false;
+
+        function initAudio() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+        }
+
+        function playTone(freq, type, duration, vol, delay = 0) {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime + delay);
+            gain.gain.setValueAtTime(vol, audioCtx.currentTime + delay);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + delay + duration);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(audioCtx.currentTime + delay);
+            osc.stop(audioCtx.currentTime + delay + duration);
+        }
+
+        function playCPRAlarm() {
+            playTone(880, 'square', 0.2, 1, 0);   // Beep 1
+            playTone(880, 'square', 0.2, 1, 0.3); // Beep 2
+        }
+
+        function playEpiAlarm() {
+            playTone(523.25, 'sine', 0.5, 0.8, 0); // High C
+            playTone(440, 'sine', 0.6, 0.8, 0.3);  // A
+        }
+
+        function toggleMetronome() {
+            const btn = document.getElementById('btn-metro');
+            if (isMetronomeOn) {
+                clearInterval(metronomeInterval);
+                isMetronomeOn = false;
+                btn.innerText = "🔊 Metronome (110 bpm) OFF";
+                btn.classList.remove('active');
+            } else {
+                initAudio();
+                isMetronomeOn = true;
+                btn.innerText = "🔊 Metronome ON";
+                btn.classList.add('active');
+                // 110 bpm = ~545ms per beat
+                metronomeInterval = setInterval(() => {
+                    playTone(400, 'triangle', 0.05, 0.5); 
+                }, 545);
+            }
+        }
+
+        // --- WAKE LOCK API ---
+        let wakeLock = null;
+        async function requestWakeLock() {
+            try {
+                if ('wakeLock' in navigator) {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                }
+            } catch (err) { console.log('Wake lock failed', err); }
+        }
+        document.addEventListener('visibilitychange', () => {
+            if (wakeLock !== null && document.visibilityState === 'visible' && isCodeActive) {
+                requestWakeLock();
+            }
+        });
+
+        // --- CORE LOGIC ---
+        function toggleCode() {
+            const btn = document.getElementById('btn-start-code');
+            const roscBtn = document.getElementById('btn-rosc');
+            initAudio(); // Initialize audio context on first user click
+
+            if (!isCodeActive) {
+                // START
+                isCodeActive = true; isRosc = false;
+                btn.innerHTML = "⏹ Stop Code"; btn.style.color = "#ff4d4d"; btn.style.borderColor = "#ff4d4d";
+                roscBtn.style.display = "block";
+                document.getElementById('status-text').innerText = "Total Time Elapsed";
+                
+                masterStartTime = Date.now();
+                masterInterval = setInterval(updateMasterClock, 1000);
+                document.querySelectorAll('.btn:not(.btn-outline)').forEach(b => b.disabled = false);
+                requestWakeLock();
+                startCPRCycle();
+            } else {
+                // STOP
+                if(confirm("End the code and reset everything?")) {
+                    location.reload(); // Cleanest way to reset all states and audio safely
+                }
+            }
+        }
+
+        function toggleROSC() {
+            isRosc = !isRosc;
+            const roscBtn = document.getElementById('btn-rosc');
+            
+            if (isRosc) {
+                // PAUSE INTERVENTIONS
+                roscBtn.style.backgroundColor = "#fff"; roscBtn.style.color = "#000";
+                document.getElementById('status-text').innerText = "POST-ROSC OBSERVATION TIME";
+                
+                clearInterval(cprTimerInterval);
+                clearInterval(epiTimerInterval);
+                if (isMetronomeOn) toggleMetronome();
+                document.querySelectorAll('.btn:not(.btn-outline)').forEach(b => b.disabled = true);
+                document.getElementById('cpr-timer-text').innerText = "Paused for ROSC";
+            } else {
+                // RESUME CODE
+                roscBtn.style.backgroundColor = "transparent"; roscBtn.style.color = "var(--text-main)";
+                document.getElementById('status-text').innerText = "Total Time Elapsed";
+                document.querySelectorAll('.btn:not(.btn-outline)').forEach(b => b.disabled = false);
+                startCPRCycle();
+                if(counts.epi > 0) startEpiTimer(true); // Resume epi timer
+            }
+        }
+
+        function updateMasterClock() {
+            const elapsed = Math.floor((Date.now() - masterStartTime) / 1000);
+            let mins = Math.floor(elapsed / 60); let secs = elapsed % 60;
+            document.getElementById('master-clock').innerText = `${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
+        }
+
+        function logAction(type) {
+            if (!isCodeActive || isRosc) return;
+            initAudio();
+
+            if(type === 'epi') {
+                counts.epi++;
+                document.getElementById('count-epi').innerText = counts.epi;
+                document.getElementById('total-epi').innerText = counts.epi + " mg";
+                startEpiTimer();
+            }
+            if(type === 'shock') document.getElementById('count-shock').innerText = ++counts.shock;
+            if(type === 'amio300') {
+                counts.amio++;
+                document.getElementById('count-amio').innerText = counts.amio;
+                document.getElementById('total-amio').innerText = "300 mg";
+                document.getElementById('btn-amio300').disabled = true;
+            }
+            if(type === 'amio150') {
+                counts.amio++;
+                document.getElementById('count-amio').innerText = counts.amio;
+                document.getElementById('total-amio').innerText = "450 mg";
+                document.getElementById('btn-amio150').disabled = true;
+            }
+            
+            const btn = document.getElementById(`btn-${type}`);
+            if(btn) {
+                const originalText = btn.innerText;
+                btn.innerText = "Given!";
+                setTimeout(() => { if(isCodeActive) btn.innerText = originalText; }, 800);
+            }
+        }
+
+        function startCPRCycle() {
+            counts.cycles++;
+            document.getElementById('count-cycles').innerText = counts.cycles;
+            cprEndTime = Date.now() + (CPR_DURATION * 1000);
+            cprAlarmPlayed = false;
+            
+            clearInterval(cprTimerInterval);
+            document.getElementById('cpr-timer-text').classList.remove('flashing');
+
+            cprTimerInterval = setInterval(() => {
+                let timeLeft = Math.ceil((cprEndTime - Date.now()) / 1000);
+                if(timeLeft <= 0) {
+                    timeLeft = 0;
+                    clearInterval(cprTimerInterval);
+                    document.getElementById('cpr-timer-text').classList.add('flashing');
+                    if(!cprAlarmPlayed) { playCPRAlarm(); cprAlarmPlayed = true; }
+                }
+                updateCPRTimerUI(timeLeft);
+            }, 1000);
+            updateCPRTimerUI(CPR_DURATION);
+        }
+
+        function updateCPRTimerUI(timeLeft) {
+            const bar = document.getElementById('cpr-timer-bar');
+            const text = document.getElementById('cpr-timer-text');
+            if(timeLeft <= 0) { bar.style.width = '0%'; text.innerText = "RHYTHM CHECK / SWAP!"; return; }
+            bar.style.width = ((timeLeft / CPR_DURATION) * 100) + '%';
+            let mins = Math.floor(timeLeft / 60); let secs = timeLeft % 60;
+            text.innerText = `Time to Rhythm Check: ${mins}:${secs < 10 ? '0' : ''}${secs}`;
+            if(timeLeft > 30) bar.style.backgroundColor = 'var(--alert-green)'; 
+            else if (timeLeft > 10) bar.style.backgroundColor = 'var(--warning-yellow)'; 
+            else bar.style.backgroundColor = 'var(--danger-red)'; 
+        }
+
+        function startEpiTimer(resume = false) {
+            if(!resume) epiStartTime = Date.now();
+            epiAlarmPlayed = false;
+            clearInterval(epiTimerInterval);
+            
+            epiTimerInterval = setInterval(() => {
+                let elapsed = Math.floor((Date.now() - epiStartTime) / 1000);
+                updateEpiTimerUI(elapsed);
+            }, 1000);
+            updateEpiTimerUI(resume ? Math.floor((Date.now() - epiStartTime) / 1000) : 0);
+        }
+
+        function updateEpiTimerUI(elapsed) {
+            const bar = document.getElementById('epi-timer-bar');
+            const text = document.getElementById('epi-timer-text');
+            bar.style.width = Math.min((elapsed / EPI_WARNING_CRITICAL) * 100, 100) + '%';
+            
+            let mins = Math.floor(elapsed / 60); let secs = elapsed % 60;
+            
+            if (elapsed < EPI_WARNING_START) {
+                bar.style.backgroundColor = 'var(--border-color)';
+                text.innerText = `Last dose: ${mins}:${secs < 10 ? '0' : ''}${secs} ago`;
+                text.classList.remove('flashing');
+            } else if (elapsed >= EPI_WARNING_START && elapsed < EPI_WARNING_CRITICAL) {
+                bar.style.backgroundColor = 'var(--warning-yellow)';
+                text.innerText = `DUE NOW (${mins}:${secs < 10 ? '0' : ''}${secs} ago)`;
+                text.classList.remove('flashing');
+                if(!epiAlarmPlayed) { playEpiAlarm(); epiAlarmPlayed = true; }
+            } else {
+                bar.style.backgroundColor = 'var(--danger-red)';
+                text.innerText = `OVERDUE! (${mins}:${secs < 10 ? '0' : ''}${secs} ago)`;
+                text.classList.add('flashing');
+            }
+        }
+    </script>
+</body>
+</html>
 
