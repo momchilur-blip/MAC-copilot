@@ -399,23 +399,7 @@
     }
 }
 
-            let mins = Math.floor(elapsed / 60); let secs = elapsed % 60;
-            
-            if (elapsed < EPI_WARNING_START) {
-                bar.style.backgroundColor = 'var(--border-color)';
-                text.innerText = `Last dose: ${mins}:${secs < 10 ? '0' : ''}${secs} ago`;
-                text.classList.remove('flashing');
-            } else if (elapsed >= EPI_WARNING_START && elapsed < EPI_WARNING_CRITICAL) {
-                bar.style.backgroundColor = 'var(--warning-yellow)';
-                text.innerText = `DUE NOW (${mins}:${secs < 10 ? '0' : ''}${secs} ago)`;
-                text.classList.remove('flashing');
-                if(!epiAlarmPlayed) { playEpiAlarm(); epiAlarmPlayed = true; }
-            } else {
-                bar.style.backgroundColor = 'var(--danger-red)';
-                text.innerText = `OVERDUE! (${mins}:${secs < 10 ? '0' : ''}${secs} ago)`;
-                text.classList.add('flashing');
-            }
-        }
+        
     </script>
 </body>
 </html>
