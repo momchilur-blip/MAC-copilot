@@ -372,10 +372,33 @@
         }
 
         function updateEpiTimerUI(elapsed) {
-            const bar = document.getElementById('epi-timer-bar');
-            const text = document.getElementById('epi-timer-text');
-            bar.style.width = Math.min((elapsed / EPI_WARNING_CRITICAL) * 100, 100) + '%';
-            
+    const bar = document.getElementById('epi-timer-bar');
+    const text = document.getElementById('epi-timer-text');
+    
+    // Fills up to the 5 minute mark (300 seconds)
+    bar.style.width = Math.min((elapsed / EPI_WARNING_CRITICAL) * 100, 100) + '%';
+    
+    let mins = Math.floor(elapsed / 60); let secs = elapsed % 60;
+    
+    if (elapsed < EPI_WARNING_START) {
+        // 0 to 3 minutes: SAFE ZONE (Green)
+        bar.style.backgroundColor = 'var(--alert-green)'; 
+        text.innerText = `Last dose: ${mins}:${secs < 10 ? '0' : ''}${secs} ago`;
+        text.classList.remove('flashing');
+    } else if (elapsed >= EPI_WARNING_START && elapsed < EPI_WARNING_CRITICAL) {
+        // 3 to 5 minutes: DUE NOW (Yellow)
+        bar.style.backgroundColor = 'var(--warning-yellow)';
+        text.innerText = `DUE NOW (${mins}:${secs < 10 ? '0' : ''}${secs} ago)`;
+        text.classList.remove('flashing');
+        if(!epiAlarmPlayed) { playEpiAlarm(); epiAlarmPlayed = true; }
+    } else {
+        // Over 5 minutes: OVERDUE (Red)
+        bar.style.backgroundColor = 'var(--danger-red)';
+        text.innerText = `OVERDUE! (${mins}:${secs < 10 ? '0' : ''}${secs} ago)`;
+        text.classList.add('flashing');
+    }
+}
+
             let mins = Math.floor(elapsed / 60); let secs = elapsed % 60;
             
             if (elapsed < EPI_WARNING_START) {
