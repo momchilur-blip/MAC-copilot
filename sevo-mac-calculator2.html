@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>Sevoflurane MAC Calculator</title>
+<style>
+  :root {
+    --bg:          #0b1116;
+    --panel:       #121a21;
+    --panel-2:     #161f27;
+    --border:      #233038;
+    --border-soft: #1c2730;
+    --text:        #e6edf2;
+    --text-dim:    #8fa3ad;
+    --text-faint:  #5d7079;
+    --accent:      #36c0c9;
+    --accent-soft: #1d4f52;
+    --warn:        #e8a33d;
+    --danger:      #e8584d;
+    --danger2:     #c0392b;
+    --purple:      #a97fdb;
+    --good:        #4ec97f;
+    --radius:      14px;
+    --mono:        'SF Mono','Consolas','Menlo',monospace;
+
+    /* zone palette — vivid, clearly distinct */
+    --z-sub:    #2a5a3a;   /* dark green  — subanaesthetic */
+    --z-awake:  #3a8c55;   /* mid green   — near awake     */
+    --z-opioid: #c47e1a;   /* amber       — opioid-sparing */
+    --z-light:  #1f7a9e;   /* steel blue  — light maint    */
+    --z-maint:  #1a9cb0;   /* teal        — maintenance    */
+    --z-deep:   #c0392b;   /* red         — deep / +2SD    */
+    --z-bar:    #8e44ad;   /* purple      — MAC-BAR        */
+    --z-max:    #5c1a1a;   /* dark red    — +3SD           */
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  body { min-height:100vh; padding:16px; padding-bottom:52px; }
+
+  .app { max-width:480px; margin:0 auto; }
+
+  header { text-align:center; padding:8px 0 20px; }
+  header h1 { font-size:1.25rem; margin:0 0 4px; letter-spacing:.3px; font-weight:700; }
+  header h1 span { color:var(--accent); }
+  header p { margin:0; color:var(--text-dim); font-size:.8rem; }
+
+  .card {
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:18px;
+    margin-bottom:14px;
+  }
+
+  .lbl {
+    font-size:.75rem; text-transform:uppercase; letter-spacing:.6px;
+    color:var(--text-dim); font-weight:600; margin-bottom:10px; display:block;
+  }
+
+  /* Segmented toggle */
+  .segmented { display:flex; background:var(--panel-2); border:1px solid var(--border); border-radius:10px; padding:4px; gap:4px; }
+  .segmented input { display:none; }
+  .segmented label {
+    flex:1; text-align:center; padding:11px 8px; border-radius:8px;
+    font-size:.92rem; font-weight:600; color:var(--text-dim); cursor:pointer;
+    transition:background .15s,color .15s; user-select:none;
+  }
+  .segmented input:checked + label { background:var(--accent-soft); color:var(--accent); }
+
+  /* Age input */
+  .age-row { display:flex; align-items:stretch; gap:10px; margin-top:14px; }
+  .age-input-wrap { flex:1; }
+
+  input[type="number"] {
+    width:100%; background:var(--panel-2); border:1px solid var(--border);
+    color:var(--text); font-size:1.4rem; font-weight:700;
+    padding:12px 14px; border-radius:10px; font-family:var(--mono); appearance:textfield;
+  }
+  input[type="number"]:focus { outline:none; border-color:var(--accent); }
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button { -webkit-appearance:none; }
+
+  .unit-pill {
+    align-self:center; background:var(--panel-2); border:1px solid var(--border);
+    color:var(--text-dim); font-size:.8rem; font-weight:600; padding:0 16px;
+    border-radius:10px; display:flex; align-items:center; min-width:64px; justify-content:center; height:52px;
+  }
+
+  .hint { margin-top:8px; font-size:.74rem; color:var(--text-faint); min-height:14px; }
+  .hint.error { color:var(--danger); }
+
+  .calc-btn {
+    width:100%; background:var(--accent); color:#04211f; border:none;
+    padding:16px; font-size:1.02rem; font-weight:700; border-radius:12px;
+    cursor:pointer; margin-top:18px; transition:transform .08s,opacity .15s; letter-spacing:.2px;
+  }
+  .calc-btn:active { transform:scale(.98); }
+
+  /* Results */
+  #results { display:none; }
+
+  .baseline-banner {
+    background:linear-gradient(135deg,var(--accent-soft),#102e30);
+    border:1px solid #1f5d61; border-radius:var(--radius);
+    padding:16px 18px; margin-bottom:14px;
+    display:flex; justify-content:space-between; align-items:center;
+  }
+  .bl-text { font-size:.78rem; color:#a7d8db; font-weight:600; text-transform:uppercase; letter-spacing:.5px; }
+  .bl-sub  { font-size:.7rem; color:#6fa8ab; margin-top:3px; }
+  .bl-value{ font-family:var(--mono); font-size:1.9rem; font-weight:800; color:#fff; }
+
+  /* ═══ GAUGE ═══════════════════════════════════════════════════ */
+  .gauge-card { margin-top:0; }
+
+  .gauge-wrap {
+    position:relative;
+    user-select:none;
+    padding-bottom:8px;
+  }
+
+  /* The coloured segmented track */
+  .gauge-track {
+    position:relative;
+    height:42px;          /* tall enough for zone labels */
+    border-radius:10px;
+    overflow:visible;     /* let scrubber overflow */
+    display:flex;         /* zones sit side-by-side */
+    cursor:grab;
+  }
+  .gauge-track:active { cursor:grabbing; }
+
+  /* Individual zone segment */
+  .g-zone {
+    position:relative;
+    height:100%;
+    flex-shrink:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+    transition:filter .1s;
+  }
+  .g-zone:first-child { border-radius:10px 0 0 10px; }
+  .g-zone:last-child  { border-radius:0 10px 10px 0; }
+
+  /* Hard separator between zones */
+  .g-zone + .g-zone::before {
+    content:'';
+    position:absolute;
+    left:0; top:0; bottom:0;
+    width:2px;
+    background:rgba(0,0,0,0.55);
+    z-index:2;
+  }
+
+  /* Zone label text */
+  .g-zone-label {
+    font-size:.58rem;
+    font-weight:800;
+    color:rgba(255,255,255,0.92);
+    text-transform:uppercase;
+    letter-spacing:.5px;
+    writing-mode:horizontal-tb;
+    white-space:nowrap;
+    text-shadow:0 1px 3px rgba(0,0,0,0.7);
+    pointer-events:none;
+    overflow:hidden;
+    text-overflow:clip;
+    max-width:100%;
+    padding:0 4px;
+    text-align:center;
+    z-index:1;
+  }
+
+  /* Vol% boundary label below the track */
+  .g-boundary-row {
+    position:relative;
+    height:18px;
+    margin-top:4px;
+  }
+  .g-blabel {
+    position:absolute;
+    transform:translateX(-50%);
+    font-size:.6rem;
+    font-family:var(--mono);
+    color:var(--text-faint);
+    white-space:nowrap;
+    top:0;
+  }
+  /* clamp edge labels so they don't overflow the card */
+  .g-blabel:first-child { transform:none; left:0 !important; }
+  .g-blabel:last-child  { transform:none; right:0 !important; left:auto !important; }
+
+  /* Active zone indicator row */
+  .gauge-zone-label-row {
+    margin-top:10px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .gauge-zone-badge {
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    padding:4px 10px;
+    border-radius:20px;
+    font-size:.72rem;
+    font-weight:700;
+    color:#fff;
+    background:var(--panel-2);
+    border:1.5px solid var(--border);
+    transition:background .15s, border-color .15s;
+    min-width:80px;
+  }
+  .zone-dot {
+    width:8px; height:8px; border-radius:50%; flex-shrink:0;
+  }
+  .gauge-readout {
+    font-family:var(--mono);
+    font-size:.72rem;
+    color:var(--text-dim);
+    margin-left:auto;
+  }
+  .gauge-readout strong { color:var(--text); font-size:.82rem; }
+
+  /* ── SCRUBBER ────────────────────────────────────────────────── */
+  .scrubber-handle {
+    position:absolute;
+    top:50%;
+    width:26px; height:26px;
+    border-radius:50%;
+    background:#fff;
+    border:3px solid var(--accent);
+    transform:translate(-50%,-50%);
+    box-shadow:0 0 0 4px rgba(54,192,201,.2), 0 2px 10px rgba(0,0,0,.6);
+    cursor:grab;
+    z-index:20;
+    touch-action:none;
+    transition:border-color .15s, box-shadow .15s;
+  }
+  .scrubber-handle:active,
+  .scrubber-handle.dragging {
+    cursor:grabbing;
+    box-shadow:0 0 0 7px rgba(54,192,201,.22), 0 2px 14px rgba(0,0,0,.7);
+  }
+
+  /* ── TOOLTIP ─────────────────────────────────────────────────── */
+  .scrubber-tip {
+    position:absolute;
+    bottom:calc(100% + 12px);
+    left:50%;
+    transform:translateX(-50%);
+    background:#1a2830;
+    border:2px solid var(--accent);
+    border-radius:10px;
+    padding:7px 12px;
+    white-space:nowrap;
+    pointer-events:none;
+    z-index:30;
+    min-width:120px;
+    text-align:center;
+    transition:border-color .15s;
+  }
+  .tip-vol  { font-family:var(--mono); font-size:1.1rem; font-weight:800; color:#fff; }
+  .tip-mac  { font-size:.68rem; color:var(--accent); font-weight:700; margin-top:1px; transition:color .15s; }
+  .scrubber-tip::after {
+    content:'';
+    position:absolute;
+    top:100%; left:50%;
+    transform:translateX(-50%);
+    border:6px solid transparent;
+    border-top-color:var(--accent);
+    transition:border-top-color .15s;
+  }
+
+  /* ── TARGET CARDS ────────────────────────────────────────────── */
+  .target-list { display:flex; flex-direction:column; gap:8px; }
+
+  .target {
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-left:4px solid var(--border-soft);
+    border-radius:12px;
+    padding:12px 16px;
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    transition:background .15s, border-left-color .15s;
+  }
+  .target.highlighted { background:#1c2c36; }
+  .target[data-tone="primary"] { border-left-color:var(--accent); }
+  .target[data-tone="warn"]    { border-left-color:var(--warn); }
+  .target[data-tone="danger"]  { border-left-color:var(--danger); }
+  .target[data-tone="danger2"] { border-left-color:var(--danger2); }
+  .target[data-tone="good"]    { border-left-color:var(--good); }
+  .target[data-tone="purple"]  { border-left-color:var(--purple); }
+
+  .target-info { flex:1; min-width:0; }
+  .target-name { font-size:.88rem; font-weight:700; color:var(--text); }
+  .target-desc { font-size:.72rem; color:var(--text-dim); margin-top:2px; }
+  .target-factor { font-size:.64rem; color:var(--text-faint); margin-top:1px; font-family:var(--mono); }
+  .target-value { font-family:var(--mono); font-size:1.3rem; font-weight:800; white-space:nowrap; text-align:right; }
+  .target-value small { font-size:.65rem; font-weight:600; color:var(--text-dim); margin-left:2px; }
+
+  .disclaimer {
+    text-align:center; font-size:.72rem; color:var(--text-faint);
+    line-height:1.5; padding:14px 10px 0;
+  }
+  .disclaimer strong { color:var(--text-dim); }
+
+  @media (max-width:360px) {
+    .bl-value { font-size:1.6rem; }
+    .target-value { font-size:1.15rem; }
+    .g-zone-label { font-size:.52rem; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <h1>Sevo<span>MAC</span> Calculator</h1>
+    <p>Age-adjusted Sevoflurane MAC targets</p>
+  </header>
+
+  <div class="card">
+    <span class="lbl">Patient Category</span>
+    <div class="segmented">
+      <input type="radio" name="mode" id="mode-peds" value="peds">
+      <label for="mode-peds">Pediatric (Months)</label>
+      <input type="radio" name="mode" id="mode-adult" value="adult" checked>
+      <label for="mode-adult">Adult (Years)</label>
+    </div>
+
+    <div style="margin-top:18px;">
+      <span class="lbl" id="age-label">Patient Age</span>
+      <div class="age-row">
+        <div class="age-input-wrap">
+          <input type="number" id="age-input" inputmode="decimal" placeholder="e.g. 45" min="0" step="any">
+        </div>
+        <div class="unit-pill" id="unit-pill">years</div>
+      </div>
+      <div class="hint" id="age-hint">Enter age in years (adult formula applies &gt; 12 months).</div>
+    </div>
+
+    <button class="calc-btn" id="calc-btn">Calculate Targets</button>
+  </div>
+
+  <div id="results">
+
+    <div class="baseline-banner">
+      <div>
+        <div class="bl-text">Baseline 1.0 MAC</div>
+        <div class="bl-sub" id="band-sub">—</div>
+      </div>
+      <div class="bl-value"><span id="baseline-value">—</span></div>
+    </div>
+
+    <!-- Gauge card -->
+    <div class="card gauge-card">
+      <span class="lbl">Clinical Range — Drag to Explore</span>
+
+      <div class="gauge-wrap" id="gauge-wrap">
+
+        <!-- Zone track (populated by JS) -->
+        <div class="gauge-track" id="gauge-track">
+          <!-- scrubber lives here so it's positioned relative to the track -->
+          <div class="scrubber-handle" id="scrubber">
+            <div class="scrubber-tip" id="scrubber-tip">
+              <div class="tip-vol" id="tip-vol">—</div>
+              <div class="tip-mac" id="tip-mac">—</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Boundary vol% labels below track -->
+        <div class="g-boundary-row" id="g-boundary-row"></div>
+
+        <!-- Active zone badge -->
+        <div class="gauge-zone-label-row">
+          <div class="gauge-zone-badge" id="zone-badge">
+            <span class="zone-dot" id="zone-dot"></span>
+            <span id="zone-name">—</span>
+          </div>
+          <div class="gauge-readout" id="gauge-readout"></div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="target-list" id="target-list"></div>
+  </div>
+
+  <p class="disclaimer">
+    <strong>For educational reference only.</strong><br>
+    Always titrate to clinical effect. MAC-BAR and SD values are population estimates.
+  </p>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  // ── DOM ──────────────────────────────────────────────────────
+  const modeRadios    = document.querySelectorAll('input[name="mode"]');
+  const ageInput      = document.getElementById('age-input');
+  const unitPill      = document.getElementById('unit-pill');
+  const ageHint       = document.getElementById('age-hint');
+  const calcBtn       = document.getElementById('calc-btn');
+  const resultsEl     = document.getElementById('results');
+  const baselineValue = document.getElementById('baseline-value');
+  const bandSub       = document.getElementById('band-sub');
+  const targetList    = document.getElementById('target-list');
+  const gaugeTrack    = document.getElementById('gauge-track');
+  const scrubber      = document.getElementById('scrubber');
+  const scrubberTip   = document.getElementById('scrubber-tip');
+  const tipVol        = document.getElementById('tip-vol');
+  const tipMac        = document.getElementById('tip-mac');
+  const zoneBadge     = document.getElementById('zone-badge');
+  const zoneDot       = document.getElementById('zone-dot');
+  const zoneName      = document.getElementById('zone-name');
+  const gaugeReadout  = document.getElementById('gauge-readout');
+  const boundaryRow   = document.getElementById('g-boundary-row');
+
+  // ── State ────────────────────────────────────────────────────
+  let currentBaseline = null;
+  let currentTargets  = null;
+  let gaugeMaxVal     = 0;
+  let scrubPct        = 0;
+
+  // ── Helpers ──────────────────────────────────────────────────
+  const currentMode = () => document.querySelector('input[name="mode"]:checked').value;
+  const round1  = n => Math.round(n * 10) / 10;
+  const clamp   = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+
+  // ── Clinical zone definitions (sorted by vol% ascending) ─────
+  // Each zone spans from its own threshold UP TO the next zone's threshold.
+  // We'll compute positions dynamically per calculation.
+  const ZONE_DEFS = [
+    { id:'sub',    label:'Subanaesthetic', color:'#2a6640', textColor:'rgba(255,255,255,.85)', from:0,         to:'awake'  },
+    { id:'awake',  label:'Near Awake',     color:'#1e7a4a', textColor:'rgba(255,255,255,.9)',  from:'awake',   to:'opioid' },
+    { id:'opioid', label:'Opioid-Sparing', color:'#b56d12', textColor:'rgba(255,255,255,.9)',  from:'opioid',  to:'light'  },
+    { id:'light',  label:'Lt. Maintenance',color:'#1565a0', textColor:'rgba(255,255,255,.9)',  from:'light',   to:'maint'  },
+    { id:'maint',  label:'Maintenance',    color:'#0e8a9e', textColor:'rgba(255,255,255,.95)', from:'maint',   to:'sd2'    },
+    { id:'deep',   label:'Deep (+2SD)',    color:'#b52a1f', textColor:'rgba(255,255,255,.95)', from:'sd2',     to:'symp'   },
+    { id:'bar',    label:'MAC-BAR',        color:'#7b2fbe', textColor:'rgba(255,255,255,.95)', from:'symp',    to:'sd3'    },
+    { id:'max',    label:'Max (+3SD)',      color:'#6b1010', textColor:'rgba(255,255,255,.85)', from:'sd3',     to:'end'    },
+  ];
+
+  // ── MAC logic ────────────────────────────────────────────────
+  function getBaselineMAC(mode, age) {
+    if (mode === 'peds') {
+      if (age < 1)  return { mac:2.8, band:'Neonate (&lt; 1 month)' };
+      if (age <= 6) return { mac:3.2, band:'Infant (1–6 months)' };
+      return              { mac:2.9, band:'Infant (7–12 months)' };
+    }
+    return {
+      mac: 2.0 * Math.pow(10, -0.00269 * (age - 40)),
+      band: `Adult — Mapleson model (age ${age} yrs)`
+    };
+  }
+
+  function buildTargets(baseline) {
+    return [
+      { key:'awake',  name:'MAC-Awake',                     desc:'Emergence / extubation threshold',             factor:0.33, tone:'good'    },
+      { key:'opioid', name:'Opioid-Sparing (with Fentanyl)',desc:'Balanced technique with concurrent opioid',    factor:0.70, tone:'warn'    },
+      { key:'light',  name:'0.8 MAC — Light Maintenance',   desc:'Lighter maintenance / spontaneous ventilation',factor:0.80, tone:''        },
+      { key:'maint',  name:'1.0 MAC — Maintenance',         desc:'Standard surgical maintenance plane',          factor:1.00, tone:'primary' },
+      { key:'sd2',    name:'+2 SD (≈95%)',                  desc:'~95% of patients immobile — deep plane',       factor:1.20, tone:'danger'  },
+      { key:'symp',   name:'MAC-BAR',                       desc:'Blunts adrenergic response to skin incision',  factor:1.45, tone:'purple'  },
+      { key:'sd3',    name:'+3 SD (≈99.7%)',                desc:'Near-maximal immobility — use with caution',   factor:1.30, tone:'danger2' },
+    ].map(t => ({ ...t, value: round1(baseline * t.factor) }));
+  }
+
+  const CARD_ORDER = ['awake','opioid','light','maint','sd2','symp','sd3'];
+
+  // ── GAUGE RENDER ─────────────────────────────────────────────
+  function renderGauge(targets) {
+    const byKey = Object.fromEntries(targets.map(t => [t.key, t]));
+
+    // Gauge max = +3SD ceiling + 12% headroom
+    gaugeMaxVal = byKey['sd3'].value * 1.12;
+
+    // Map key → absolute vol value; 'end' = gaugeMaxVal, 0 = 0
+    const absVal = key => {
+      if (key === 0)     return 0;
+      if (key === 'end') return gaugeMaxVal;
+      return byKey[key] ? byKey[key].value : 0;
+    };
+
+    const pct = v => clamp((v / gaugeMaxVal) * 100, 0, 100);
+
+    // Clear previous zone els (keep scrubber)
+    [...gaugeTrack.querySelectorAll('.g-zone')].forEach(el => el.remove());
+
+    // Build coloured zone segments
+    ZONE_DEFS.forEach(z => {
+      const v1 = absVal(z.from);
+      const v2 = absVal(z.to);
+      const w  = pct(v2) - pct(v1);
+      if (w <= 0) return;
+
+      const seg = document.createElement('div');
+      seg.className = 'g-zone';
+      seg.dataset.zoneId = z.id;
+      seg.style.width      = w + '%';
+      seg.style.background = z.color;
+
+      const lbl = document.createElement('span');
+      lbl.className   = 'g-zone-label';
+      lbl.textContent = z.label;
+      lbl.style.color = z.textColor;
+      seg.appendChild(lbl);
+
+      // insert before scrubber
+      gaugeTrack.insertBefore(seg, scrubber);
+    });
+
+    // Boundary labels below track
+    boundaryRow.innerHTML = '';
+    const boundaries = [0, 'awake', 'opioid', 'light', 'maint', 'sd2', 'symp', 'sd3', 'end'];
+    boundaries.forEach(key => {
+      const v = absVal(key);
+      const p = pct(v);
+      const el = document.createElement('span');
+      el.className  = 'g-blabel';
+      el.style.left = p + '%';
+      el.textContent = v.toFixed(1);
+      boundaryRow.appendChild(el);
+    });
+
+    // Set scrubber to 1.0 MAC initially
+    setScrubberPct(pct(byKey['maint'].value) / 100);
+  }
+
+  // ── Identify which zone a vol% value falls in ────────────────
+  function identifyZone(volVal) {
+    if (!currentTargets) return null;
+    const by = Object.fromEntries(currentTargets.map(t => [t.key, t.value]));
+    if      (volVal < by.awake)  return ZONE_DEFS[0];
+    else if (volVal < by.opioid) return ZONE_DEFS[1];
+    else if (volVal < by.light)  return ZONE_DEFS[2];
+    else if (volVal < by.maint)  return ZONE_DEFS[3];
+    else if (volVal < by.sd2)    return ZONE_DEFS[4];
+    else if (volVal < by.symp)   return ZONE_DEFS[5];
+    else if (volVal < by.sd3)    return ZONE_DEFS[6];
+    else                         return ZONE_DEFS[7];
+  }
+
+  // ── SCRUBBER UPDATE ──────────────────────────────────────────
+  function setScrubberPct(p) {
+    scrubPct = clamp(p, 0, 1);
+    scrubber.style.left = (scrubPct * 100) + '%';
+
+    const volVal  = scrubPct * gaugeMaxVal;
+    const macFrac = currentBaseline ? volVal / currentBaseline : 0;
+
+    tipVol.textContent = volVal.toFixed(2) + ' vol%';
+    tipMac.textContent = macFrac.toFixed(2) + ' MAC';
+
+    const zone = identifyZone(volVal);
+    if (zone) {
+      // Colour the tooltip border + arrow to match zone
+      scrubberTip.style.borderColor = zone.color;
+      scrubberTip.style.setProperty('--tip-arrow', zone.color);
+      tipMac.style.color = zone.color;
+
+      // Update arrow colour via a pseudo-element trick using inline style on parent
+      // (we'll use a CSS var override)
+      scrubberTip.setAttribute('data-zone-color', zone.color);
+
+      // Zone badge
+      zoneDot.style.background  = zone.color;
+      zoneName.textContent       = zone.label;
+      zoneBadge.style.borderColor= zone.color;
+      zoneBadge.style.background = zone.color + '22';
+    }
+
+    // Gauge readout
+    gaugeReadout.innerHTML = `<strong>${volVal.toFixed(2)}</strong> vol% &nbsp;·&nbsp; <strong>${macFrac.toFixed(2)}</strong> MAC`;
+
+    // Highlight nearest card
+    if (currentTargets) {
+      let nearKey = null, nearDist = Infinity;
+      currentTargets.forEach(t => {
+        const d = Math.abs(t.value - volVal);
+        if (d < nearDist) { nearDist = d; nearKey = t.key; }
+      });
+      document.querySelectorAll('.target').forEach(el =>
+        el.classList.toggle('highlighted', el.dataset.key === nearKey));
+    }
+
+    // Scrubber border tinted to zone
+    if (zone) {
+      scrubber.style.borderColor = zone.color;
+      scrubber.style.boxShadow   = `0 0 0 4px ${zone.color}33, 0 2px 10px rgba(0,0,0,.6)`;
+    }
+  }
+
+  // ── Tooltip arrow colour patch (CSS pseudo can't be set inline) ──
+  // We inject a <style> block once and update a CSS var
+  const arrowStyle = document.createElement('style');
+  document.head.appendChild(arrowStyle);
+  function updateArrowColor(color) {
+    arrowStyle.textContent = `#scrubber-tip::after { border-top-color: ${color} !important; }`;
+  }
+
+  // ── Drag logic ───────────────────────────────────────────────
+  let dragging = false;
+
+  function trackPointer(clientX) {
+    const rect = gaugeTrack.getBoundingClientRect();
+    setScrubberPct((clientX - rect.left) / rect.width);
+
+    const zone = identifyZone(scrubPct * gaugeMaxVal);
+    if (zone) updateArrowColor(zone.color);
+  }
+
+  scrubber.addEventListener('mousedown', e => { dragging = true; scrubber.classList.add('dragging'); e.preventDefault(); });
+  document.addEventListener('mousemove', e => { if (dragging) trackPointer(e.clientX); });
+  document.addEventListener('mouseup',   ()  => { dragging = false; scrubber.classList.remove('dragging'); });
+
+  scrubber.addEventListener('touchstart', e => { dragging = true; scrubber.classList.add('dragging'); e.preventDefault(); }, { passive:false });
+  document.addEventListener('touchmove',  e => { if (dragging) { trackPointer(e.touches[0].clientX); e.preventDefault(); } }, { passive:false });
+  document.addEventListener('touchend',   ()  => { dragging = false; scrubber.classList.remove('dragging'); });
+
+  // Tap anywhere on track to jump
+  document.getElementById('gauge-wrap').addEventListener('click', e => {
+    if (e.target === scrubber || scrubber.contains(e.target)) return;
+    trackPointer(e.clientX);
+    const zone = identifyZone(scrubPct * gaugeMaxVal);
+    if (zone) updateArrowColor(zone.color);
+  });
+
+  // ── Render results ───────────────────────────────────────────
+  function renderResults(baseline, band) {
+    currentBaseline = baseline;
+    baselineValue.textContent = round1(baseline).toFixed(1) + ' vol%';
+    bandSub.innerHTML = band;
+
+    const targets = buildTargets(baseline);
+    currentTargets = targets;
+    const byKey = Object.fromEntries(targets.map(t => [t.key, t]));
+
+    // Cards
+    targetList.innerHTML = '';
+    CARD_ORDER.forEach(key => {
+      const t = byKey[key];
+      if (!t) return;
+      const row = document.createElement('div');
+      row.className = 'target';
+      row.dataset.key = key;
+      row.setAttribute('data-tone', t.tone);
+      row.innerHTML = `
+        <div class="target-info">
+          <div class="target-name">${t.name}</div>
+          <div class="target-desc">${t.desc}</div>
+          <div class="target-factor">× ${t.factor.toFixed(2)} MAC</div>
+        </div>
+        <div class="target-value">${t.value.toFixed(1)}<small>vol%</small></div>`;
+      targetList.appendChild(row);
+    });
+
+    renderGauge(targets);
+    resultsEl.style.display = 'block';
+  }
+
+  // ── Validation ───────────────────────────────────────────────
+  function validate() {
+    const mode = currentMode();
+    const raw  = ageInput.value.trim();
+    if (!raw) return { ok:false, msg:'Please enter a patient age.' };
+    const age = parseFloat(raw);
+    if (isNaN(age) || age < 0) return { ok:false, msg:'Age must be a valid, non-negative number.' };
+    if (mode === 'peds' && age > 12)
+      return { ok:false, msg:'Age exceeds 12 months — switch to Adult (Years) for this patient.' };
+    if (mode === 'adult' && age > 0 && age < 1)
+      return { ok:false, msg:'Patients under 1 year should use Pediatric (Months) mode.' };
+    if (mode === 'adult' && age > 110)
+      return { ok:false, msg:'Age seems unusually high — please double-check input.' };
+    return { ok:true, age, mode };
+  }
+
+  function updateUIForMode() {
+    const mode = currentMode();
+    ageInput.value = '';
+    resultsEl.style.display = 'none';
+    currentBaseline = null;
+    if (mode === 'peds') {
+      unitPill.textContent = 'months';
+      ageInput.placeholder = 'e.g. 4';
+      ageInput.max = '12';
+      ageHint.textContent = 'Enter age in completed months (0–12). For older patients, switch to Adult.';
+    } else {
+      unitPill.textContent = 'years';
+      ageInput.placeholder = 'e.g. 45';
+      ageInput.removeAttribute('max');
+      ageHint.textContent = 'Enter age in years. Mapleson exponential model (valid ~1–80 yrs).';
+    }
+    ageHint.classList.remove('error');
+  }
+
+  function handleCalculate() {
+    const v = validate();
+    if (!v.ok) {
+      ageHint.textContent = v.msg;
+      ageHint.classList.add('error');
+      resultsEl.style.display = 'none';
+      ageInput.focus();
+      return;
+    }
+    ageHint.classList.remove('error');
+    const { mac, band } = getBaselineMAC(v.mode, v.age);
+    renderResults(mac, band);
+    ageHint.textContent = v.mode === 'peds'
+      ? 'Enter age in completed months (0–12). For older patients, switch to Adult.'
+      : 'Enter age in years. Mapleson exponential model (valid ~1–80 yrs).';
+  }
+
+  modeRadios.forEach(r => r.addEventListener('change', updateUIForMode));
+  calcBtn.addEventListener('click', handleCalculate);
+  ageInput.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); handleCalculate(); } });
+  ageInput.addEventListener('input', () => {
+    if (ageHint.classList.contains('error')) {
+      ageHint.classList.remove('error');
+      ageHint.textContent = currentMode() === 'peds'
+        ? 'Enter age in completed months (0–12). For older patients, switch to Adult.'
+        : 'Enter age in years. Mapleson exponential model (valid ~1–80 yrs).';
+    }
+  });
+
+  updateUIForMode();
+})();
+</script>
+</body>
+</html>
