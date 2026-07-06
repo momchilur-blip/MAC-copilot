@@ -226,10 +226,11 @@
         let counts = { propofol: 0, fentanyl: 0, midaz: 0, airway: 0 };
         const doses = { propofol: 10, fentanyl: 25, midaz: 1 }; 
         
-        let propTimerInterval = null, propTimeLeft = 0;
-        let fentTimerInterval = null, fentTimeLeft = 0;
-        const PROP_DURATION = 240; 
-        const FENT_PEAK_DURATION = 240; 
+        let propTimerInterval = null, propTimeLeft = 0, propEndTime = 0;
+let fentTimerInterval = null, fentTimeLeft = 0, fentEndTime = 0;
+const PROP_DURATION = 240; 
+const FENT_PEAK_DURATION = 240; 
+ 
 
         function initApp() {
             const container = document.getElementById('rass-container');
@@ -296,15 +297,22 @@
         }
 
         function startPropTimer() {
-            propTimeLeft = PROP_DURATION;
+    propEndTime = Date.now() + (PROP_DURATION * 1000);
+    clearInterval(propTimerInterval);
+    
+    propTimerInterval = setInterval(() => {
+        // Calculate the difference between the target time and right now
+        propTimeLeft = Math.ceil((propEndTime - Date.now()) / 1000);
+        
+        if(propTimeLeft <= 0) {
+            propTimeLeft = 0;
             clearInterval(propTimerInterval);
-            updatePropTimerUI();
-            propTimerInterval = setInterval(() => {
-                propTimeLeft--;
-                updatePropTimerUI();
-                if(propTimeLeft <= 0) clearInterval(propTimerInterval);
-            }, 1000);
         }
+        updatePropTimerUI();
+    }, 1000);
+    
+    updatePropTimerUI();
+}
 
         function updatePropTimerUI() {
             const bar = document.getElementById('prop-timer-bar');
@@ -320,15 +328,22 @@
         }
 
         function startFentTimer() {
-            fentTimeLeft = FENT_PEAK_DURATION;
+    fentEndTime = Date.now() + (FENT_PEAK_DURATION * 1000);
+    clearInterval(fentTimerInterval);
+    
+    fentTimerInterval = setInterval(() => {
+        // Calculate the difference between the target time and right now
+        fentTimeLeft = Math.ceil((fentEndTime - Date.now()) / 1000);
+        
+        if(fentTimeLeft <= 0) {
+            fentTimeLeft = 0;
             clearInterval(fentTimerInterval);
-            updateFentTimerUI();
-            fentTimerInterval = setInterval(() => {
-                fentTimeLeft--;
-                updateFentTimerUI();
-                if(fentTimeLeft <= 0) clearInterval(fentTimerInterval);
-            }, 1000);
         }
+        updateFentTimerUI();
+    }, 1000);
+    
+    updateFentTimerUI();
+}
 
         function updateFentTimerUI() {
             const bar = document.getElementById('fent-timer-bar');
