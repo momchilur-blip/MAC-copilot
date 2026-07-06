@@ -1,1 +1,810 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Anesthesia Dosing Calculator</title>
+<style>
+  :root{
+    --bg: #0e1116;
+    --card: #171b23;
+    --card-border: #262c38;
+    --accent: #3ba8ff;
+    --accent-soft: rgba(59,168,255,0.12);
+    --text: #e8ecf3;
+    --text-dim: #8b93a3;
+    --danger: #ff6b6b;
+    --good: #2ecc9a;
+    --radius: 14px;
+    --hypnotic: #c792ea;
+    --relaxant: #ffb86b;
+    --opioid: #ff6b9d;
+    --local: #5fd0c1;
+  }
+  *{ box-sizing: border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    padding: 16px;
+    padding-bottom: 90px;
+    min-height: 100vh;
+  }
+  .app-header{
+    text-align:center;
+    margin-bottom: 18px;
+  }
+  .app-header h1{
+    font-size: 1.25rem;
+    margin: 0 0 2px 0;
+    letter-spacing: 0.3px;
+  }
+  .app-header p{
+    margin:0;
+    font-size: 0.78rem;
+    color: var(--text-dim);
+  }
+  .card{
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 14px;
+  }
+  .card-compact{
+    padding: 10px 12px;
+    margin-bottom: 10px;
+  }
+  .input-grid{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .field{
+    display:flex;
+    flex-direction:column;
+    gap:3px;
+  }
+  .field label{
+    font-size: 0.62rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+  .field input[type="number"]{
+    background: #0f1319;
+    border: 1px solid var(--card-border);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 8px 9px;
+    font-size: 0.88rem;
+    width: 100%;
+    -moz-appearance: textfield;
+  }
+  .field input[type="number"]:focus{
+    outline: none;
+    border-color: var(--accent);
+  }
+  .gender-toggle{
+    display:flex;
+    grid-column: span 2;
+    background:#0f1319;
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    padding: 3px;
+    gap:3px;
+  }
+  .gender-toggle button{
+    flex:1;
+    padding: 7px 0;
+    border:none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-dim);
+    font-size: 0.8rem;
+    font-weight:600;
+    cursor:pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+  .gender-toggle button.active{
+    background: var(--accent);
+    color: #06131f;
+  }
+  .calc-btn{
+    grid-column: span 2;
+    margin-top: 2px;
+    padding: 10px;
+    border-radius: 10px;
+    border: none;
+    background: linear-gradient(180deg, #3ba8ff, #2b8fe0);
+    color: #06131f;
+    font-size: 0.88rem;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(59,168,255,0.25);
+  }
+  .calc-btn:active{ transform: scale(0.98); }
+
+  .weight-summary{
+    display:none;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    margin-top: 8px;
+    text-align:center;
+  }
+  .weight-summary.show{ display:grid; }
+  .weight-summary .stat{
+    background: var(--accent-soft);
+    border-radius: 8px;
+    padding: 6px 4px;
+  }
+  .weight-summary .stat .val{
+    font-size: 0.92rem;
+    font-weight:700;
+    color: var(--accent);
+  }
+  .weight-summary .stat .lbl{
+    font-size: 0.58rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-top:1px;
+  }
+
+  .tabs{
+    display:flex;
+    gap: 6px;
+    margin-bottom: 14px;
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 4px;
+  }
+  .tab-btn{
+    flex:1;
+    padding: 11px 0;
+    text-align:center;
+    border:none;
+    border-radius: 9px;
+    background: transparent;
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .tab-btn.active{
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+
+  .tab-panel{ display:none; }
+  .tab-panel.active{ display:block; animation: fadein 0.2s ease; }
+  @keyframes fadein{ from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:translateY(0);} }
+
+  .section-title{
+    font-size: 0.78rem;
+    font-weight:700;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin: 0 0 10px 0;
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .section-title::before{
+    content:"";
+    width:4px;
+    height:14px;
+    background: var(--accent);
+    border-radius: 2px;
+    display:inline-block;
+  }
+
+  .result-row{
+    display:flex;
+    justify-content: space-between;
+    align-items:flex-start;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--card-border);
+    gap: 10px;
+  }
+  .result-row:last-child{ border-bottom:none; }
+  .result-row .rname{
+    font-size: 0.86rem;
+    color: var(--text);
+    flex: 1.3;
+  }
+  .result-row .rname small{
+    display:block;
+    color: var(--text-dim);
+    font-size: 0.72rem;
+    margin-top: 2px;
+    font-weight: 400;
+  }
+  .result-row .rval{
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--good);
+    text-align:right;
+    flex: 1;
+    white-space: nowrap;
+  }
+
+  .drug-name{
+    font-weight: 800;
+    letter-spacing: 0.1px;
+  }
+  .drug-name.hypnotic{ color: var(--hypnotic); }
+  .drug-name.relaxant{ color: var(--relaxant); }
+  .drug-name.opioid{ color: var(--opioid); }
+  .drug-name.local{ color: var(--local); }
+
+  .category-legend{
+    display:flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 12px;
+    font-size: 0.66rem;
+    color: var(--text-dim);
+  }
+  .category-legend span{
+    display:flex;
+    align-items:center;
+    gap: 5px;
+  }
+  .category-legend .dot{
+    width:8px; height:8px; border-radius:50%;
+    display:inline-block;
+  }
+
+  .propofol-box{
+    border: 1px solid var(--hypnotic);
+    background: rgba(199,146,234,0.07);
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 12px;
+  }
+  .propofol-header{
+    display:flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(199,146,234,0.25);
+  }
+  .propofol-header .drug-name{
+    font-size: 1.05rem;
+  }
+  .propofol-tag{
+    font-size: 0.62rem;
+    background: rgba(199,146,234,0.18);
+    color: var(--hypnotic);
+    padding: 4px 9px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .propofol-doses{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .propofol-dose{
+    background:#0f1319;
+    border: 1px solid rgba(199,146,234,0.15);
+    border-radius: 9px;
+    padding: 8px 6px;
+    text-align:center;
+  }
+  .propofol-dose .d-context{
+    display:block;
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    margin-bottom: 3px;
+  }
+  .propofol-dose .d-rate{
+    display:block;
+    font-size: 0.68rem;
+    color: var(--text-dim);
+  }
+  .propofol-dose .d-val{
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--hypnotic);
+  }
+  .other-drugs-label{
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 4px 0 4px 0;
+  }
+
+  .subgroup{
+    margin-top: 4px;
+    margin-bottom: 4px;
+  }
+  .subgroup-title{
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    font-style: italic;
+    margin: 6px 0 2px 0;
+  }
+
+  .placeholder{
+    text-align:center;
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    padding: 30px 10px;
+  }
+
+  .disclaimer{
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #10151d;
+    border-top: 1px solid var(--card-border);
+    padding: 10px 16px;
+    font-size: 0.68rem;
+    color: var(--text-dim);
+    text-align:center;
+    line-height:1.3;
+  }
+
+  .slider-card{
+    margin-top: 6px;
+  }
+  .slider-readout{
+    display:flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 4px;
+  }
+  .slider-readout .rate-val{
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--text);
+  }
+  .slider-readout .rate-val span{
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    font-weight: 500;
+    margin-left: 4px;
+  }
+  .zone-badge{
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 5px 10px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+  }
+  .slider-outer{
+    position: relative;
+    height: 38px;
+    margin: 6px 0 4px 0;
+  }
+  .slider-bg{
+    position: absolute;
+    top: 13px;
+    left: 0;
+    right: 0;
+    height: 12px;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  input[type="range"].remi-range{
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 38px;
+    margin: 0;
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    cursor: pointer;
+  }
+  input[type="range"].remi-range::-webkit-slider-runnable-track{
+    background: transparent;
+    height: 38px;
+  }
+  input[type="range"].remi-range::-webkit-slider-thumb{
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #fff;
+    border: 3px solid var(--opioid);
+    margin-top: 9px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+  }
+  input[type="range"].remi-range::-moz-range-track{
+    background: transparent;
+    height: 12px;
+    border: none;
+  }
+  input[type="range"].remi-range::-moz-range-thumb{
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #fff;
+    border: 3px solid var(--opioid);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+  }
+  .slider-ticks{
+    position: relative;
+    height: 14px;
+    margin-bottom: 8px;
+  }
+  .slider-ticks .tick{
+    position: absolute;
+    transform: translateX(-50%);
+    font-size: 0.6rem;
+    color: var(--text-dim);
+    white-space: nowrap;
+  }
+  .slider-dose-readout{
+    text-align:center;
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    margin-top: 2px;
+  }
+  .slider-dose-readout strong{
+    color: var(--text);
+  }
+
+  @media (min-width: 600px){
+    body{ max-width: 600px; margin: 0 auto; }
+  }
+
+</style>
+</head>
+<body>
+
+  <div class="app-header">
+    <h1>⚕ Anesthesia Dosing Calculator</h1>
+    <p>Airway, induction &amp; Remifentanil reference tool</p>
+  </div>
+
+  <div class="card card-compact">
+    <div class="input-grid">
+      <div class="gender-toggle">
+        <button type="button" id="btn-male" class="active" onclick="setGender('male')">Male</button>
+        <button type="button" id="btn-female" onclick="setGender('female')">Female</button>
+      </div>
+
+      <div class="field">
+        <label for="age">Age (years)</label>
+        <input type="number" id="age" inputmode="numeric" placeholder="e.g. 45">
+      </div>
+      <div class="field">
+        <label for="height">Height (cm)</label>
+        <input type="number" id="height" inputmode="numeric" placeholder="e.g. 170">
+      </div>
+      <div class="field" style="grid-column: span 2;">
+        <label for="weight">Actual Weight (kg)</label>
+        <input type="number" id="weight" inputmode="numeric" placeholder="e.g. 78">
+      </div>
+
+      <button class="calc-btn" onclick="calculate()">Calculate Parameters</button>
+    </div>
+
+    <div class="weight-summary" id="weightSummary">
+      <div class="stat"><div class="val" id="sumIBW">--</div><div class="lbl">IBW</div></div>
+      <div class="stat"><div class="val" id="sumABW">--</div><div class="lbl">ABW</div></div>
+      <div class="stat"><div class="val" id="sumDosing">--</div><div class="lbl">Propofol Wt</div></div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" id="tab-btn-1" onclick="showTab(1)">Airway &amp; Induction</button>
+    <button class="tab-btn" id="tab-btn-2" onclick="showTab(2)">Remifentanil</button>
+  </div>
+
+  <div id="tab-1" class="tab-panel active">
+    <div id="results1">
+      <div class="placeholder">Enter patient parameters above and tap "Calculate Parameters" to see results.</div>
+    </div>
+  </div>
+
+  <div id="tab-2" class="tab-panel">
+    <div id="results2">
+      <div class="placeholder">Enter patient parameters above and tap "Calculate Parameters" to see results.</div>
+    </div>
+  </div>
+
+  <div class="disclaimer">
+    For educational reference only. Always evaluate the patient's hemodynamic status before administering agents.
+  </div>
+
+<script>
+  let gender = 'male';
+  let currentIBW = 0;
+  let sliderMax = 30;
+
+  const remiZones = [
+    { upTo: 0.05, label: 'Sub-Analgesic',       color: '#5a6472' },
+    { upTo: 0.10, label: 'Analgesic',           color: '#3ba8ff' },
+    { upTo: 0.15, label: 'Light Maintenance',   color: '#2ecc9a' },
+    { upTo: 0.20, label: 'Standard Maintenance',color: '#ffd166' },
+    { upTo: 0.25, label: 'Deep Maintenance',    color: '#ff9f5b' },
+    { upTo: Infinity, label: 'High Stimulus+',  color: '#ff6b6b' }
+  ];
+
+  function getZone(dose){
+    for(const z of remiZones){
+      if(dose <= z.upTo + 1e-9) return z;
+    }
+    return remiZones[remiZones.length - 1];
+  }
+
+  function setGender(g){
+    gender = g;
+    document.getElementById('btn-male').classList.toggle('active', g === 'male');
+    document.getElementById('btn-female').classList.toggle('active', g === 'female');
+  }
+
+  function showTab(n){
+    document.getElementById('tab-1').classList.toggle('active', n === 1);
+    document.getElementById('tab-2').classList.toggle('active', n === 2);
+    document.getElementById('tab-btn-1').classList.toggle('active', n === 1);
+    document.getElementById('tab-btn-2').classList.toggle('active', n === 2);
+  }
+
+  function round10(n){
+    return Math.round(n / 10) * 10;
+  }
+  function roundInt(n){
+    return Math.round(n);
+  }
+  function round1(n){
+    return Math.round(n * 10) / 10;
+  }
+
+  function rowHTML(name, sub, value, category){
+    const nameHTML = category
+      ? `<span class="drug-name ${category}">${name}</span>`
+      : name;
+    return `<div class="result-row">
+      <div class="rname">${nameHTML}${sub ? `<small>${sub}</small>` : ''}</div>
+      <div class="rval">${value}</div>
+    </div>`;
+  }
+
+  function calculate(){
+    const height = parseFloat(document.getElementById('height').value);
+    const weight = parseFloat(document.getElementById('weight').value);
+    const age = parseFloat(document.getElementById('age').value);
+
+    if(!height || !weight || height <= 0 || weight <= 0){
+      alert('Please enter valid Height and Actual Weight values.');
+      return;
+    }
+
+    // IBW - Devine formula
+    let ibw;
+    if(gender === 'male'){
+      ibw = 50 + 0.91 * (height - 152.4);
+    } else {
+      ibw = 45.5 + 0.91 * (height - 152.4);
+    }
+    if(ibw < 0) ibw = 0; // guard for very short heights
+    currentIBW = ibw;
+
+    // ABW
+    const abw = ibw + 0.4 * (weight - ibw);
+
+    // Dosing weight for propofol
+    const isObese = weight > 1.2 * ibw;
+    const dosingWeight = isObese ? abw : weight;
+    const dosingLabel = isObese ? 'Based on ABW for obesity' : 'Based on TBW';
+
+    // Update weight summary
+    document.getElementById('sumIBW').textContent = roundInt(ibw) + ' kg';
+    document.getElementById('sumABW').textContent = roundInt(abw) + ' kg';
+    document.getElementById('sumDosing').textContent = roundInt(dosingWeight) + ' kg';
+    document.getElementById('weightSummary').classList.add('show');
+
+    // ---- Section 1: Airway & Ventilation ----
+    const ettInfo = gender === 'male'
+      ? 'Size 8.0 | 22-24 cm at lips'
+      : 'Size 7.0-7.5 | 20-22 cm at lips';
+
+    let lmaInfo;
+    if(weight < 50) lmaInfo = 'Size 3';
+    else if(weight <= 70) lmaInfo = 'Size 4';
+    else lmaInfo = 'Size 5';
+
+    const tvLow = round10(ibw * 6);
+    const tvHigh = round10(ibw * 8);
+
+    let section1 = `<div class="section-title">Airway &amp; Ventilation</div>`;
+    section1 += rowHTML('Endotracheal Tube (ETT)', '', ettInfo);
+    section1 += rowHTML('LMA Size', '', lmaInfo);
+    section1 += rowHTML('Tidal Volume', '6 - 8 mL/kg IBW', `${tvLow} - ${tvHigh} mL`);
+
+    // ---- Section 2: Co-Induction ----
+    const fentLow = roundInt(weight * 1.0);
+    const fentHigh = roundInt(weight * 2.0);
+    const lido = roundInt(weight * 1.0);
+
+    let section2 = `<div class="section-title">Co-Induction</div>`;
+    section2 += rowHTML('Fentanyl', '1 - 2 mcg/kg TBW', `${fentLow} - ${fentHigh} mcg`, 'opioid');
+    section2 += rowHTML('Lidocaine', '1 mg/kg TBW', `${lido} mg`, 'local');
+
+    // ---- Section 3: Hypnotics & Muscle Relaxants ----
+    const propofol10 = roundInt(dosingWeight * 1.0);
+    const propofol15 = roundInt(dosingWeight * 1.5);
+    const propofol20 = roundInt(dosingWeight * 2.0);
+    const propofol25 = roundInt(dosingWeight * 2.5);
+
+    const ketLow = roundInt(weight * 1.0);
+    const ketHigh = roundInt(weight * 1.5);
+
+    const roc = roundInt(ibw * 0.6);
+    const atrac = roundInt(weight * 0.5);
+
+    let section3 = `<div class="section-title">Hypnotics &amp; Muscle Relaxants</div>`;
+
+    section3 += `
+      <div class="propofol-box">
+        <div class="propofol-header">
+          <span class="drug-name hypnotic">Propofol</span>
+          <span class="propofol-tag">${dosingLabel}</span>
+        </div>
+        <div class="propofol-doses">
+          <div class="propofol-dose">
+            <span class="d-context">Frail / Shock</span>
+            <span class="d-val">${propofol10} mg</span>
+            <span class="d-rate">1.0 mg/kg</span>
+          </div>
+          <div class="propofol-dose">
+            <span class="d-context">Elderly / Mild risk</span>
+            <span class="d-val">${propofol15} mg</span>
+            <span class="d-rate">1.5 mg/kg</span>
+          </div>
+          <div class="propofol-dose">
+            <span class="d-context">Standard Adult</span>
+            <span class="d-val">${propofol20} mg</span>
+            <span class="d-rate">2.0 mg/kg</span>
+          </div>
+          <div class="propofol-dose">
+            <span class="d-context">Robust / Young</span>
+            <span class="d-val">${propofol25} mg</span>
+            <span class="d-rate">2.5 mg/kg</span>
+          </div>
+        </div>
+      </div>
+    `;
+
+    section3 += `<div class="other-drugs-label">Other Agents</div>`;
+    section3 += rowHTML('Ketamine', '1.0 - 1.5 mg/kg TBW', `${ketLow} - ${ketHigh} mg`, 'hypnotic');
+    section3 += rowHTML('Rocuronium', '0.6 mg/kg IBW', `${roc} mg`, 'relaxant');
+    section3 += rowHTML('Atracurium', '0.5 mg/kg TBW', `${atrac} mg`, 'relaxant');
+
+    const legend = `
+      <div class="category-legend">
+        <span><span class="dot" style="background:var(--hypnotic)"></span>Hypnotic</span>
+        <span><span class="dot" style="background:var(--relaxant)"></span>Relaxant</span>
+        <span><span class="dot" style="background:var(--opioid)"></span>Opioid</span>
+        <span><span class="dot" style="background:var(--local)"></span>Local Anesthetic</span>
+      </div>
+    `;
+
+    document.getElementById('results1').innerHTML =
+      `${legend}<div class="card">${section1}</div><div class="card">${section2}</div><div class="card">${section3}</div>`;
+
+    // ---- Tab 2: Remifentanil ----
+    function remiRate(doseMcgKgMin){
+      return round1((doseMcgKgMin * ibw * 60) / 50);
+    }
+
+    const r05 = remiRate(0.05);
+    const r10 = remiRate(0.10);
+    const r15 = remiRate(0.15);
+    const r20 = remiRate(0.20);
+    const r25 = remiRate(0.25);
+
+    let remiSection = `<div class="section-title">Remifentanil Infusion</div>`;
+    remiSection += `<div class="subgroup-title">2.5 mg in 50 mL = 50 mcg/mL &middot; Based on Ideal Body Weight (IBW) for safety</div>`;
+    remiSection += rowHTML('0.05 mcg/kg/min', 'Analgesic', `${r05} mL/h`, 'opioid');
+    remiSection += rowHTML('0.10 mcg/kg/min', 'Light Maintenance', `${r10} mL/h`, 'opioid');
+    remiSection += rowHTML('0.15 mcg/kg/min', 'Standard Maintenance', `${r15} mL/h`, 'opioid');
+    remiSection += rowHTML('0.20 mcg/kg/min', 'Deep Maintenance', `${r20} mL/h`, 'opioid');
+    remiSection += rowHTML('0.25 mcg/kg/min', 'High Stimulus', `${r25} mL/h`, 'opioid');
+
+    // Live perfusor rate slider
+    sliderMax = Math.ceil((r25 * 1.35) * 2) / 2; // headroom above high-stimulus rate
+    const sliderStart = r15; // default to standard maintenance
+
+    let sliderSection = `<div class="section-title">Live Perfusor Rate Check</div>`;
+    sliderSection += `
+      <div class="slider-card">
+        <div class="slider-readout">
+          <div class="rate-val"><span id="remiCurrentRate">${sliderStart.toFixed(1)}</span><span>mL/h on pump</span></div>
+          <div class="zone-badge" id="remiZoneBadge">Standard Maintenance</div>
+        </div>
+        <div class="slider-outer">
+          <div class="slider-bg" id="remiSliderBg"></div>
+          <input type="range" class="remi-range" id="remiSlider"
+                 min="0" max="${sliderMax}" step="0.1" value="${sliderStart}"
+                 oninput="updateRemiSlider(this.value)">
+        </div>
+        <div class="slider-ticks" id="remiSliderTicks"></div>
+        <div class="slider-dose-readout">≈ <strong id="remiDoseReadout">0.15</strong> mcg/kg/min at this rate</div>
+      </div>
+    `;
+
+    document.getElementById('results2').innerHTML = `<div class="card">${remiSection}</div><div class="card">${sliderSection}</div>`;
+
+    initRemiSlider();
+    updateRemiSlider(sliderStart);
+  }
+
+  function initRemiSlider(){
+    const bg = document.getElementById('remiSliderBg');
+    const ticksEl = document.getElementById('remiSliderTicks');
+    if(!bg || !ticksEl) return;
+
+    // Build hard-stop gradient from zone boundaries (in dose units) converted to mL/h
+    const boundaries = [0, 0.05, 0.10, 0.15, 0.20, 0.25];
+    const colors = remiZones.map(z => z.color);
+    let stops = [];
+    for(let i = 0; i < boundaries.length; i++){
+      const doseVal = boundaries[i];
+      const mlh = (doseVal * currentIBW * 60) / 50;
+      const pct = Math.min(100, (mlh / sliderMax) * 100);
+      const color = colors[i];
+      if(i === 0){
+        stops.push(`${color} 0%`);
+      } else {
+        stops.push(`${color} ${pct}%`);
+      }
+      const nextColor = colors[i + 1];
+      if(nextColor !== undefined){
+        stops.push(`${nextColor} ${pct}%`);
+      }
+    }
+    stops.push(`${colors[colors.length - 1]} 100%`);
+    bg.style.background = `linear-gradient(to right, ${stops.join(', ')})`;
+
+    // Tick labels at each named rate (mL/h) under the bar
+    ticksEl.innerHTML = '';
+    boundaries.slice(1).forEach(doseVal => {
+      const mlh = (doseVal * currentIBW * 60) / 50;
+      const pct = Math.min(100, (mlh / sliderMax) * 100);
+      const tick = document.createElement('div');
+      tick.className = 'tick';
+      tick.style.left = pct + '%';
+      tick.textContent = mlh.toFixed(1);
+      ticksEl.appendChild(tick);
+    });
+  }
+
+  function updateRemiSlider(value){
+    const rate = parseFloat(value);
+    document.getElementById('remiCurrentRate').textContent = rate.toFixed(1);
+
+    if(currentIBW > 0){
+      const dose = (rate * 50) / (60 * currentIBW);
+      const zone = getZone(dose);
+      document.getElementById('remiDoseReadout').textContent = dose.toFixed(2);
+      const badge = document.getElementById('remiZoneBadge');
+      badge.textContent = zone.label;
+      badge.style.background = zone.color + '33';
+      badge.style.color = zone.color;
+    }
+  }
+</script>
+
+</body>
+</html>
 
