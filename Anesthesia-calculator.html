@@ -1,818 +1,470 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
-<title>Anesthesia Dosing Calculator</title>
-<style>
-  :root{
-    --bg: #0e1116;
-    --card: #171b23;
-    --card-border: #262c38;
-    --accent: #3ba8ff;
-    --accent-soft: rgba(59,168,255,0.12);
-    --text: #e8ecf3;
-    --text-dim: #8b93a3;
-    --danger: #ff6b6b;
-    --good: #2ecc9a;
-    --radius: 14px;
-    --hypnotic: #c792ea;
-    --relaxant: #ffb86b;
-    --opioid: #ff6b9d;
-    --local: #5fd0c1;
-  }
-  *{ box-sizing: border-box; }
-  html,body{ margin:0; padding:0; }
-  body{
-    background: var(--bg);
-    color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    padding: 16px;
-    padding-bottom: 90px;
-    min-height: 100vh;
-  }
-  .app-header{
-    text-align:center;
-    margin-bottom: 18px;
-  }
-  .app-header h1{
-    font-size: 1.25rem;
-    margin: 0 0 2px 0;
-    letter-spacing: 0.3px;
-  }
-  .app-header p{
-    margin:0;
-    font-size: 0.78rem;
-    color: var(--text-dim);
-  }
-  .card{
-    background: var(--card);
-    border: 1px solid var(--card-border);
-    border-radius: var(--radius);
-    padding: 16px;
-    margin-bottom: 14px;
-  }
-  .card-compact{
-    padding: 10px 12px;
-    margin-bottom: 10px;
-  }
-  .input-grid{
-    display:grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-  }
-  .field{
-    display:flex;
-    flex-direction:column;
-    gap:3px;
-  }
-  .field label{
-    font-size: 0.62rem;
-    color: var(--text-dim);
-    text-transform: uppercase;
-    letter-spacing: 0.4px;
-  }
-  .field input[type="number"]{
-    background: #0f1319;
-    border: 1px solid var(--card-border);
-    color: var(--text);
-    border-radius: 8px;
-    padding: 8px 9px;
-    font-size: 0.88rem;
-    width: 100%;
-    -moz-appearance: textfield;
-  }
-  .field input[type="number"]:focus{
-    outline: none;
-    border-color: var(--accent);
-  }
-  .gender-toggle{
-    display:flex;
-    grid-column: span 2;
-    background:#0f1319;
-    border: 1px solid var(--card-border);
-    border-radius: 8px;
-    padding: 3px;
-    gap:3px;
-  }
-  .gender-toggle button{
-    flex:1;
-    padding: 7px 0;
-    border:none;
-    border-radius: 6px;
-    background: transparent;
-    color: var(--text-dim);
-    font-size: 0.8rem;
-    font-weight:600;
-    cursor:pointer;
-    transition: background 0.15s, color 0.15s;
-  }
-  .gender-toggle button.active{
-    background: var(--accent);
-    color: #06131f;
-  }
-  .calc-btn{
-    grid-column: span 2;
-    margin-top: 2px;
-    padding: 10px;
-    border-radius: 10px;
-    border: none;
-    background: linear-gradient(180deg, #3ba8ff, #2b8fe0);
-    color: #06131f;
-    font-size: 0.88rem;
-    font-weight: 700;
-    letter-spacing: 0.3px;
-    cursor: pointer;
-    box-shadow: 0 4px 14px rgba(59,168,255,0.25);
-  }
-  .calc-btn:active{ transform: scale(0.98); }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+    <title>Induction & NMB Tracker</title>
+    <style>
+        :root {
+            /* Shared UI Colors (From MAC/ACLS) */
+            --bg-color: #121212;
+            --text-main: #e0e0e0;
+            --text-muted: #888;
+            --card-bg: #1e1e1e;
+            --border-color: #333;
+            --input-bg: #2c2c2c;
+            
+            /* Status Colors */
+            --danger-red: #ff4d4d; 
+            --warning-yellow: #ffc107; 
+            --alert-green: #28a745;    
+            --info-blue: #007bff;
+            --opioid-purple: #9c27b0;
+            --relaxant-orange: #ff9933;
+        }
 
-  .weight-summary{
-    display:none;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 6px;
-    margin-top: 8px;
-    text-align:center;
-  }
-  .weight-summary.show{ display:grid; }
-  .weight-summary .stat{
-    background: var(--accent-soft);
-    border-radius: 8px;
-    padding: 6px 4px;
-  }
-  .weight-summary .stat .val{
-    font-size: 0.92rem;
-    font-weight:700;
-    color: var(--accent);
-  }
-  .weight-summary .stat .lbl{
-    font-size: 0.58rem;
-    color: var(--text-dim);
-    text-transform: uppercase;
-    margin-top:1px;
-  }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-bottom: 50px;
+        }
 
-  .tabs{
-    display:flex;
-    gap: 6px;
-    margin-bottom: 14px;
-    background: var(--card);
-    border: 1px solid var(--card-border);
-    border-radius: 12px;
-    padding: 4px;
-  }
-  .tab-btn{
-    flex:1;
-    padding: 11px 0;
-    text-align:center;
-    border:none;
-    border-radius: 9px;
-    background: transparent;
-    color: var(--text-dim);
-    font-size: 0.85rem;
-    font-weight:600;
-    cursor:pointer;
-  }
-  .tab-btn.active{
-    background: var(--accent-soft);
-    color: var(--accent);
-  }
+        h2, h3, h4 { margin-top: 0; margin-bottom: 10px; }
 
-  .tab-panel{ display:none; }
-  .tab-panel.active{ display:block; animation: fadein 0.2s ease; }
-  @keyframes fadein{ from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:translateY(0);} }
+        .container {
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
 
-  .section-title{
-    font-size: 0.78rem;
-    font-weight:700;
-    color: var(--accent);
-    text-transform: uppercase;
-    letter-spacing: 0.6px;
-    margin: 0 0 10px 0;
-    display:flex;
-    align-items:center;
-    gap:6px;
-  }
-  .section-title::before{
-    content:"";
-    width:4px;
-    height:14px;
-    background: var(--accent);
-    border-radius: 2px;
-    display:inline-block;
-  }
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
 
-  .result-row{
-    display:flex;
-    justify-content: space-between;
-    align-items:flex-start;
-    padding: 10px 0;
-    border-bottom: 1px solid var(--card-border);
-    gap: 10px;
-  }
-  .result-row:last-child{ border-bottom:none; }
-  .result-row .rname{
-    font-size: 0.86rem;
-    color: var(--text);
-    flex: 1.3;
-  }
-  .result-row .rname small{
-    display:block;
-    color: var(--text-dim);
-    font-size: 0.72rem;
-    margin-top: 2px;
-    font-weight: 400;
-  }
-  .result-row .rval{
-    font-size: 0.95rem;
-    font-weight: 700;
-    color: var(--good);
-    text-align:right;
-    flex: 1;
-    white-space: nowrap;
-  }
+        /* Nav & Tabs */
+        .app-nav {
+            display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; 
+            width: 100%; max-width: 600px; padding: 10px 0 15px 0; border-bottom: 2px solid var(--border-color);
+            margin-bottom: 5px;
+        }
+        .app-nav a {
+            text-decoration: none; padding: 8px 16px; background-color: #6c757d; color: white; 
+            border-radius: 6px; font-weight: bold; font-size: 0.9em; text-align: center; flex: 1;
+        }
+        .app-nav a.active { background-color: var(--info-blue); }
 
-  .drug-name{
-    font-weight: 800;
-    letter-spacing: 0.1px;
-  }
-  .drug-name.hypnotic{ color: var(--hypnotic); }
-  .drug-name.relaxant{ color: var(--relaxant); }
-  .drug-name.opioid{ color: var(--opioid); }
-  .drug-name.local{ color: var(--local); }
+        .module-tabs {
+            display: flex; gap: 8px; background: var(--bg-color); padding: 4px; border-radius: 8px;
+        }
+        .tab-btn {
+            flex: 1; padding: 10px 0; border: 1px solid var(--border-color); border-radius: 6px; 
+            background: var(--card-bg); color: var(--text-muted); font-weight: bold; cursor: pointer;
+            transition: all 0.2s; font-size: 0.9em;
+        }
+        .tab-btn.active {
+            background: var(--text-main); color: var(--bg-color); border-color: var(--text-main);
+        }
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; animation: fadeIn 0.2s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-  .category-legend{
-    display:flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-bottom: 12px;
-    font-size: 0.66rem;
-    color: var(--text-dim);
-  }
-  .category-legend span{
-    display:flex;
-    align-items:center;
-    gap: 5px;
-  }
-  .category-legend .dot{
-    width:8px; height:8px; border-radius:50%;
-    display:inline-block;
-  }
+        /* Inputs */
+        .input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 15px; }
+        .field { display: flex; flex-direction: column; gap: 4px; }
+        .field label { font-size: 0.8em; color: var(--text-muted); font-weight: bold; text-transform: uppercase; }
+        .field input {
+            background: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-main);
+            border-radius: 6px; padding: 10px; font-size: 1.1em; font-weight: bold; text-align: center;
+        }
+        .field input:focus { outline: 2px solid var(--info-blue); border-color: transparent; }
+        
+        .gender-toggle { grid-column: span 2; display: flex; gap: 5px; }
+        .gender-btn {
+            flex: 1; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px;
+            background: var(--input-bg); color: var(--text-muted); font-weight: bold; cursor: pointer;
+        }
+        .gender-btn.active { background: var(--info-blue); color: white; border-color: var(--info-blue); }
 
-  .propofol-box{
-    border: 1px solid var(--hypnotic);
-    background: rgba(199,146,234,0.07);
-    border-radius: 12px;
-    padding: 12px;
-    margin-bottom: 12px;
-  }
-  .propofol-header{
-    display:flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid rgba(199,146,234,0.25);
-  }
-  .propofol-header .drug-name{
-    font-size: 1.05rem;
-  }
-  .propofol-tag{
-    font-size: 0.62rem;
-    background: rgba(199,146,234,0.18);
-    color: var(--hypnotic);
-    padding: 4px 9px;
-    border-radius: 20px;
-    text-transform: uppercase;
-    letter-spacing: 0.4px;
-    font-weight: 700;
-    white-space: nowrap;
-  }
-  .propofol-doses{
-    display:grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-  }
-  .propofol-dose{
-    background:#0f1319;
-    border: 1px solid rgba(199,146,234,0.15);
-    border-radius: 9px;
-    padding: 8px 6px;
-    text-align:center;
-  }
-  .propofol-dose .d-context{
-    display:block;
-    font-size: 0.65rem;
-    color: var(--text-dim);
-    margin-bottom: 3px;
-  }
-  .propofol-dose .d-rate{
-    display:block;
-    font-size: 0.68rem;
-    color: var(--text-dim);
-  }
-  .propofol-dose .d-val{
-    font-size: 1.05rem;
-    font-weight: 800;
-    color: var(--hypnotic);
-  }
-  .other-drugs-label{
-    font-size: 0.65rem;
-    color: var(--text-dim);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin: 4px 0 4px 0;
-  }
+        .btn-calc {
+            grid-column: span 2; padding: 14px; background: var(--alert-green); color: white;
+            border: none; border-radius: 8px; font-size: 1.1em; font-weight: bold; cursor: pointer;
+        }
+        .btn-calc:active { transform: scale(0.98); }
 
-  .subgroup{
-    margin-top: 4px;
-    margin-bottom: 4px;
-  }
-  .subgroup-title{
-    font-size: 0.72rem;
-    color: var(--text-dim);
-    font-style: italic;
-    margin: 6px 0 2px 0;
-  }
+        /* Results List */
+        .result-section { margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 10px; }
+        .result-title { font-size: 0.85em; color: var(--info-blue); font-weight: bold; text-transform: uppercase; margin-bottom: 8px; }
+        .result-row {
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 8px 0; border-bottom: 1px dashed var(--border-color);
+        }
+        .result-row:last-child { border-bottom: none; }
+        .result-name { font-size: 0.95em; }
+        .result-name small { display: block; font-size: 0.8em; color: var(--text-muted); }
+        .result-val { font-size: 1.1em; font-weight: bold; color: var(--text-main); }
 
-  .placeholder{
-    text-align:center;
-    color: var(--text-dim);
-    font-size: 0.85rem;
-    padding: 30px 10px;
-  }
+        /* Remi Slider Restyle */
+        .slider-readout { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 15px; }
+        .rate-val { font-size: 2em; font-weight: bold; color: var(--alert-green); }
+        .rate-val span { font-size: 0.4em; color: var(--text-muted); font-weight: normal; margin-left: 5px; }
+        .zone-badge { padding: 6px 12px; border-radius: 4px; font-size: 0.8em; font-weight: bold; text-transform: uppercase; background: #333; }
+        
+        .remi-range {
+            -webkit-appearance: none; width: 100%; height: 12px; border-radius: 6px; 
+            background: var(--border-color); outline: none; margin: 15px 0;
+        }
+        .remi-range::-webkit-slider-thumb {
+            -webkit-appearance: none; appearance: none; width: 24px; height: 24px; 
+            border-radius: 50%; background: var(--text-main); cursor: pointer; border: 4px solid var(--opioid-purple);
+        }
+        .slider-dose-readout { text-align: center; font-size: 0.9em; color: var(--text-muted); margin-top: 10px; }
+        .slider-dose-readout strong { color: var(--text-main); font-size: 1.2em; }
 
-  .disclaimer{
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: #10151d;
-    border-top: 1px solid var(--card-border);
-    padding: 10px 16px;
-    font-size: 0.68rem;
-    color: var(--text-dim);
-    text-align:center;
-    line-height:1.3;
-  }
+        /* NMB Tracker */
+        .btn-nmb {
+            width: 100%; padding: 16px; border: none; border-radius: 8px; font-weight: bold; 
+            font-size: 1.1em; cursor: pointer; color: white; margin-bottom: 10px; transition: 0.2s;
+        }
+        .btn-nmb:active { transform: scale(0.98); }
+        .btn-intubate { background-color: var(--relaxant-orange); color: #000; }
+        .btn-topup { background-color: var(--info-blue); }
+        .btn-emergence { background-color: transparent; border: 2px solid var(--border-color); color: var(--text-muted); }
+        .btn-emergence.active { border-color: var(--danger-red); color: var(--danger-red); }
 
-  .slider-card{
-    margin-top: 6px;
-  }
-  .slider-readout{
-    display:flex;
-    justify-content: space-between;
-    align-items: baseline;
-    margin-bottom: 4px;
-  }
-  .slider-readout .rate-val{
-    font-size: 1.4rem;
-    font-weight: 800;
-    color: var(--text);
-  }
-  .slider-readout .rate-val span{
-    font-size: 0.75rem;
-    color: var(--text-dim);
-    font-weight: 500;
-    margin-left: 4px;
-  }
-  .zone-badge{
-    font-size: 0.68rem;
-    font-weight: 700;
-    padding: 5px 10px;
-    border-radius: 20px;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-    white-space: nowrap;
-  }
-  .slider-outer{
-    position: relative;
-    height: 38px;
-    margin: 6px 0 4px 0;
-  }
-  .slider-bg{
-    position: absolute;
-    top: 13px;
-    left: 0;
-    right: 0;
-    height: 12px;
-    border-radius: 6px;
-    overflow: hidden;
-    border: 1px solid rgba(255,255,255,0.06);
-  }
-  input[type="range"].remi-range{
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 38px;
-    margin: 0;
-    -webkit-appearance: none;
-    appearance: none;
-    background: transparent;
-    cursor: pointer;
-  }
-  input[type="range"].remi-range::-webkit-slider-runnable-track{
-    background: transparent;
-    height: 38px;
-  }
-  input[type="range"].remi-range::-webkit-slider-thumb{
-    -webkit-appearance: none;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background: #fff;
-    border: 3px solid var(--opioid);
-    margin-top: 9px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.5);
-  }
-  input[type="range"].remi-range::-moz-range-track{
-    background: transparent;
-    height: 12px;
-    border: none;
-  }
-  input[type="range"].remi-range::-moz-range-thumb{
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background: #fff;
-    border: 3px solid var(--opioid);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.5);
-  }
-  .slider-ticks{
-    position: relative;
-    height: 14px;
-    margin-bottom: 8px;
-  }
-  .slider-ticks .tick{
-    position: absolute;
-    transform: translateX(-50%);
-    font-size: 0.6rem;
-    color: var(--text-dim);
-    white-space: nowrap;
-  }
-  .slider-dose-readout{
-    text-align:center;
-    font-size: 0.72rem;
-    color: var(--text-dim);
-    margin-top: 2px;
-  }
-  .slider-dose-readout strong{
-    color: var(--text);
-  }
+        .nmb-timer-wrapper { margin: 15px 0 25px 0; }
+        .nmb-bar-bg { background: var(--border-color); height: 16px; border-radius: 8px; overflow: hidden; width: 100%; }
+        .nmb-bar-fill { height: 100%; width: 100%; background-color: var(--alert-green); transition: width 1s linear, background-color 0.5s ease; }
+        .nmb-timer-text { font-size: 1.2em; color: var(--text-main); text-align: center; margin-top: 8px; font-weight: bold; font-variant-numeric: tabular-nums;}
+        .nmb-instruction { text-align: center; font-size: 0.9em; color: var(--text-muted); margin-top: 4px; min-height: 20px;}
 
-  @media (min-width: 600px){
-    body{ max-width: 600px; margin: 0 auto; }
-  }
-
-</style>
+        @keyframes flash { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+        .flashing { animation: flash 1s infinite; color: var(--danger-red) !important;}
+    </style>
 </head>
 <body>
-<!-- NAV BAR / TABS -->
-    <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; width: 100%; max-width: 600px; padding: 10px 0; border-bottom: 2px solid #333;">
-        <a href="index.html" style="text-decoration: none; padding: 8px 16px; background-color: #007bff; color: white; border-radius: 6px; font-weight: bold; font-size: 0.9em; text-align: center; flex: 1;">MAC Co-Pilot</a>
-        <a href="ACLS-tracker.html" style="text-decoration: none; padding: 8px 16px; background-color: #6c757d; color: white; border-radius: 6px; font-weight: bold; font-size: 0.9em; text-align: center; flex: 1;">ACLS</a>
-         <a href="Anesthesia-calculator.html" style="text-decoration: none; padding: 8px 16px; background-color: #6c757d; color: white; border-radius: 6px; font-weight: bold; font-size: 0.9em; text-align: center; flex: 1;">Induction Calc</a>
-        <a href="sevo-mac-calculator2.html" style="text-decoration: none; padding: 8px 16px; background-color: #6c757d; color: white; border-radius: 6px; font-weight: bold; font-size: 0.9em; text-align: center; flex: 1;">MAC Calc</a>
-    </div>
-    <!-- END NAV BAR -->
 
-  <div class="app-header">
-    <h1>⚕ Anesthesia Dosing Calculator</h1>
-    <p>Airway, induction &amp; Remifentanil reference tool</p>
-  </div>
-
-  <div class="card card-compact">
-    <div class="input-grid">
-      <div class="gender-toggle">
-        <button type="button" id="btn-male" class="active" onclick="setGender('male')">Male</button>
-        <button type="button" id="btn-female" onclick="setGender('female')">Female</button>
-      </div>
-
-      <div class="field">
-        <label for="age">Age (years)</label>
-        <input type="number" id="age" inputmode="numeric" placeholder="e.g. 45">
-      </div>
-      <div class="field">
-        <label for="height">Height (cm)</label>
-        <input type="number" id="height" inputmode="numeric" placeholder="e.g. 170">
-      </div>
-      <div class="field" style="grid-column: span 2;">
-        <label for="weight">Actual Weight (kg)</label>
-        <input type="number" id="weight" inputmode="numeric" placeholder="e.g. 78">
-      </div>
-
-      <button class="calc-btn" onclick="calculate()">Calculate Parameters</button>
+    <div class="app-nav">
+        <a href="index.html">MAC Co-Pilot</a>
+        <a href="ACLS-tracker.html">ACLS</a>
+        <a href="Anesthesia-calculator.html" class="active">Induction Calc</a>
+        <a href="sevo-mac-calculator2.html">MAC Calc</a>
     </div>
 
-    <div class="weight-summary" id="weightSummary">
-      <div class="stat"><div class="val" id="sumIBW">--</div><div class="lbl">IBW</div></div>
-      <div class="stat"><div class="val" id="sumABW">--</div><div class="lbl">ABW</div></div>
-      <div class="stat"><div class="val" id="sumDosing">--</div><div class="lbl">Propofol Wt</div></div>
-    </div>
-  </div>
-
-  <div class="tabs">
-    <button class="tab-btn active" id="tab-btn-1" onclick="showTab(1)">Airway &amp; Induction</button>
-    <button class="tab-btn" id="tab-btn-2" onclick="showTab(2)">Remifentanil</button>
-  </div>
-
-  <div id="tab-1" class="tab-panel active">
-    <div id="results1">
-      <div class="placeholder">Enter patient parameters above and tap "Calculate Parameters" to see results.</div>
-    </div>
-  </div>
-
-  <div id="tab-2" class="tab-panel">
-    <div id="results2">
-      <div class="placeholder">Enter patient parameters above and tap "Calculate Parameters" to see results.</div>
-    </div>
-  </div>
-
-  <div class="disclaimer">
-    For educational reference only. Always evaluate the patient's hemodynamic status before administering agents.
-  </div>
-
-<script>
-  let gender = 'male';
-  let currentIBW = 0;
-  let sliderMax = 30;
-
-  const remiZones = [
-    { upTo: 0.05, label: 'Sub-Analgesic',       color: '#5a6472' },
-    { upTo: 0.10, label: 'Analgesic',           color: '#3ba8ff' },
-    { upTo: 0.15, label: 'Light Maintenance',   color: '#2ecc9a' },
-    { upTo: 0.20, label: 'Standard Maintenance',color: '#ffd166' },
-    { upTo: 0.25, label: 'Deep Maintenance',    color: '#ff9f5b' },
-    { upTo: Infinity, label: 'High Stimulus+',  color: '#ff6b6b' }
-  ];
-
-  function getZone(dose){
-    for(const z of remiZones){
-      if(dose <= z.upTo + 1e-9) return z;
-    }
-    return remiZones[remiZones.length - 1];
-  }
-
-  function setGender(g){
-    gender = g;
-    document.getElementById('btn-male').classList.toggle('active', g === 'male');
-    document.getElementById('btn-female').classList.toggle('active', g === 'female');
-  }
-
-  function showTab(n){
-    document.getElementById('tab-1').classList.toggle('active', n === 1);
-    document.getElementById('tab-2').classList.toggle('active', n === 2);
-    document.getElementById('tab-btn-1').classList.toggle('active', n === 1);
-    document.getElementById('tab-btn-2').classList.toggle('active', n === 2);
-  }
-
-  function round10(n){
-    return Math.round(n / 10) * 10;
-  }
-  function roundInt(n){
-    return Math.round(n);
-  }
-  function round1(n){
-    return Math.round(n * 10) / 10;
-  }
-
-  function rowHTML(name, sub, value, category){
-    const nameHTML = category
-      ? `<span class="drug-name ${category}">${name}</span>`
-      : name;
-    return `<div class="result-row">
-      <div class="rname">${nameHTML}${sub ? `<small>${sub}</small>` : ''}</div>
-      <div class="rval">${value}</div>
-    </div>`;
-  }
-
-  function calculate(){
-    const height = parseFloat(document.getElementById('height').value);
-    const weight = parseFloat(document.getElementById('weight').value);
-    const age = parseFloat(document.getElementById('age').value);
-
-    if(!height || !weight || height <= 0 || weight <= 0){
-      alert('Please enter valid Height and Actual Weight values.');
-      return;
-    }
-
-    // IBW - Devine formula
-    let ibw;
-    if(gender === 'male'){
-      ibw = 50 + 0.91 * (height - 152.4);
-    } else {
-      ibw = 45.5 + 0.91 * (height - 152.4);
-    }
-    if(ibw < 0) ibw = 0; // guard for very short heights
-    currentIBW = ibw;
-
-    // ABW
-    const abw = ibw + 0.4 * (weight - ibw);
-
-    // Dosing weight for propofol
-    const isObese = weight > 1.2 * ibw;
-    const dosingWeight = isObese ? abw : weight;
-    const dosingLabel = isObese ? 'Based on ABW for obesity' : 'Based on TBW';
-
-    // Update weight summary
-    document.getElementById('sumIBW').textContent = roundInt(ibw) + ' kg';
-    document.getElementById('sumABW').textContent = roundInt(abw) + ' kg';
-    document.getElementById('sumDosing').textContent = roundInt(dosingWeight) + ' kg';
-    document.getElementById('weightSummary').classList.add('show');
-
-    // ---- Section 1: Airway & Ventilation ----
-    const ettInfo = gender === 'male'
-      ? 'Size 8.0 | 22-24 cm at lips'
-      : 'Size 7.0-7.5 | 20-22 cm at lips';
-
-    let lmaInfo;
-    if(weight < 50) lmaInfo = 'Size 3';
-    else if(weight <= 70) lmaInfo = 'Size 4';
-    else lmaInfo = 'Size 5';
-
-    const tvLow = round10(ibw * 6);
-    const tvHigh = round10(ibw * 8);
-
-    let section1 = `<div class="section-title">Airway &amp; Ventilation</div>`;
-    section1 += rowHTML('Endotracheal Tube (ETT)', '', ettInfo);
-    section1 += rowHTML('LMA Size', '', lmaInfo);
-    section1 += rowHTML('Tidal Volume', '6 - 8 mL/kg IBW', `${tvLow} - ${tvHigh} mL`);
-
-    // ---- Section 2: Co-Induction ----
-    const fentLow = roundInt(weight * 1.0);
-    const fentHigh = roundInt(weight * 2.0);
-    const lido = roundInt(weight * 1.0);
-
-    let section2 = `<div class="section-title">Co-Induction</div>`;
-    section2 += rowHTML('Fentanyl', '1 - 2 mcg/kg TBW', `${fentLow} - ${fentHigh} mcg`, 'opioid');
-    section2 += rowHTML('Lidocaine', '1 mg/kg TBW', `${lido} mg`, 'local');
-
-    // ---- Section 3: Hypnotics & Muscle Relaxants ----
-    const propofol10 = roundInt(dosingWeight * 1.0);
-    const propofol15 = roundInt(dosingWeight * 1.5);
-    const propofol20 = roundInt(dosingWeight * 2.0);
-    const propofol25 = roundInt(dosingWeight * 2.5);
-
-    const ketLow = roundInt(weight * 1.0);
-    const ketHigh = roundInt(weight * 1.5);
-
-    const roc = roundInt(ibw * 0.6);
-    const atrac = roundInt(weight * 0.5);
-
-    let section3 = `<div class="section-title">Hypnotics &amp; Muscle Relaxants</div>`;
-
-    section3 += `
-      <div class="propofol-box">
-        <div class="propofol-header">
-          <span class="drug-name hypnotic">Propofol</span>
-          <span class="propofol-tag">${dosingLabel}</span>
+    <div class="container">
+        <!-- Patient Parameters -->
+        <div class="card">
+            <h3 style="margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">Patient Parameters</h3>
+            <div class="input-grid">
+                <div class="gender-toggle">
+                    <button class="gender-btn active" id="btn-male" onclick="setGender('male')">Male</button>
+                    <button class="gender-btn" id="btn-female" onclick="setGender('female')">Female</button>
+                </div>
+                <div class="field">
+                    <label>Height (cm)</label>
+                    <input type="number" id="pt-height" placeholder="170">
+                </div>
+                <div class="field">
+                    <label>Actual Wt (kg)</label>
+                    <input type="number" id="pt-weight" placeholder="75">
+                </div>
+                <button class="btn-calc" onclick="calculate()">Calculate Doses</button>
+            </div>
+            <div style="display: flex; justify-content: space-around; text-align: center; margin-top: 10px; font-size: 0.9em;">
+                <div><span style="color:var(--text-muted); font-size: 0.8em; text-transform: uppercase;">IBW</span><br><strong id="out-ibw">-- kg</strong></div>
+                <div><span style="color:var(--text-muted); font-size: 0.8em; text-transform: uppercase;">ABW</span><br><strong id="out-abw">-- kg</strong></div>
+            </div>
         </div>
-        <div class="propofol-doses">
-          <div class="propofol-dose">
-            <span class="d-context">Frail / Shock</span>
-            <span class="d-val">${propofol10} mg</span>
-            <span class="d-rate">1.0 mg/kg</span>
-          </div>
-          <div class="propofol-dose">
-            <span class="d-context">Elderly / Mild risk</span>
-            <span class="d-val">${propofol15} mg</span>
-            <span class="d-rate">1.5 mg/kg</span>
-          </div>
-          <div class="propofol-dose">
-            <span class="d-context">Standard Adult</span>
-            <span class="d-val">${propofol20} mg</span>
-            <span class="d-rate">2.0 mg/kg</span>
-          </div>
-          <div class="propofol-dose">
-            <span class="d-context">Robust / Young</span>
-            <span class="d-val">${propofol25} mg</span>
-            <span class="d-rate">2.5 mg/kg</span>
-          </div>
+
+        <!-- Module Tabs -->
+        <div class="module-tabs">
+            <button class="tab-btn active" onclick="switchTab('induction')" id="tab-btn-induction">Induction</button>
+            <button class="tab-btn" onclick="switchTab('remi')" id="tab-btn-remi">Remifentanil</button>
+            <button class="tab-btn" onclick="switchTab('nmb')" id="tab-btn-nmb">NMB Tracker</button>
         </div>
-      </div>
-    `;
 
-    section3 += `<div class="other-drugs-label">Other Agents</div>`;
-    section3 += rowHTML('Ketamine', '1.0 - 1.5 mg/kg TBW', `${ketLow} - ${ketHigh} mg`, 'hypnotic');
-    section3 += rowHTML('Rocuronium', '0.6 mg/kg IBW', `${roc} mg`, 'relaxant');
-    section3 += rowHTML('Atracurium', '0.5 mg/kg TBW', `${atrac} mg`, 'relaxant');
-
-    const legend = `
-      <div class="category-legend">
-        <span><span class="dot" style="background:var(--hypnotic)"></span>Hypnotic</span>
-        <span><span class="dot" style="background:var(--relaxant)"></span>Relaxant</span>
-        <span><span class="dot" style="background:var(--opioid)"></span>Opioid</span>
-        <span><span class="dot" style="background:var(--local)"></span>Local Anesthetic</span>
-      </div>
-    `;
-
-    document.getElementById('results1').innerHTML =
-      `${legend}<div class="card">${section1}</div><div class="card">${section2}</div><div class="card">${section3}</div>`;
-
-    // ---- Tab 2: Remifentanil ----
-    function remiRate(doseMcgKgMin){
-      return round1((doseMcgKgMin * ibw * 60) / 50);
-    }
-
-    const r05 = remiRate(0.05);
-    const r10 = remiRate(0.10);
-    const r15 = remiRate(0.15);
-    const r20 = remiRate(0.20);
-    const r25 = remiRate(0.25);
-
-    let remiSection = `<div class="section-title">Remifentanil Infusion</div>`;
-    remiSection += `<div class="subgroup-title">2.5 mg in 50 mL = 50 mcg/mL &middot; Based on Ideal Body Weight (IBW) for safety</div>`;
-    remiSection += rowHTML('0.05 mcg/kg/min', 'Analgesic', `${r05} mL/h`, 'opioid');
-    remiSection += rowHTML('0.10 mcg/kg/min', 'Light Maintenance', `${r10} mL/h`, 'opioid');
-    remiSection += rowHTML('0.15 mcg/kg/min', 'Standard Maintenance', `${r15} mL/h`, 'opioid');
-    remiSection += rowHTML('0.20 mcg/kg/min', 'Deep Maintenance', `${r20} mL/h`, 'opioid');
-    remiSection += rowHTML('0.25 mcg/kg/min', 'High Stimulus', `${r25} mL/h`, 'opioid');
-
-    // Live perfusor rate slider
-    sliderMax = Math.ceil((r25 * 1.35) * 2) / 2; // headroom above high-stimulus rate
-    const sliderStart = r15; // default to standard maintenance
-
-    let sliderSection = `<div class="section-title">Live Perfusor Rate Check</div>`;
-    sliderSection += `
-      <div class="slider-card">
-        <div class="slider-readout">
-          <div class="rate-val"><span id="remiCurrentRate">${sliderStart.toFixed(1)}</span><span>mL/h on pump</span></div>
-          <div class="zone-badge" id="remiZoneBadge">Standard Maintenance</div>
+        <!-- TAB 1: INDUCTION -->
+        <div class="card tab-panel active" id="panel-induction">
+            <div id="induction-results" style="text-align: center; color: var(--text-muted); padding: 20px 0;">
+                Enter parameters and calculate to view dosing guide.
+            </div>
         </div>
-        <div class="slider-outer">
-          <div class="slider-bg" id="remiSliderBg"></div>
-          <input type="range" class="remi-range" id="remiSlider"
-                 min="0" max="${sliderMax}" step="0.1" value="${sliderStart}"
-                 oninput="updateRemiSlider(this.value)">
+
+        <!-- TAB 2: REMIFENTANIL -->
+        <div class="card tab-panel" id="panel-remi">
+            <div id="remi-content" style="display: none;">
+                <div style="font-size: 0.85em; color: var(--text-muted); margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+                    Assumes 2.5 mg in 50 mL = <strong>50 mcg/mL</strong><br>Calculations based strictly on <strong>IBW</strong>.
+                </div>
+                
+                <div class="slider-readout">
+                    <div class="rate-val"><span id="remi-ml-h" style="font-size: 1em; color: var(--text-main);">0.0</span><span>mL/h</span></div>
+                    <div class="zone-badge" id="remi-badge">Adjust Slider</div>
+                </div>
+                
+                <input type="range" class="remi-range" id="remi-slider" min="0" max="30" step="0.5" value="0" oninput="updateRemi()">
+                
+                <div class="slider-dose-readout">
+                    Current Dose: <strong id="remi-mcg-kg-min">0.00</strong> mcg/kg/min
+                </div>
+
+                <div class="result-section" style="margin-top: 25px;">
+                    <div class="result-title">Reference Zones</div>
+                    <div class="result-row"><div class="result-name">Analgesic<small>0.05 mcg/kg/min</small></div><div class="result-val" id="ref-05">-- mL/h</div></div>
+                    <div class="result-row"><div class="result-name">Light Maintenance<small>0.10 mcg/kg/min</small></div><div class="result-val" id="ref-10">-- mL/h</div></div>
+                    <div class="result-row"><div class="result-name">Standard Maintenance<small>0.15 mcg/kg/min</small></div><div class="result-val" id="ref-15">-- mL/h</div></div>
+                    <div class="result-row"><div class="result-name">High Stimulus<small>0.25 mcg/kg/min</small></div><div class="result-val" id="ref-25">-- mL/h</div></div>
+                </div>
+            </div>
+            <div id="remi-placeholder" style="text-align: center; color: var(--text-muted); padding: 20px 0;">
+                Calculate parameters first.
+            </div>
         </div>
-        <div class="slider-ticks" id="remiSliderTicks"></div>
-        <div class="slider-dose-readout">≈ <strong id="remiDoseReadout">0.15</strong> mcg/kg/min at this rate</div>
-      </div>
-    `;
 
-    document.getElementById('results2').innerHTML = `<div class="card">${remiSection}</div><div class="card">${sliderSection}</div>`;
+        <!-- TAB 3: NMB TRACKER -->
+        <div class="card tab-panel" id="panel-nmb">
+            <h3 style="text-align: center; color: var(--relaxant-orange);">Relaxant Timer</h3>
+            <div style="text-align: center; font-size: 0.85em; color: var(--text-muted); margin-bottom: 20px;">
+                Standardized for Atracurium / Rocuronium <strong>(10 mg/mL)</strong>
+            </div>
 
-    initRemiSlider();
-    updateRemiSlider(sliderStart);
-  }
+            <button class="btn-nmb btn-intubate" onclick="startNMB('intubation')">💉 Intubation Dose (~3.5 - 4 mL)</button>
+            <button class="btn-nmb btn-topup" onclick="startNMB('topup')">+ 1 mL Top-Up (10 mg)</button>
+            
+            <div class="nmb-timer-wrapper">
+                <div class="nmb-bar-bg"><div class="nmb-bar-fill" id="nmb-bar"></div></div>
+                <div class="nmb-timer-text" id="nmb-clock">00:00</div>
+                <div class="nmb-instruction" id="nmb-instruction">Awaiting initial dose...</div>
+            </div>
 
-  function initRemiSlider(){
-    const bg = document.getElementById('remiSliderBg');
-    const ticksEl = document.getElementById('remiSliderTicks');
-    if(!bg || !ticksEl) return;
+            <button class="btn-nmb btn-emergence" id="btn-emergence" onclick="stopNMB()">⏹ Emergence (Do Not Redose)</button>
+        </div>
+    </div>
 
-    // Build hard-stop gradient from zone boundaries (in dose units) converted to mL/h
-    const boundaries = [0, 0.05, 0.10, 0.15, 0.20, 0.25];
-    const colors = remiZones.map(z => z.color);
-    let stops = [];
-    for(let i = 0; i < boundaries.length; i++){
-      const doseVal = boundaries[i];
-      const mlh = (doseVal * currentIBW * 60) / 50;
-      const pct = Math.min(100, (mlh / sliderMax) * 100);
-      const color = colors[i];
-      if(i === 0){
-        stops.push(`${color} 0%`);
-      } else {
-        stops.push(`${color} ${pct}%`);
-      }
-      const nextColor = colors[i + 1];
-      if(nextColor !== undefined){
-        stops.push(`${nextColor} ${pct}%`);
-      }
-    }
-    stops.push(`${colors[colors.length - 1]} 100%`);
-    bg.style.background = `linear-gradient(to right, ${stops.join(', ')})`;
+    <script>
+        // --- GLOBAL STATE ---
+        let gender = 'male';
+        let ibw = 0;
+        let abw = 0;
+        
+        // NMB Timer State
+        let nmbInterval = null;
+        let nmbEndTime = 0;
+        let nmbDuration = 0;
+        let nmbWarningStart = 0;
 
-    // Tick labels at each named rate (mL/h) under the bar
-    ticksEl.innerHTML = '';
-    boundaries.slice(1).forEach(doseVal => {
-      const mlh = (doseVal * currentIBW * 60) / 50;
-      const pct = Math.min(100, (mlh / sliderMax) * 100);
-      const tick = document.createElement('div');
-      tick.className = 'tick';
-      tick.style.left = pct + '%';
-      tick.textContent = mlh.toFixed(1);
-      ticksEl.appendChild(tick);
-    });
-  }
+        const INTUBATION_TIME = 35 * 60; // 35 minutes
+        const INTUBATION_WARNING = 33 * 60; // Warn at 33 min
+        
+        const TOPUP_TIME = 15 * 60; // 15 minutes
+        const TOPUP_WARNING = 13 * 60; // Warn at 13 min
 
-  function updateRemiSlider(value){
-    const rate = parseFloat(value);
-    document.getElementById('remiCurrentRate').textContent = rate.toFixed(1);
+        // --- CALCULATOR LOGIC ---
+        function setGender(g) {
+            gender = g;
+            document.getElementById('btn-male').classList.toggle('active', g === 'male');
+            document.getElementById('btn-female').classList.toggle('active', g === 'female');
+        }
 
-    if(currentIBW > 0){
-      const dose = (rate * 50) / (60 * currentIBW);
-      const zone = getZone(dose);
-      document.getElementById('remiDoseReadout').textContent = dose.toFixed(2);
-      const badge = document.getElementById('remiZoneBadge');
-      badge.textContent = zone.label;
-      badge.style.background = zone.color + '33';
-      badge.style.color = zone.color;
-    }
-  }
-</script>
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-panel').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(`panel-${tabId}`).classList.add('active');
+            document.getElementById(`tab-btn-${tabId}`).classList.add('active');
+        }
 
+        function calculate() {
+            const height = parseFloat(document.getElementById('pt-height').value);
+            const weight = parseFloat(document.getElementById('pt-weight').value);
+
+            if (!height || !weight || height <= 0 || weight <= 0) {
+                alert('Please enter valid Height and Actual Weight values.');
+                return;
+            }
+
+            // Calculate IBW & ABW
+            ibw = gender === 'male' ? 50 + 0.91 * (height - 152.4) : 45.5 + 0.91 * (height - 152.4);
+            if (ibw < 0) ibw = 0;
+            abw = ibw + 0.4 * (weight - ibw);
+            
+            const dosingWeight = (weight > 1.2 * ibw) ? abw : weight;
+
+            document.getElementById('out-ibw').innerText = Math.round(ibw) + ' kg';
+            document.getElementById('out-abw').innerText = Math.round(abw) + ' kg';
+
+            // Populate Induction Tab
+            buildInductionTab(weight, ibw, dosingWeight);
+
+            // Populate Remi Tab
+            document.getElementById('remi-placeholder').style.display = 'none';
+            document.getElementById('remi-content').style.display = 'block';
+            
+            const maxRate = Math.ceil(( (0.30 * ibw * 60) / 50 ) / 5) * 5; // dynamic slider max
+            document.getElementById('remi-slider').max = maxRate;
+            
+            // Set references
+            const calcRate = (mcg) => ((mcg * ibw * 60) / 50).toFixed(1);
+            document.getElementById('ref-05').innerText = calcRate(0.05) + " mL/h";
+            document.getElementById('ref-10').innerText = calcRate(0.10) + " mL/h";
+            document.getElementById('ref-15').innerText = calcRate(0.15) + " mL/h";
+            document.getElementById('ref-25').innerText = calcRate(0.25) + " mL/h";
+
+            // Default to standard maintenance rate
+            document.getElementById('remi-slider').value = calcRate(0.15);
+            updateRemi();
+        }
+
+                function buildInductionTab(weight, ibw, propWt) {
+            const html = `
+                <div class="result-section" style="border-top:none; padding-top:0;">
+                    <div class="result-title">Airway & Ventilation</div>
+                    <div class="result-row"><div class="result-name">ETT Size<small>${gender === 'male' ? '22-24 cm at lips' : '20-22 cm at lips'}</small></div><div class="result-val">${gender === 'male' ? '8.0' : '7.0 - 7.5'}</div></div>
+                    <div class="result-row"><div class="result-name">Tidal Volume<small>6 - 8 mL/kg IBW</small></div><div class="result-val">${Math.round(ibw * 6 / 10)*10} - ${Math.round(ibw * 8 / 10)*10} mL</div></div>
+                </div>
+                
+                <div class="result-section">
+                    <div class="result-title" style="color: var(--alert-green);">Induction Dosing</div>
+                    <div class="result-row"><div class="result-name">Fentanyl<small>1 - 2 mcg/kg TBW</small></div><div class="result-val">${Math.round(weight * 1)} - ${Math.round(weight * 2)} mcg</div></div>
+                    <div class="result-row"><div class="result-name">Propofol (Standard)<small>2.0 mg/kg (${weight > 1.2 * ibw ? 'ABW' : 'TBW'})</small></div><div class="result-val">${Math.round(propWt * 2.0)} mg</div></div>
+                    <div class="result-row"><div class="result-name">Propofol (Frail/Elderly)<small>1.0 - 1.5 mg/kg</small></div><div class="result-val">${Math.round(propWt * 1.0)} - ${Math.round(propWt * 1.5)} mg</div></div>
+                </div>
+
+                <div class="result-section">
+                    <div class="result-title" style="color: var(--relaxant-orange);">Neuromuscular Blockade</div>
+                    <div class="result-row"><div class="result-name">Atracurium<small>0.5 mg/kg TBW (10 mg/mL)</small></div><div class="result-val">${(weight * 0.5 / 10).toFixed(1)} mL</div></div>
+                    <div class="result-row"><div class="result-name">Rocuronium<small>0.6 mg/kg IBW (10 mg/mL)</small></div><div class="result-val">${(ibw * 0.6 / 10).toFixed(1)} mL</div></div>
+                </div>
+
+                <div class="result-section">
+                    <div class="result-title" style="color: var(--warning-yellow);">Pacing & Onset Guide</div>
+                    <div class="result-row">
+                        <div class="result-name">1. Fentanyl<small>Push first. Wait for peak effect.</small></div>
+                        <div class="result-val" style="color: var(--info-blue); font-size: 0.95em;">Wait 3 min</div>
+                    </div>
+                    <div class="result-row">
+                        <div class="result-name">2. Propofol<small>Push slowly. Loss of verbal contact.</small></div>
+                        <div class="result-val" style="color: var(--info-blue); font-size: 0.95em;">Onset ~45s</div>
+                    </div>
+                    <div class="result-row">
+                        <div class="result-name">3. Muscle Relaxant<small>Push immediately after LOC.</small></div>
+                        <div style="text-align: right; font-size: 0.9em; line-height: 1.4;">
+                            <strong>Roc:</strong> Wait 60-90s<br>
+                            <span style="color:var(--text-muted)"><strong>Atrac:</strong> Wait 120-180s</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('induction-results').innerHTML = html;
+        }
+
+
+        // --- REMI SLIDER LOGIC ---
+        const remiZones = [
+            { upTo: 0.05, label: 'Sub-Analgesic', bg: '#444', color: '#fff' },
+            { upTo: 0.10, label: 'Analgesic', bg: 'var(--info-blue)', color: '#fff' },
+            { upTo: 0.15, label: 'Light Maint.', bg: 'var(--alert-green)', color: '#fff' },
+            { upTo: 0.20, label: 'Standard Maint.', bg: 'var(--warning-yellow)', color: '#000' },
+            { upTo: 0.25, label: 'Deep Maint.', bg: 'var(--relaxant-orange)', color: '#000' },
+            { upTo: Infinity, label: 'High Stimulus', bg: 'var(--danger-red)', color: '#fff' }
+        ];
+
+        function updateRemi() {
+            if (ibw === 0) return;
+            const rate = parseFloat(document.getElementById('remi-slider').value);
+            document.getElementById('remi-ml-h').innerText = rate.toFixed(1);
+            
+            // Formula: Dose (mcg/kg/min) = (Rate (mL/h) * Concentration (50 mcg/mL)) / (Weight (kg) * 60)
+            const dose = (rate * 50) / (ibw * 60);
+            document.getElementById('remi-mcg-kg-min').innerText = dose.toFixed(2);
+            
+            let currentZone = remiZones[remiZones.length - 1];
+            for (let z of remiZones) {
+                if (dose <= z.upTo + 0.001) { currentZone = z; break; }
+            }
+            
+            const badge = document.getElementById('remi-badge');
+            badge.innerText = currentZone.label;
+            badge.style.backgroundColor = currentZone.bg;
+            badge.style.color = currentZone.color;
+        }
+
+        // --- NMB TRACKER LOGIC ---
+        function startNMB(type) {
+            clearInterval(nmbInterval);
+            document.getElementById('btn-emergence').classList.remove('active');
+            
+            if(type === 'intubation') {
+                nmbDuration = INTUBATION_TIME;
+                nmbWarningStart = INTUBATION_WARNING;
+            } else {
+                nmbDuration = TOPUP_TIME;
+                nmbWarningStart = TOPUP_WARNING;
+            }
+            
+            nmbEndTime = Date.now() + (nmbDuration * 1000);
+            
+            nmbInterval = setInterval(() => {
+                let timeLeft = Math.ceil((nmbEndTime - Date.now()) / 1000);
+                if(timeLeft <= 0) timeLeft = 0;
+                updateNMBUI(timeLeft);
+            }, 1000);
+            
+            updateNMBUI(nmbDuration);
+        }
+
+        function stopNMB() {
+            clearInterval(nmbInterval);
+            const bar = document.getElementById('nmb-bar');
+            const text = document.getElementById('nmb-clock');
+            const inst = document.getElementById('nmb-instruction');
+            
+            bar.style.width = '0%';
+            text.innerText = "--:--";
+            text.classList.remove('flashing');
+            inst.innerText = "Reversal / Emergence active. Do not redose.";
+            document.getElementById('btn-emergence').classList.add('active');
+        }
+
+        function updateNMBUI(timeLeft) {
+            const bar = document.getElementById('nmb-bar');
+            const text = document.getElementById('nmb-clock');
+            const inst = document.getElementById('nmb-instruction');
+            
+            let elapsed = nmbDuration - timeLeft;
+            bar.style.width = ((timeLeft / nmbDuration) * 100) + '%';
+            
+            let mins = Math.floor(timeLeft / 60);
+            let secs = timeLeft % 60;
+            text.innerText = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+            
+            if (elapsed < nmbWarningStart) {
+                // Safe Zone
+                bar.style.backgroundColor = 'var(--alert-green)';
+                text.classList.remove('flashing');
+                inst.innerText = "Patient paralyzed. Stable.";
+            } else if (elapsed >= nmbWarningStart && timeLeft > 0) {
+                // Warning Zone
+                bar.style.backgroundColor = 'var(--warning-yellow)';
+                text.classList.remove('flashing');
+                inst.innerText = "Watch for VT drops or curare clefts.";
+            } else {
+                // Due / Overdue
+                bar.style.backgroundColor = 'var(--danger-red)';
+                text.classList.add('flashing');
+                inst.innerText = "TOP-UP DUE NOW. (Patient may move)";
+            }
+        }
+    </script>
 </body>
 </html>
-
