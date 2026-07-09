@@ -113,7 +113,7 @@
         .flashing { animation: flash 1s infinite; color: var(--iso-relaxant) !important;}
         @keyframes flash { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
 
-        /* Custom Visual Sliders (Remi & Sevo) */
+        /* Custom Visual Sliders */
         .slider-readout { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 15px; }
         .rate-val { font-size: 2em; font-weight: bold; color: var(--text-main); }
         .zone-badge { padding: 6px 12px; border-radius: 4px; font-size: 0.8em; font-weight: bold; text-transform: uppercase; background: #333; }
@@ -124,6 +124,7 @@
         .sevo-segmented input { display:none; }
         .sevo-segmented label { flex:1; text-align:center; padding:10px 8px; border-radius:6px; font-size:.9em; font-weight:bold; color:var(--text-muted); cursor:pointer; }
         .sevo-segmented input:checked + label { background:var(--text-main); color:var(--bg-color); }
+        
         .target-list { display:flex; flex-direction:column; gap:8px; margin-top: 15px;}
         .target { background:var(--input-bg); border:1px solid var(--border-color); border-left:4px solid var(--border-color); border-radius:8px; padding:12px; display:flex; justify-content:space-between; align-items:center; }
         .target-value { font-family: monospace; font-size:1.3rem; font-weight:bold; }
@@ -151,6 +152,9 @@
             <button class="nav-btn" id="nav-log" onclick="setMainTab('log')">Log</button>
         </div>
 
+        <!-- ============================== -->
+        <!-- MODULE 1: INDUCTION & REMI     -->
+        <!-- ============================== -->
         <div id="main-induction" class="tab-panel active">
             <div class="card" style="margin-bottom: 15px;">
                 <div class="input-grid">
@@ -198,6 +202,9 @@
             </div>
         </div>
 
+        <!-- ============================== -->
+        <!-- MODULE 2: SEVO MAC CALCULATOR  -->
+        <!-- ============================== -->
         <div id="main-sevo" class="tab-panel">
             <div class="card">
                 <span class="section-label" style="display:block; text-align:left;">Patient Category</span>
@@ -215,8 +222,8 @@
 
                 <div class="switch-container">
                     <div>
-                        <strong style="color: var(--iso-opioid); font-size: 0.9em;">Concurrent Opioids</strong><br>
-                        <span style="font-size: 0.75em; color: var(--text-muted);">Fentanyl / Remi (~2ng/mL site conc.)</span>
+                        <strong style="color: var(--iso-opioid); font-size: 0.9em;">Concurrent Opioids Administered</strong><br>
+                        <span style="font-size: 0.75em; color: var(--text-muted);">e.g., Fentanyl ~1-2mcg/kg (2ng/mL site conc.)</span>
                     </div>
                     <label class="switch">
                         <input type="checkbox" id="opioid-toggle" onchange="calculateSevo()">
@@ -238,6 +245,7 @@
                     </div>
                 </div>
 
+                <!-- Sevo Visual Slider -->
                 <div class="card" style="margin-bottom: 15px;">
                     <div class="slider-readout">
                         <div class="rate-val"><span id="sevo-vol-disp">0.0</span><span style="font-size:0.4em; color:var(--text-muted); margin-left:4px;">vol%</span></div>
@@ -245,28 +253,32 @@
                     </div>
                     <input type="range" class="custom-range" id="sevo-slider" min="0" max="3" step="0.1" value="0" oninput="updateSevoSlider()">
                     <div style="text-align: center; font-size: 0.9em; color: var(--text-muted);">
-                        Calculated MAC: <strong id="sevo-mac-disp" style="color:var(--text-main); font-size:1.2em;">0.00</strong>
+                        Calculated fMAC: <strong id="sevo-mac-disp" style="color:var(--text-main); font-size:1.2em;">0.00</strong>
                     </div>
                 </div>
                 
                 <div class="target-list" id="target-list" style="margin-bottom: 15px;"></div>
 
+                <!-- Washout Predictor -->
                 <div class="card" style="border: 1px solid var(--alert-green);">
-                    <h4 style="color: var(--alert-green); margin-bottom: 5px;">Emergence Washout Predictor</h4>
-                    <p style="font-size: 0.8em; color: var(--text-muted); margin-top: 0;">Predicts time to reach MAC-Awake based on circuit hysteresis ($\tau$).</p>
+                    <h4 style="color: var(--alert-green); margin-bottom: 5px;">Hysteresis Washout Predictor ($\tau_{CNS}$)</h4>
+                    <p style="font-size: 0.8em; color: var(--text-muted); margin-top: 0;">Predicts brain equilibration down to MAC-Awake based on Circuit Flow & CNS delays.</p>
                     <div class="input-grid" style="grid-template-columns: 1fr 1fr;">
-                        <div class="field"><label>Current EtSevo (vol%)</label><input type="number" id="washout-current" placeholder="e.g. 2.0" step="0.1"></div>
+                        <div class="field"><label>Current EtSevo (%)</label><input type="number" id="washout-current" placeholder="e.g. 2.0" step="0.1"></div>
                         <div class="field"><label>FGF (L/min)</label><input type="number" id="washout-fgf" placeholder="e.g. 1.5" step="0.1"></div>
                     </div>
-                    <button class="btn" style="background: var(--alert-green); margin-bottom: 10px;" onclick="calculateWashout()">Predict Time</button>
+                    <button class="btn" style="background: var(--alert-green); margin-bottom: 10px;" onclick="calculateWashout()">Predict Washout Time</button>
                     <div id="washout-result" style="text-align: center; font-size: 1.1em; font-weight: bold; color: var(--text-main); display: none;">
                         Estimated time: <span id="washout-time" style="color: var(--alert-green); font-size: 1.3em;">--</span> min <br>
-                        <span style="font-size: 0.8em; color: var(--text-muted);">Target time: <strong id="washout-clock" style="color:var(--text-main);">[--:--]</strong></span>
+                        <span style="font-size: 0.9em; color: var(--text-muted);">Target time: <strong id="washout-clock" style="color:var(--text-main); font-family:monospace; font-size:1.1em;">[--:--]</strong></span>
                     </div>
                 </div>
             </div>
         </div>
 
+        <!-- ============================== -->
+        <!-- MODULE 3: NMB TRACKER          -->
+        <!-- ============================== -->
         <div id="main-nmb" class="tab-panel">
             <div class="card">
                 <h3 style="text-align: center; color: var(--iso-relaxant);">Neuromuscular Blockade</h3>
@@ -288,6 +300,9 @@
             </div>
         </div>
 
+        <!-- ============================== -->
+        <!-- MODULE 4: EVENT LOGGER         -->
+        <!-- ============================== -->
         <div id="main-log" class="tab-panel">
             
             <div class="section-label">Surgery Type</div>
@@ -299,6 +314,7 @@
             </div>
 
             <div class="card">
+                <!-- Standard Tab -->
                 <div id="log-std" class="tab-panel active log-sub">
                     <div class="log-grid">
                         <button class="btn-log b-local" onclick="addLog('Patient in OR, monitors placed.')">Monitors Placed</button>
@@ -312,6 +328,7 @@
                     </div>
                 </div>
 
+                <!-- Neuro Tab -->
                 <div id="log-neuro" class="tab-panel log-sub">
                     <div class="log-grid">
                         <button class="btn-log b-local" onclick="addLog('Mayfield pins placed by surgical team.')">Mayfield Pins</button>
@@ -323,6 +340,7 @@
                     </div>
                 </div>
 
+                <!-- Laparoscopy Tab -->
                 <div id="log-lap" class="tab-panel log-sub">
                     <div class="log-grid">
                         <button class="btn-log b-local" onclick="addLog('Pneumoperitoneum insufflated.')">Insufflation</button>
@@ -332,6 +350,7 @@
                     </div>
                 </div>
 
+                <!-- Vascular Tab -->
                 <div id="log-vasc" class="tab-panel log-sub">
                     <div class="log-grid">
                         <button class="btn-log b-local" onclick="promptHeparin()">Heparin Given</button>
@@ -343,12 +362,14 @@
                     </div>
                 </div>
 
+                <!-- Custom Input -->
                 <div style="display: flex; gap: 8px; margin: 15px 0;">
                     <input type="text" id="custom-text" placeholder="Custom event (e.g. ABG drawn)" style="flex:1; background:var(--input-bg); border:1px solid var(--border-color); color:var(--text-main); padding:10px; border-radius:6px;">
                     <button class="btn" style="width: auto; margin:0; background:var(--text-main); color:var(--bg-color);" onclick="addCustomLog()">Log</button>
                 </div>
             </div>
 
+            <!-- Compiled Log -->
             <div class="card">
                 <h3 style="display: flex; justify-content: space-between; color: var(--text-muted); font-size: 0.9em; text-transform: uppercase;">
                     Anesthesia Record <span style="color:var(--iso-relaxant); cursor:pointer;" onclick="clearLog()">Clear</span>
@@ -423,13 +444,13 @@
                 </div>
                 <div class="result-section">
                     <div class="result-title" style="color: var(--iso-hypnotic);">Induction Dosing</div>
-                    <div class="result-row"><div class="result-name" style="color: var(--iso-opioid);">Fentanyl<small style="color: var(--text-muted);">1 - 2 mcg/kg TBW</small></div><div class="result-val">${Math.round(ptWeight * 1)} - ${Math.round(ptWeight * 2)} mcg</div></div>
-                    <div class="result-row"><div class="result-name" style="color: var(--iso-hypnotic);">Propofol (Standard)<small style="color: var(--text-muted);">2.0 mg/kg (${ptWeight > 1.2 * ibw ? 'ABW' : 'TBW'})</small></div><div class="result-val">${Math.round(dosingWeight * 2.0)} mg</div></div>
+                    <div class="result-row"><div class="result-name" style="color: var(--iso-opioid); font-weight:bold;">Fentanyl<small style="color: var(--text-muted); font-weight:normal;">1 - 2 mcg/kg TBW</small></div><div class="result-val">${Math.round(ptWeight * 1)} - ${Math.round(ptWeight * 2)} mcg</div></div>
+                    <div class="result-row"><div class="result-name" style="color: var(--iso-hypnotic); font-weight:bold;">Propofol (Standard)<small style="color: var(--text-muted); font-weight:normal;">2.0 mg/kg (${ptWeight > 1.2 * ibw ? 'ABW' : 'TBW'})</small></div><div class="result-val">${Math.round(dosingWeight * 2.0)} mg</div></div>
                 </div>
                 <div class="result-section">
                     <div class="result-title" style="color: var(--iso-relaxant);">Neuromuscular Blockade (10 mg/mL)</div>
-                    <div class="result-row"><div class="result-name" style="color: var(--iso-relaxant);">Atracurium<small style="color: var(--text-muted);">0.5 mg/kg TBW</small></div><div class="result-val">${(ptWeight * 0.5 / 10).toFixed(1)} mL</div></div>
-                    <div class="result-row"><div class="result-name" style="color: var(--iso-relaxant);">Rocuronium<small style="color: var(--text-muted);">0.6 mg/kg IBW</small></div><div class="result-val">${(ibw * 0.6 / 10).toFixed(1)} mL</div></div>
+                    <div class="result-row"><div class="result-name" style="color: var(--iso-relaxant); font-weight:bold;">Atracurium<small style="color: var(--text-muted); font-weight:normal;">0.5 mg/kg TBW</small></div><div class="result-val">${(ptWeight * 0.5 / 10).toFixed(1)} mL</div></div>
+                    <div class="result-row"><div class="result-name" style="color: var(--iso-relaxant); font-weight:bold;">Rocuronium<small style="color: var(--text-muted); font-weight:normal;">0.6 mg/kg IBW</small></div><div class="result-val">${(ibw * 0.6 / 10).toFixed(1)} mL</div></div>
                 </div>
             `;
             document.getElementById('induction-results').innerHTML = html;
@@ -441,7 +462,7 @@
             updateRemi();
         }
 
-        // --- REMI SLIDER (HARD STOPS) ---
+        // --- REMI SLIDER (HARD STOPS + BLACK DIVIDERS) ---
         function updateRemi() {
             if (ibw === 0) return;
             const slider = document.getElementById('remi-slider');
@@ -453,7 +474,7 @@
             
             const zones = [
                 { limit: 0.05, label: 'Sub-Analgesic', color: '#444' },
-                { limit: 0.10, label: 'Analgesic', color: 'var(--iso-opioid)' },
+                { limit: 0.10, label: 'Analgesic', color: '#17a2b8' },
                 { limit: 0.15, label: 'Light Maint.', color: 'var(--alert-green)' },
                 { limit: 0.20, label: 'Standard Maint.', color: 'var(--iso-hypnotic)' },
                 { limit: 0.25, label: 'Deep Maint.', color: 'var(--iso-relaxant)' },
@@ -466,9 +487,9 @@
             const badge = document.getElementById('remi-badge');
             badge.innerText = activeZone.label;
             badge.style.backgroundColor = activeZone.color;
-            badge.style.color = (activeZone.color === '#ffcc00') ? '#000' : '#fff';
+            badge.style.color = (activeZone.color === 'var(--iso-hypnotic)') ? '#000' : '#fff';
             
-            // Build hard-stop gradient with 2px black dividers
+            // Re-apply hard-stop gradient with 2px black dividers
             const maxRate = parseFloat(slider.max);
             let gradStops = [];
             let lastPct = 0;
@@ -479,15 +500,15 @@
                 let pct = (bndRate / maxRate) * 100;
                 if(pct > 100) pct = 100;
                 
-                gradStops.push(`${zones[i].color} ${lastPct}% calc(${pct}% - 1px)`);
-                gradStops.push(`#000 calc(${pct}% - 1px) calc(${pct}% + 1px)`);
+                gradStops.push(`${zones[i].color} ${lastPct}% calc(${pct}% - 2px)`);
+                gradStops.push(`#000 calc(${pct}% - 2px) calc(${pct}% + 2px)`);
                 lastPct = pct;
                 if(pct === 100) break;
             }
             slider.style.background = `linear-gradient(to right, ${gradStops.join(', ')})`;
         }
 
-        // --- SEVO MAC CALCULATOR ---
+        // --- SEVO MAC CALCULATOR (OPIOID CROSSOVER LOGIC) ---
         const sevoModeRadios = document.querySelectorAll('input[name="mode"]');
         sevoModeRadios.forEach(r => r.addEventListener('change', () => {
             const mode = document.querySelector('input[name="mode"]:checked').value;
@@ -513,24 +534,26 @@
             document.getElementById('baseline-value').innerText = mac.toFixed(1) + ' vol%';
             document.getElementById('band-sub').innerText = band;
 
-            // Opioid Reduction Math
-            let oAwake = 1.0, oImm = 1.0, oBar = 1.0;
+            // Opioid Reduction Modifiers
+            let oAwake = 1.0, oUnc = 1.0, oImm = 1.0, oBar = 1.0;
             if (document.getElementById('opioid-toggle').checked) {
                 oAwake = 0.85; // 15% reduction
-                oImm = 0.50;   // 50% reduction
-                oBar = 0.25;   // 75% reduction
+                oUnc = 0.85;   // 15% reduction (But floor is generally 0.7 fMAC)
+                oImm = 0.50;   // 50% reduction for immobility
+                oBar = 0.25;   // 75% reduction for sympathetic tone
             }
 
-            // Raw targets
+            // Raw targets (Before sorting)
             let t = [
-                { name: 'MAC-Awake',   val: mac * 0.33 * oAwake, color: 'var(--alert-green)' },
-                { name: 'MAC 1 (50%)', val: mac * 1.00 * oImm,   color: 'var(--iso-hypnotic)' },
-                { name: '+2 SD (95%)', val: mac * 1.20 * oImm,   color: 'var(--iso-relaxant)' },
-                { name: '+3 SD (99%)', val: mac * 1.30 * oImm,   color: '#b52a1f' },
-                { name: 'MAC-BAR',     val: mac * 1.45 * oBar,   color: 'var(--iso-pressor)' }
+                { id: 'awake', name: 'MAC-Awake',   val: mac * 0.33 * oAwake, color: '#17a2b8', desc: 'Extubation Threshold' },
+                { id: 'unc',   name: 'Unconscious', val: mac * 0.70 * oUnc,   color: 'var(--alert-green)', desc: 'Awareness Prevention Floor' },
+                { id: 'mac1',  name: 'MAC 1',       val: mac * 1.00 * oImm,   color: 'var(--iso-hypnotic)', desc: '50% Immobility' },
+                { id: 'sd2',   name: '+2 SD',       val: mac * 1.20 * oImm,   color: 'var(--iso-relaxant)', desc: '95% Immobility' },
+                { id: 'sd3',   name: '+3 SD',       val: mac * 1.30 * oImm,   color: '#b52a1f', desc: '99.7% Immobility' },
+                { id: 'bar',   name: 'MAC-BAR',     val: mac * 1.45 * oBar,   color: 'var(--iso-pressor)', desc: 'Blunts Adrenergic Response' }
             ];
             
-            // Sort ascending to handle Opioid inversion (MAC-BAR dropping below MAC)
+            // Sort ascending. If opioids are active, MAC-BAR plunges below MAC 1 and +2SD.
             t.sort((a,b) => a.val - b.val);
             sevoZones = t;
 
@@ -539,7 +562,7 @@
             for(let z of t) {
                 listHtml += `
                     <div class="target" style="border-left-color: ${z.color};">
-                        <div style="font-weight:bold; color: var(--text-main);">${z.name}</div>
+                        <div><div style="font-weight:bold; color: var(--text-main);">${z.name}</div><div style="font-size:0.7em; color:var(--text-muted);">${z.desc}</div></div>
                         <div class="target-value" style="color:${z.color};">${z.val.toFixed(2)}<small>vol%</small></div>
                     </div>`;
             }
@@ -548,8 +571,11 @@
 
             // Configure Gauge Slider
             const slider = document.getElementById('sevo-slider');
-            slider.max = (t[t.length-1].val * 1.15).toFixed(1); // 15% headroom above max
-            slider.value = (mac * 1.0 * oImm).toFixed(1); // Default to MAC 1
+            slider.max = (t[t.length-1].val * 1.15).toFixed(1); 
+            
+            // Auto-snap to MAC 1 initially
+            let defaultVal = (mac * 1.00 * oImm).toFixed(1);
+            slider.value = defaultVal; 
             updateSevoSlider();
         }
 
@@ -571,7 +597,7 @@
             badge.style.color = (active.color === 'var(--iso-hypnotic)') ? '#000' : '#fff';
             slider.style.borderColor = active.color;
 
-            // Build Hard-Stop Gradient for Sevo
+            // Build Hard-Stop Gradient for Sevo Slider
             const maxVol = parseFloat(slider.max);
             let gradStops = [];
             let lastPct = 0;
@@ -580,8 +606,8 @@
                 let pct = (sevoZones[i].val / maxVol) * 100;
                 if(pct > 100) pct = 100;
                 
-                gradStops.push(`${sevoZones[i].color} ${lastPct}% calc(${pct}% - 1px)`);
-                gradStops.push(`#000 calc(${pct}% - 1px) calc(${pct}% + 1px)`);
+                gradStops.push(`${sevoZones[i].color} ${lastPct}% calc(${pct}% - 2px)`);
+                gradStops.push(`#000 calc(${pct}% - 2px) calc(${pct}% + 2px)`);
                 lastPct = pct;
                 if(pct === 100) break;
             }
@@ -589,24 +615,28 @@
             slider.style.background = `linear-gradient(to right, ${gradStops.join(', ')})`;
         }
 
-        // --- WASHOUT PREDICTOR ---
+        // --- WASHOUT PREDICTOR (Hysteresis Math) ---
         function calculateWashout() {
             if(!sevoZones) { alert("Calculate targets first."); return; }
             const currentVol = parseFloat(document.getElementById('washout-current').value);
             const fgf = parseFloat(document.getElementById('washout-fgf').value);
             
-            const awakeTarget = sevoZones.find(z => z.name === 'MAC-Awake').val;
+            const awakeTarget = sevoZones.find(z => z.id === 'awake').val;
 
             if(isNaN(currentVol) || isNaN(fgf) || fgf <= 0) { alert("Enter valid vol% and FGF."); return; }
             if(currentVol <= awakeTarget) { alert("Already at or below MAC-Awake."); return; }
 
-            const vCircuit = 5.0; 
-            const tau = vCircuit / fgf;
-            const timeMins = -tau * Math.log(awakeTarget / currentVol);
+            // tau_CNS = 3.5 min for Sevo. tau_circuit = 5L / FGF
+            const tauCNS = 3.5;
+            const tauCircuit = 5.0 / fgf;
+            const tauTotal = tauCNS + tauCircuit; 
+            
+            // Exponential decay: t = -tau_total * ln(C_target / C_current)
+            const timeMins = -tauTotal * Math.log(awakeTarget / currentVol);
             
             document.getElementById('washout-time').innerText = Math.round(timeMins);
             
-            // Generate HH:MM
+            // Generate exact clock time [HH:MM]
             const targetDate = new Date(Date.now() + (timeMins * 60000));
             const hh = targetDate.getHours().toString().padStart(2, '0');
             const mm = targetDate.getMinutes().toString().padStart(2, '0');
