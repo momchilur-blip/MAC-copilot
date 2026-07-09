@@ -21,6 +21,14 @@
             --iso-pressor: #cc99ff;  
             --iso-local: #cccccc;    
             --alert-green: #28a745;  
+
+            /* Logger Taxonomy Colors */
+            --log-prep: #888888;   /* Gray */
+            --log-pos: #17a2b8;    /* Teal */
+            --log-surg: #ffc107;   /* Yellow */
+            --log-proc: #28a745;   /* Green */
+            --log-hemo: #ff4d4d;   /* Red */
+            --log-drug: #9c27b0;   /* Purple */
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -63,7 +71,7 @@
         .tab-panel.active { display: block; animation: fadeIn 0.2s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Inputs (Responsive) */
+        /* Inputs */
         .input-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 15px; }
         .field { display: flex; flex-direction: column; gap: 4px; }
         .field label { font-size: 0.8em; color: var(--text-muted); font-weight: bold; text-transform: uppercase; }
@@ -89,7 +97,7 @@
         .result-row:last-child { border-bottom: none; }
         .result-name { font-size: 0.95em; }
         .result-name small { display: block; font-size: 0.8em; color: var(--text-muted); }
-        .result-val { font-size: 1.1em; font-weight: bold; color: var(--text-main); }
+        .result-val { font-size: 1.1em; font-weight: bold; color: var(--text-main); text-align: right; }
 
         .btn { width: 100%; padding: 14px; border: none; border-radius: 8px; font-weight: bold; font-size: 1.05em; cursor: pointer; color: white; margin-bottom: 10px; transition: 0.1s; }
         .btn:active { transform: scale(0.98); }
@@ -100,13 +108,17 @@
         .nmb-timer-text { font-size: 1.5em; color: var(--text-main); text-align: center; font-weight: bold; font-variant-numeric: tabular-nums; }
         .nmb-sum-box { text-align: center; background: var(--input-bg); padding: 10px; border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--border-color); }
         
-        /* Logger Grid */
+        /* Logger Grid Taxonomy */
         .log-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
         .btn-log { padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--input-bg); color: var(--text-main); font-weight: bold; cursor: pointer; font-size: 0.85em; text-align: left; }
         .btn-log:active { background: var(--border-color); }
-        .b-hypnotic { border-left: 4px solid var(--iso-hypnotic); } .b-opioid { border-left: 4px solid var(--iso-opioid); }
-        .b-relaxant { border-left: 4px solid var(--iso-relaxant); } .b-pressor { border-left: 4px solid var(--iso-pressor); }
-        .b-local { border-left: 4px solid var(--iso-local); } .b-green { border-left: 4px solid var(--alert-green); }
+        
+        .b-prep { border-left: 4px solid var(--log-prep); } 
+        .b-pos  { border-left: 4px solid var(--log-pos); }
+        .b-surg { border-left: 4px solid var(--log-surg); } 
+        .b-proc { border-left: 4px solid var(--log-proc); }
+        .b-hemo { border-left: 4px solid var(--log-hemo); } 
+        .b-drug { border-left: 4px solid var(--log-drug); }
         
         .log-textarea { width: 100%; height: 250px; background: #000; border: 1px solid var(--border-color); color: var(--alert-green); border-radius: 8px; padding: 12px; font-family: monospace; font-size: 0.95em; resize: vertical; margin-bottom: 10px;}
         
@@ -152,9 +164,6 @@
             <button class="nav-btn" id="nav-log" onclick="setMainTab('log')">Log</button>
         </div>
 
-        <!-- ============================== -->
-        <!-- MODULE 1: INDUCTION & REMI     -->
-        <!-- ============================== -->
         <div id="main-induction" class="tab-panel active">
             <div class="card" style="margin-bottom: 15px;">
                 <div class="input-grid">
@@ -202,9 +211,6 @@
             </div>
         </div>
 
-        <!-- ============================== -->
-        <!-- MODULE 2: SEVO MAC CALCULATOR  -->
-        <!-- ============================== -->
         <div id="main-sevo" class="tab-panel">
             <div class="card">
                 <span class="section-label" style="display:block; text-align:left;">Patient Category</span>
@@ -245,7 +251,6 @@
                     </div>
                 </div>
 
-                <!-- Sevo Visual Slider -->
                 <div class="card" style="margin-bottom: 15px;">
                     <div class="slider-readout">
                         <div class="rate-val"><span id="sevo-vol-disp">0.0</span><span style="font-size:0.4em; color:var(--text-muted); margin-left:4px;">vol%</span></div>
@@ -255,11 +260,12 @@
                     <div style="text-align: center; font-size: 0.9em; color: var(--text-muted);">
                         Calculated fMAC: <strong id="sevo-mac-disp" style="color:var(--text-main); font-size:1.2em;">0.00</strong>
                     </div>
+                    
+                    <button class="btn" style="background: var(--input-bg); color: var(--text-main); border: 1px solid var(--border-color); margin-top: 15px; font-size: 0.9em;" onclick="logSevoChange()">📝 Send Vol% to Event Log</button>
                 </div>
                 
                 <div class="target-list" id="target-list" style="margin-bottom: 15px;"></div>
 
-                <!-- Washout Predictor -->
                 <div class="card" style="border: 1px solid var(--alert-green);">
                     <h4 style="color: var(--alert-green); margin-bottom: 5px;">Hysteresis Washout Predictor ($\tau_{CNS}$)</h4>
                     <p style="font-size: 0.8em; color: var(--text-muted); margin-top: 0;">Predicts brain equilibration down to MAC-Awake based on Circuit Flow & CNS delays.</p>
@@ -276,9 +282,6 @@
             </div>
         </div>
 
-        <!-- ============================== -->
-        <!-- MODULE 3: NMB TRACKER          -->
-        <!-- ============================== -->
         <div id="main-nmb" class="tab-panel">
             <div class="card">
                 <h3 style="text-align: center; color: var(--iso-relaxant);">Neuromuscular Blockade</h3>
@@ -300,9 +303,6 @@
             </div>
         </div>
 
-        <!-- ============================== -->
-        <!-- MODULE 4: EVENT LOGGER         -->
-        <!-- ============================== -->
         <div id="main-log" class="tab-panel">
             
             <div class="section-label">Surgery Type</div>
@@ -310,66 +310,66 @@
                 <button class="sub-tab-btn active" id="log-nav-std" onclick="setSubTab('log', 'std')">Standard</button>
                 <button class="sub-tab-btn" id="log-nav-neuro" onclick="setSubTab('log', 'neuro')">Neuro</button>
                 <button class="sub-tab-btn" id="log-nav-lap" onclick="setSubTab('log', 'lap')">Lap</button>
-                <button class="sub-tab-btn" id="log-nav-vasc" onclick="setSubTab('log', 'vasc')">Vascular</button>
+                <button class="sub-tab-btn" id="log-nav-vasc" onclick="setSubTab('log', 'vasc')">Vasc/Thoracic</button>
             </div>
 
             <div class="card">
-                <!-- Standard Tab -->
                 <div id="log-std" class="tab-panel active log-sub">
                     <div class="log-grid">
-                        <button class="btn-log b-local" onclick="addLog('Patient in OR, monitors placed.')">Monitors Placed</button>
-                        <button class="btn-log b-local" onclick="addLog('Pre-oxygenation started.')">Pre-O2</button>
-                        <button class="btn-log b-hypnotic" onclick="addLog('Induction initiated.')">Induction</button>
-                        <button class="btn-log b-green" onclick="addLog('Airway secured, ETCO2 confirmed.')">Airway Secured</button>
-                        <button class="btn-log b-local" onclick="addLog('Surgical incision.')">Incision</button>
-                        <button class="btn-log b-green" onclick="addLog('Extubation. Patient breathing spontaneously.')">Extubation</button>
-                        <button class="btn-log b-local" onclick="addLog('Fluid bolus administered (Crystalloid).')">Fluid Bolus</button>
-                        <button class="btn-log b-pressor" onclick="addLog('Vasopressor administered.')">Pressor Given</button>
+                        <button class="btn-log b-prep" onclick="addLog('Patient in OR, monitors placed.')">Monitors Placed</button>
+                        <button class="btn-log b-prep" onclick="addLog('Pre-oxygenation started.')">Pre-O2</button>
+                        <button class="btn-log b-proc" onclick="addLog('Induction initiated.')">Induction</button>
+                        <button class="btn-log b-proc" onclick="addLog('Airway secured, ETCO2 confirmed.')">Airway Secured</button>
+                        <button class="btn-log b-surg" onclick="addLog('Surgical incision.')">Incision</button>
+                        <button class="btn-log b-surg" onclick="addLog('Skin closure initiated.')">Skin Closure</button>
+                        <button class="btn-log b-proc" onclick="addLog('Extubation. Patient breathing spontaneously.')">Extubation</button>
+                        <button class="btn-log b-hemo" onclick="addLog('Fluid bolus administered (Crystalloid).')">Fluid Bolus</button>
                     </div>
                 </div>
 
-                <!-- Neuro Tab -->
                 <div id="log-neuro" class="tab-panel log-sub">
                     <div class="log-grid">
-                        <button class="btn-log b-local" onclick="addLog('Mayfield pins placed by surgical team.')">Mayfield Pins</button>
-                        <button class="btn-log b-green" onclick="addLog('Patient positioned prone. Eyes/pressure points checked and free.')">Prone + Eyes Free</button>
-                        <button class="btn-log b-pressor" onclick="addLog('Mannitol/Hypertonic saline administered.')">Osmotherapy</button>
-                        <button class="btn-log b-local" onclick="addLog('Dura opened.')">Dura Open</button>
-                        <button class="btn-log b-local" onclick="addLog('Dura closed.')">Dura Closed</button>
-                        <button class="btn-log b-green" onclick="addLog('Hemostasis confirmed by surgeon.')">Hemostasis</button>
+                        <button class="btn-log b-prep" onclick="addLog('Mayfield pins placed by surgical team.')">Mayfield Pins</button>
+                        <button class="btn-log b-pos" onclick="addLog('Patient positioned prone. Eyes/pressure points checked and free.')">Prone + Eyes Free</button>
+                        <button class="btn-log b-drug" onclick="addLog('Mannitol/Hypertonic saline administered.')">Osmotherapy</button>
+                        <button class="btn-log b-surg" onclick="addLog('Burr holes initiated.')">Burr Holes</button>
+                        <button class="btn-log b-surg" onclick="addLog('Dura opened.')">Dura Open</button>
+                        <button class="btn-log b-surg" onclick="addLog('Dura closed.')">Dura Closed</button>
+                        <button class="btn-log b-surg" onclick="addLog('Hemostasis confirmed by surgeon.')">Hemostasis</button>
+                        <button class="btn-log b-hemo" onclick="addLog('Hypotonia (MAP < 65) noted.')">MAP < 65</button>
                     </div>
                 </div>
 
-                <!-- Laparoscopy Tab -->
                 <div id="log-lap" class="tab-panel log-sub">
                     <div class="log-grid">
-                        <button class="btn-log b-local" onclick="addLog('Pneumoperitoneum insufflated.')">Insufflation</button>
-                        <button class="btn-log b-local" onclick="addLog('Patient placed in Trendelenburg position.')">Trendelenburg</button>
-                        <button class="btn-log b-local" onclick="addLog('Patient placed in Reverse Trendelenburg.')">Rev. Trendelenburg</button>
-                        <button class="btn-log b-green" onclick="addLog('Desufflation complete.')">Desufflation</button>
+                        <button class="btn-log b-surg" onclick="addLog('Pneumoperitoneum insufflated.')">Insufflation</button>
+                        <button class="btn-log b-pos" onclick="addLog('Patient placed in Trendelenburg position.')">Trendelenburg</button>
+                        <button class="btn-log b-pos" onclick="addLog('Patient placed in Reverse Trendelenburg.')">Rev. Trendelenburg</button>
+                        <button class="btn-log b-surg" onclick="addLog('Desufflation complete.')">Desufflation</button>
+                        <button class="btn-log b-hemo" onclick="addLog('Bradycardia noted.')">Bradycardia</button>
+                        <button class="btn-log b-hemo" onclick="addLog('Ephedrine administered.')">Ephedrine</button>
                     </div>
                 </div>
 
-                <!-- Vascular Tab -->
                 <div id="log-vasc" class="tab-panel log-sub">
                     <div class="log-grid">
-                        <button class="btn-log b-local" onclick="promptHeparin()">Heparin Given</button>
-                        <button class="btn-log b-local" onclick="addLog('Arterial cross-clamp applied.')">Cross-Clamp ON</button>
-                        <button class="btn-log b-green" onclick="addLog('Arterial cross-clamp released.')">Cross-Clamp OFF</button>
-                        <button class="btn-log b-local" onclick="addLog('Blood transfusion initiated.')">Transfusion Start</button>
-                        <button class="btn-log b-local" onclick="addLog('Arterial line placed and secured.')">A-Line Placed</button>
-                        <button class="btn-log b-local" onclick="addLog('Central venous catheter (CVC) placed.')">CVC Placed</button>
+                        <button class="btn-log b-drug" onclick="promptHeparin()">Heparin Given</button>
+                        <button class="btn-log b-surg" onclick="addLog('Arterial cross-clamp applied.')">Cross-Clamp ON</button>
+                        <button class="btn-log b-surg" onclick="addLog('Arterial cross-clamp released.')">Cross-Clamp OFF</button>
+                        <button class="btn-log b-surg" onclick="addLog('One lung ventilation initiated.')">One Lung Vent (OLV)</button>
+                        <button class="btn-log b-hemo" onclick="addLog('Blood transfusion initiated.')">Transfusion Start</button>
+                        <button class="btn-log b-proc" onclick="addLog('Arterial line placed and secured.')">A-Line Placed</button>
+                        <button class="btn-log b-proc" onclick="addLog('Central venous catheter (CVC) placed.')">CVC Placed</button>
+                        <button class="btn-log b-drug" onclick="addLog('Furosemide administered.')">Furosemide</button>
                     </div>
                 </div>
 
-                <!-- Custom Input -->
                 <div style="display: flex; gap: 8px; margin: 15px 0;">
                     <input type="text" id="custom-text" placeholder="Custom event (e.g. ABG drawn)" style="flex:1; background:var(--input-bg); border:1px solid var(--border-color); color:var(--text-main); padding:10px; border-radius:6px;">
                     <button class="btn" style="width: auto; margin:0; background:var(--text-main); color:var(--bg-color);" onclick="addCustomLog()">Log</button>
                 </div>
             </div>
 
-            <!-- Compiled Log -->
             <div class="card">
                 <h3 style="display: flex; justify-content: space-between; color: var(--text-muted); font-size: 0.9em; text-transform: uppercase;">
                     Anesthesia Record <span style="color:var(--iso-relaxant); cursor:pointer;" onclick="clearLog()">Clear</span>
@@ -436,6 +436,20 @@
             nmbCalculatedIntubationMg = Math.round(ptWeight * 0.5);
             document.getElementById('btn-intub-ml').innerText = (nmbCalculatedIntubationMg / 10).toFixed(1);
 
+            // Calculate exact volumes based on concentrations
+            const fentMinMg = Math.round(ptWeight * 1);
+            const fentMaxMg = Math.round(ptWeight * 2);
+            const fentMinMl = (fentMinMg / 50).toFixed(1);
+            const fentMaxMl = (fentMaxMg / 50).toFixed(1);
+
+            const propMg = Math.round(dosingWeight * 2.0);
+            const propMl = (propMg / 10).toFixed(1);
+
+            const ketMinMg = Math.round(ptWeight * 1.0);
+            const ketMaxMg = Math.round(ptWeight * 1.5);
+            const ketMinMl = (ketMinMg / 50).toFixed(1);
+            const ketMaxMl = (ketMaxMg / 50).toFixed(1);
+
             const html = `
                 <div class="result-section" style="border-top:none; padding-top:0;">
                     <div class="result-title">Airway & Ventilation</div>
@@ -444,8 +458,18 @@
                 </div>
                 <div class="result-section">
                     <div class="result-title" style="color: var(--iso-hypnotic);">Induction Dosing</div>
-                    <div class="result-row"><div class="result-name" style="color: var(--iso-opioid); font-weight:bold;">Fentanyl<small style="color: var(--text-muted); font-weight:normal;">1 - 2 mcg/kg TBW</small></div><div class="result-val">${Math.round(ptWeight * 1)} - ${Math.round(ptWeight * 2)} mcg</div></div>
-                    <div class="result-row"><div class="result-name" style="color: var(--iso-hypnotic); font-weight:bold;">Propofol (Standard)<small style="color: var(--text-muted); font-weight:normal;">2.0 mg/kg (${ptWeight > 1.2 * ibw ? 'ABW' : 'TBW'})</small></div><div class="result-val">${Math.round(dosingWeight * 2.0)} mg</div></div>
+                    <div class="result-row">
+                        <div class="result-name" style="color: var(--iso-opioid); font-weight:bold;">Fentanyl <span style="font-size:0.8em; font-weight:normal; color:var(--text-main);">(50 mcg/mL)</span><small style="color: var(--text-muted); font-weight:normal;">1-2 mcg/kg (${fentMinMg}-${fentMaxMg} mcg)</small></div>
+                        <div class="result-val">${fentMinMl} - ${fentMaxMl} mL</div>
+                    </div>
+                    <div class="result-row">
+                        <div class="result-name" style="color: var(--iso-hypnotic); font-weight:bold;">Propofol <span style="font-size:0.8em; font-weight:normal; color:var(--text-main);">(10 mg/mL)</span><small style="color: var(--text-muted); font-weight:normal;">2.0 mg/kg (${propMg} mg)</small></div>
+                        <div class="result-val">${propMl} mL</div>
+                    </div>
+                    <div class="result-row">
+                        <div class="result-name" style="color: var(--iso-hypnotic); font-weight:bold;">Ketamine <span style="font-size:0.8em; font-weight:normal; color:var(--text-main);">(50 mg/mL)</span><small style="color: var(--text-muted); font-weight:normal;">1-1.5 mg/kg (${ketMinMg}-${ketMaxMg} mg) <br><span style="font-size:0.85em;">*Manufacturer range: 0.7-4.5 mg/kg</span></small></div>
+                        <div class="result-val">${ketMinMl} - ${ketMaxMl} mL</div>
+                    </div>
                 </div>
                 <div class="result-section">
                     <div class="result-title" style="color: var(--iso-relaxant);">Neuromuscular Blockade (10 mg/mL)</div>
@@ -489,7 +513,6 @@
             badge.style.backgroundColor = activeZone.color;
             badge.style.color = (activeZone.color === 'var(--iso-hypnotic)') ? '#000' : '#fff';
             
-            // Re-apply hard-stop gradient with 2px black dividers
             const maxRate = parseFloat(slider.max);
             let gradStops = [];
             let lastPct = 0;
@@ -534,16 +557,14 @@
             document.getElementById('baseline-value').innerText = mac.toFixed(1) + ' vol%';
             document.getElementById('band-sub').innerText = band;
 
-            // Opioid Reduction Modifiers
             let oAwake = 1.0, oUnc = 1.0, oImm = 1.0, oBar = 1.0;
             if (document.getElementById('opioid-toggle').checked) {
-                oAwake = 0.85; // 15% reduction
-                oUnc = 0.85;   // 15% reduction (But floor is generally 0.7 fMAC)
-                oImm = 0.50;   // 50% reduction for immobility
-                oBar = 0.25;   // 75% reduction for sympathetic tone
+                oAwake = 0.85; 
+                oUnc = 0.85;   
+                oImm = 0.50;   
+                oBar = 0.25;   
             }
 
-            // Raw targets (Before sorting)
             let t = [
                 { id: 'awake', name: 'MAC-Awake',   val: mac * 0.33 * oAwake, color: '#17a2b8', desc: 'Extubation Threshold' },
                 { id: 'unc',   name: 'Unconscious', val: mac * 0.70 * oUnc,   color: 'var(--alert-green)', desc: 'Awareness Prevention Floor' },
@@ -553,11 +574,9 @@
                 { id: 'bar',   name: 'MAC-BAR',     val: mac * 1.45 * oBar,   color: 'var(--iso-pressor)', desc: 'Blunts Adrenergic Response' }
             ];
             
-            // Sort ascending. If opioids are active, MAC-BAR plunges below MAC 1 and +2SD.
             t.sort((a,b) => a.val - b.val);
             sevoZones = t;
 
-            // Build Target List UI
             let listHtml = '';
             for(let z of t) {
                 listHtml += `
@@ -569,11 +588,8 @@
             document.getElementById('target-list').innerHTML = listHtml;
             document.getElementById('sevo-results').style.display = 'block';
 
-            // Configure Gauge Slider
             const slider = document.getElementById('sevo-slider');
             slider.max = (t[t.length-1].val * 1.15).toFixed(1); 
-            
-            // Auto-snap to MAC 1 initially
             let defaultVal = (mac * 1.00 * oImm).toFixed(1);
             slider.value = defaultVal; 
             updateSevoSlider();
@@ -597,7 +613,6 @@
             badge.style.color = (active.color === 'var(--iso-hypnotic)') ? '#000' : '#fff';
             slider.style.borderColor = active.color;
 
-            // Build Hard-Stop Gradient for Sevo Slider
             const maxVol = parseFloat(slider.max);
             let gradStops = [];
             let lastPct = 0;
@@ -615,6 +630,14 @@
             slider.style.background = `linear-gradient(to right, ${gradStops.join(', ')})`;
         }
 
+        // Logs the current Sevo value to the event logger
+        function logSevoChange() {
+            const vol = document.getElementById('sevo-vol-disp').innerText;
+            const fmac = document.getElementById('sevo-mac-disp').innerText;
+            addLog(`Sevoflurane adjusted to ${vol} vol% (fMAC: ${fmac}).`);
+            alert("Sent to Event Log!");
+        }
+
         // --- WASHOUT PREDICTOR (Hysteresis Math) ---
         function calculateWashout() {
             if(!sevoZones) { alert("Calculate targets first."); return; }
@@ -626,17 +649,14 @@
             if(isNaN(currentVol) || isNaN(fgf) || fgf <= 0) { alert("Enter valid vol% and FGF."); return; }
             if(currentVol <= awakeTarget) { alert("Already at or below MAC-Awake."); return; }
 
-            // tau_CNS = 3.5 min for Sevo. tau_circuit = 5L / FGF
             const tauCNS = 3.5;
             const tauCircuit = 5.0 / fgf;
             const tauTotal = tauCNS + tauCircuit; 
             
-            // Exponential decay: t = -tau_total * ln(C_target / C_current)
             const timeMins = -tauTotal * Math.log(awakeTarget / currentVol);
             
             document.getElementById('washout-time').innerText = Math.round(timeMins);
             
-            // Generate exact clock time [HH:MM]
             const targetDate = new Date(Date.now() + (timeMins * 60000));
             const hh = targetDate.getHours().toString().padStart(2, '0');
             const mm = targetDate.getMinutes().toString().padStart(2, '0');
