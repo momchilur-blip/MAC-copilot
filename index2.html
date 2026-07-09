@@ -15,22 +15,20 @@
             --input-bg: #2c2c2c;
             
             /* ISO 26825 Syringe Label Standard Colors */
-            --iso-hypnotic: #ffcc00; /* Yellow: Propofol/Thiopental */
-            --iso-opioid: #00bfff;   /* Light Blue: Fentanyl/Remi */
-            --iso-relaxant: #ff3333; /* Red: Roc/Atracurium */
-            --iso-pressor: #cc99ff;  /* Violet: Pressors/Osmotherapy */
-            --iso-local: #cccccc;    /* Gray: Locals/Standard events */
-            --alert-green: #28a745;  /* System Green */
+            --iso-hypnotic: #ffcc00; 
+            --iso-opioid: #00bfff;   
+            --iso-relaxant: #ff3333; 
+            --iso-pressor: #cc99ff;  
+            --iso-local: #cccccc;    
+            --alert-green: #28a745;  
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            margin: 0; padding: 10px;
-            display: flex; flex-direction: column; align-items: center;
+            background-color: var(--bg-color); color: var(--text-main);
+            margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center;
             padding-bottom: 60px;
         }
 
@@ -38,11 +36,7 @@
         .section-label { font-size: 0.7em; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; text-align: center; font-weight: bold;}
 
         .container { width: 100%; max-width: 600px; display: flex; flex-direction: column; gap: 15px; }
-
-        .card {
-            background: var(--card-bg); border-radius: 12px; padding: 15px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-        }
+        .card { background: var(--card-bg); border-radius: 12px; padding: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
 
         /* Master Nav */
         .master-nav {
@@ -77,7 +71,6 @@
             background: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-main);
             border-radius: 6px; padding: 12px; font-size: 1.1em; font-weight: bold; text-align: center; width: 100%;
         }
-        .field input:focus { outline: 2px solid var(--text-main); border-color: transparent; }
         
         .gender-toggle { grid-column: 1 / -1; display: flex; gap: 8px; }
         .gender-btn { flex: 1; padding: 12px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--input-bg); color: var(--text-muted); font-weight: bold; cursor: pointer; }
@@ -98,7 +91,6 @@
         .result-name small { display: block; font-size: 0.8em; color: var(--text-muted); }
         .result-val { font-size: 1.1em; font-weight: bold; color: var(--text-main); }
 
-        /* Buttons General */
         .btn { width: 100%; padding: 14px; border: none; border-radius: 8px; font-weight: bold; font-size: 1.05em; cursor: pointer; color: white; margin-bottom: 10px; transition: 0.1s; }
         .btn:active { transform: scale(0.98); }
         
@@ -112,37 +104,39 @@
         .log-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
         .btn-log { padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--input-bg); color: var(--text-main); font-weight: bold; cursor: pointer; font-size: 0.85em; text-align: left; }
         .btn-log:active { background: var(--border-color); }
-        
-        .b-hypnotic { border-left: 4px solid var(--iso-hypnotic); } 
-        .b-opioid { border-left: 4px solid var(--iso-opioid); }
-        .b-relaxant { border-left: 4px solid var(--iso-relaxant); } 
-        .b-pressor { border-left: 4px solid var(--iso-pressor); }
-        .b-local { border-left: 4px solid var(--iso-local); }
-        .b-green { border-left: 4px solid var(--alert-green); }
+        .b-hypnotic { border-left: 4px solid var(--iso-hypnotic); } .b-opioid { border-left: 4px solid var(--iso-opioid); }
+        .b-relaxant { border-left: 4px solid var(--iso-relaxant); } .b-pressor { border-left: 4px solid var(--iso-pressor); }
+        .b-local { border-left: 4px solid var(--iso-local); } .b-green { border-left: 4px solid var(--alert-green); }
         
         .log-textarea { width: 100%; height: 250px; background: #000; border: 1px solid var(--border-color); color: var(--alert-green); border-radius: 8px; padding: 12px; font-family: monospace; font-size: 0.95em; resize: vertical; margin-bottom: 10px;}
         
         .flashing { animation: flash 1s infinite; color: var(--iso-relaxant) !important;}
         @keyframes flash { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
 
-        /* Remi Slider overrides */
+        /* Custom Visual Sliders (Remi & Sevo) */
         .slider-readout { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 15px; }
         .rate-val { font-size: 2em; font-weight: bold; color: var(--text-main); }
         .zone-badge { padding: 6px 12px; border-radius: 4px; font-size: 0.8em; font-weight: bold; text-transform: uppercase; background: #333; }
-        .remi-range { -webkit-appearance: none; width: 100%; height: 12px; border-radius: 6px; background: var(--border-color); outline: none; margin: 15px 0; }
-        .remi-range::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 24px; height: 24px; border-radius: 50%; background: #fff; cursor: pointer; box-shadow: 0 0 5px rgba(0,0,0,0.5); border: 4px solid var(--iso-opioid);}
-
-        /* Sevo Tab specific fixes */
+        .custom-range { -webkit-appearance: none; width: 100%; height: 24px; border-radius: 6px; outline: none; margin: 15px 0; border: 1px solid var(--border-color); }
+        .custom-range::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 30px; height: 30px; border-radius: 50%; background: #fff; cursor: pointer; box-shadow: 0 0 5px rgba(0,0,0,0.8); border: 4px solid #333;}
+        
         .sevo-segmented { display:flex; background:var(--input-bg); border:1px solid var(--border-color); border-radius:8px; padding:4px; gap:4px; margin-bottom: 15px;}
         .sevo-segmented input { display:none; }
         .sevo-segmented label { flex:1; text-align:center; padding:10px 8px; border-radius:6px; font-size:.9em; font-weight:bold; color:var(--text-muted); cursor:pointer; }
         .sevo-segmented input:checked + label { background:var(--text-main); color:var(--bg-color); }
         .target-list { display:flex; flex-direction:column; gap:8px; margin-top: 15px;}
         .target { background:var(--input-bg); border:1px solid var(--border-color); border-left:4px solid var(--border-color); border-radius:8px; padding:12px; display:flex; justify-content:space-between; align-items:center; }
-        .target[data-tone="good"] { border-left-color:var(--alert-green); }
-        .target[data-tone="primary"] { border-left-color:var(--iso-hypnotic); }
         .target-value { font-family: monospace; font-size:1.3rem; font-weight:bold; }
-        .target-value small { font-size:0.6em; margin-left: 2px;}
+        .target-value small { font-size:0.6em; margin-left: 2px; color: var(--text-muted);}
+
+        /* Checkbox switch for Opioid toggle */
+        .switch-container { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-top: 1px solid var(--border-color); margin-top: 10px;}
+        .switch { position: relative; display: inline-block; width: 50px; height: 24px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--input-bg); border: 1px solid var(--border-color); transition: .4s; border-radius: 24px; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: var(--text-muted); transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--iso-opioid); border-color: var(--iso-opioid); }
+        input:checked + .slider:before { transform: translateX(26px); background-color: #fff; }
     </style>
 </head>
 <body>
@@ -195,7 +189,7 @@
                         <div class="rate-val"><span id="remi-ml-h">0.0</span><span style="font-size:0.4em; color:var(--text-muted); margin-left:4px;">mL/h</span></div>
                         <div class="zone-badge" id="remi-badge">Adjust Slider</div>
                     </div>
-                    <input type="range" class="remi-range" id="remi-slider" min="0" max="30" step="0.5" value="0" oninput="updateRemi()">
+                    <input type="range" class="custom-range" id="remi-slider" min="0" max="30" step="0.5" value="0" oninput="updateRemi()">
                     <div style="text-align: center; font-size: 0.9em; color: var(--text-muted);">
                         Current Dose: <strong id="remi-mcg-kg-min" style="color:var(--iso-opioid); font-size:1.2em;">0.00</strong> mcg/kg/min
                     </div>
@@ -218,7 +212,19 @@
                     <label id="age-label">Patient Age</label>
                     <input type="number" id="age-input" placeholder="e.g. 45" min="0" step="any">
                 </div>
-                <button class="btn" style="background: var(--text-main); color: var(--bg-color);" id="calc-sevo-btn">Calculate MAC Targets</button>
+
+                <div class="switch-container">
+                    <div>
+                        <strong style="color: var(--iso-opioid); font-size: 0.9em;">Concurrent Opioids</strong><br>
+                        <span style="font-size: 0.75em; color: var(--text-muted);">Fentanyl / Remi (~2ng/mL site conc.)</span>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="opioid-toggle" onchange="calculateSevo()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <button class="btn" style="background: var(--text-main); color: var(--bg-color); margin-top: 15px;" onclick="calculateSevo()">Calculate MAC Targets</button>
             </div>
 
             <div id="sevo-results" style="display: none;">
@@ -229,6 +235,17 @@
                             <div style="font-size: 0.7em; color: var(--iso-hypnotic);" id="band-sub">—</div>
                         </div>
                         <div style="font-size: 1.8em; font-family: monospace; font-weight: bold; color: var(--text-main);" id="baseline-value">—</div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-bottom: 15px;">
+                    <div class="slider-readout">
+                        <div class="rate-val"><span id="sevo-vol-disp">0.0</span><span style="font-size:0.4em; color:var(--text-muted); margin-left:4px;">vol%</span></div>
+                        <div class="zone-badge" id="sevo-badge">Adjust Slider</div>
+                    </div>
+                    <input type="range" class="custom-range" id="sevo-slider" min="0" max="3" step="0.1" value="0" oninput="updateSevoSlider()">
+                    <div style="text-align: center; font-size: 0.9em; color: var(--text-muted);">
+                        Calculated MAC: <strong id="sevo-mac-disp" style="color:var(--text-main); font-size:1.2em;">0.00</strong>
                     </div>
                 </div>
                 
@@ -243,7 +260,8 @@
                     </div>
                     <button class="btn" style="background: var(--alert-green); margin-bottom: 10px;" onclick="calculateWashout()">Predict Time</button>
                     <div id="washout-result" style="text-align: center; font-size: 1.1em; font-weight: bold; color: var(--text-main); display: none;">
-                        Estimated time to MAC-Awake: <span id="washout-time" style="color: var(--alert-green); font-size: 1.3em;">--</span> min
+                        Estimated time: <span id="washout-time" style="color: var(--alert-green); font-size: 1.3em;">--</span> min <br>
+                        <span style="font-size: 0.8em; color: var(--text-muted);">Target time: <strong id="washout-clock" style="color:var(--text-main);">[--:--]</strong></span>
                     </div>
                 </div>
             </div>
@@ -346,15 +364,11 @@
         let gender = 'male';
         let ibw = 0, abw = 0, ptWeight = 0;
         
-        // NMB State
-        let nmbTotalMg = 0;
-        let nmbCalculatedIntubationMg = 0; 
-        let nmbInterval = null;
-        let nmbEndTime = 0, nmbDuration = 0, nmbWarningStart = 0;
-        let nmbNotified = false;
+        let nmbTotalMg = 0, nmbCalculatedIntubationMg = 0; 
+        let nmbInterval = null, nmbEndTime = 0, nmbDuration = 0, nmbWarningStart = 0, nmbNotified = false;
 
-        // Sevo State
-        let currentSevoTargets = null;
+        let currentSevoBaseline = 0;
+        let sevoZones = [];
 
         // --- NAVIGATION LOGIC ---
         function setMainTab(tabId) {
@@ -389,9 +403,7 @@
             const height = parseFloat(document.getElementById('pt-height').value);
             ptWeight = parseFloat(document.getElementById('pt-weight').value);
 
-            if (!height || !ptWeight || height <= 0 || ptWeight <= 0) {
-                alert('Please enter valid Height and Actual Weight values.'); return;
-            }
+            if (!height || !ptWeight || height <= 0 || ptWeight <= 0) { alert('Please enter valid Height and Weight values.'); return; }
 
             ibw = gender === 'male' ? 50 + 0.91 * (height - 152.4) : 45.5 + 0.91 * (height - 152.4);
             if (ibw < 0) ibw = 0;
@@ -400,7 +412,6 @@
 
             document.getElementById('out-ibw').innerText = Math.round(ibw) + ' kg';
             document.getElementById('out-abw').innerText = Math.round(abw) + ' kg';
-
             nmbCalculatedIntubationMg = Math.round(ptWeight * 0.5);
             document.getElementById('btn-intub-ml').innerText = (nmbCalculatedIntubationMg / 10).toFixed(1);
 
@@ -412,13 +423,13 @@
                 </div>
                 <div class="result-section">
                     <div class="result-title" style="color: var(--iso-hypnotic);">Induction Dosing</div>
-                    <div class="result-row"><div class="result-name">Fentanyl<small>1 - 2 mcg/kg TBW</small></div><div class="result-val" style="color: var(--iso-opioid);">${Math.round(ptWeight * 1)} - ${Math.round(ptWeight * 2)} mcg</div></div>
-                    <div class="result-row"><div class="result-name">Propofol (Standard)<small>2.0 mg/kg (${ptWeight > 1.2 * ibw ? 'ABW' : 'TBW'})</small></div><div class="result-val" style="color: var(--iso-hypnotic);">${Math.round(dosingWeight * 2.0)} mg</div></div>
+                    <div class="result-row"><div class="result-name" style="color: var(--iso-opioid);">Fentanyl<small style="color: var(--text-muted);">1 - 2 mcg/kg TBW</small></div><div class="result-val">${Math.round(ptWeight * 1)} - ${Math.round(ptWeight * 2)} mcg</div></div>
+                    <div class="result-row"><div class="result-name" style="color: var(--iso-hypnotic);">Propofol (Standard)<small style="color: var(--text-muted);">2.0 mg/kg (${ptWeight > 1.2 * ibw ? 'ABW' : 'TBW'})</small></div><div class="result-val">${Math.round(dosingWeight * 2.0)} mg</div></div>
                 </div>
                 <div class="result-section">
                     <div class="result-title" style="color: var(--iso-relaxant);">Neuromuscular Blockade (10 mg/mL)</div>
-                    <div class="result-row"><div class="result-name">Atracurium<small>0.5 mg/kg TBW</small></div><div class="result-val" style="color: var(--iso-relaxant);">${(ptWeight * 0.5 / 10).toFixed(1)} mL</div></div>
-                    <div class="result-row"><div class="result-name">Rocuronium<small>0.6 mg/kg IBW</small></div><div class="result-val" style="color: var(--iso-relaxant);">${(ibw * 0.6 / 10).toFixed(1)} mL</div></div>
+                    <div class="result-row"><div class="result-name" style="color: var(--iso-relaxant);">Atracurium<small style="color: var(--text-muted);">0.5 mg/kg TBW</small></div><div class="result-val">${(ptWeight * 0.5 / 10).toFixed(1)} mL</div></div>
+                    <div class="result-row"><div class="result-name" style="color: var(--iso-relaxant);">Rocuronium<small style="color: var(--text-muted);">0.6 mg/kg IBW</small></div><div class="result-val">${(ibw * 0.6 / 10).toFixed(1)} mL</div></div>
                 </div>
             `;
             document.getElementById('induction-results').innerHTML = html;
@@ -430,7 +441,7 @@
             updateRemi();
         }
 
-        // --- REMI SLIDER ---
+        // --- REMI SLIDER (HARD STOPS) ---
         function updateRemi() {
             if (ibw === 0) return;
             const slider = document.getElementById('remi-slider');
@@ -440,9 +451,40 @@
             const dose = (rate * 50) / (ibw * 60);
             document.getElementById('remi-mcg-kg-min').innerText = dose.toFixed(2);
             
-            // Dynamic Gradient Color
-            const pct = (slider.value / slider.max) * 100;
-            slider.style.background = `linear-gradient(to right, var(--iso-opioid) 0%, var(--iso-opioid) ${pct}%, var(--border-color) ${pct}%, var(--border-color) 100%)`;
+            const zones = [
+                { limit: 0.05, label: 'Sub-Analgesic', color: '#444' },
+                { limit: 0.10, label: 'Analgesic', color: 'var(--iso-opioid)' },
+                { limit: 0.15, label: 'Light Maint.', color: 'var(--alert-green)' },
+                { limit: 0.20, label: 'Standard Maint.', color: 'var(--iso-hypnotic)' },
+                { limit: 0.25, label: 'Deep Maint.', color: 'var(--iso-relaxant)' },
+                { limit: Infinity, label: 'High Stimulus', color: '#b52a1f' }
+            ];
+
+            let activeZone = zones[zones.length - 1];
+            for(let z of zones) { if(dose <= z.limit + 0.001) { activeZone = z; break; } }
+            
+            const badge = document.getElementById('remi-badge');
+            badge.innerText = activeZone.label;
+            badge.style.backgroundColor = activeZone.color;
+            badge.style.color = (activeZone.color === '#ffcc00') ? '#000' : '#fff';
+            
+            // Build hard-stop gradient with 2px black dividers
+            const maxRate = parseFloat(slider.max);
+            let gradStops = [];
+            let lastPct = 0;
+            
+            for(let i=0; i<zones.length; i++) {
+                if (zones[i].limit === Infinity) { gradStops.push(`${zones[i].color} ${lastPct}% 100%`); break; }
+                const bndRate = (zones[i].limit * ibw * 60) / 50;
+                let pct = (bndRate / maxRate) * 100;
+                if(pct > 100) pct = 100;
+                
+                gradStops.push(`${zones[i].color} ${lastPct}% calc(${pct}% - 1px)`);
+                gradStops.push(`#000 calc(${pct}% - 1px) calc(${pct}% + 1px)`);
+                lastPct = pct;
+                if(pct === 100) break;
+            }
+            slider.style.background = `linear-gradient(to right, ${gradStops.join(', ')})`;
         }
 
         // --- SEVO MAC CALCULATOR ---
@@ -452,7 +494,7 @@
             document.getElementById('age-input').placeholder = mode === 'peds' ? 'e.g. 4 (Months)' : 'e.g. 45 (Years)';
         }));
 
-        document.getElementById('calc-sevo-btn').addEventListener('click', () => {
+        function calculateSevo() {
             const mode = document.querySelector('input[name="mode"]:checked').value;
             const age = parseFloat(document.getElementById('age-input').value);
             if(isNaN(age) || age < 0) { alert("Enter a valid age."); return; }
@@ -467,49 +509,109 @@
                 band = `Adult (Mapleson age ${age})`;
             }
 
-            document.getElementById('baseline-value').innerText = (Math.round(mac * 10) / 10).toFixed(1) + ' vol%';
+            currentSevoBaseline = mac;
+            document.getElementById('baseline-value').innerText = mac.toFixed(1) + ' vol%';
             document.getElementById('band-sub').innerText = band;
 
-            currentSevoTargets = {
-                awake: mac * 0.33,
-                maint: mac * 1.00,
-                bar: mac * 1.45
-            };
+            // Opioid Reduction Math
+            let oAwake = 1.0, oImm = 1.0, oBar = 1.0;
+            if (document.getElementById('opioid-toggle').checked) {
+                oAwake = 0.85; // 15% reduction
+                oImm = 0.50;   // 50% reduction
+                oBar = 0.25;   // 75% reduction
+            }
 
-            const html = `
-                <div class="target" data-tone="good">
-                    <div><div style="font-weight:bold;">MAC-Awake</div><div style="font-size:0.7em; color:var(--text-muted);">Extubation Threshold</div></div>
-                    <div class="target-value" style="color:var(--alert-green);">${currentSevoTargets.awake.toFixed(1)}<small>vol%</small></div>
-                </div>
-                <div class="target" data-tone="primary">
-                    <div><div style="font-weight:bold;">1.0 MAC</div><div style="font-size:0.7em; color:var(--text-muted);">Maintenance</div></div>
-                    <div class="target-value" style="color:var(--iso-hypnotic);">${currentSevoTargets.maint.toFixed(1)}<small>vol%</small></div>
-                </div>
-                <div class="target" style="border-left-color: var(--iso-pressor);">
-                    <div><div style="font-weight:bold;">MAC-BAR</div><div style="font-size:0.7em; color:var(--text-muted);">Blunts Adrenergic Response</div></div>
-                    <div class="target-value" style="color:var(--iso-pressor);">${currentSevoTargets.bar.toFixed(1)}<small>vol%</small></div>
-                </div>
-            `;
-            document.getElementById('target-list').innerHTML = html;
+            // Raw targets
+            let t = [
+                { name: 'MAC-Awake',   val: mac * 0.33 * oAwake, color: 'var(--alert-green)' },
+                { name: 'MAC 1 (50%)', val: mac * 1.00 * oImm,   color: 'var(--iso-hypnotic)' },
+                { name: '+2 SD (95%)', val: mac * 1.20 * oImm,   color: 'var(--iso-relaxant)' },
+                { name: '+3 SD (99%)', val: mac * 1.30 * oImm,   color: '#b52a1f' },
+                { name: 'MAC-BAR',     val: mac * 1.45 * oBar,   color: 'var(--iso-pressor)' }
+            ];
+            
+            // Sort ascending to handle Opioid inversion (MAC-BAR dropping below MAC)
+            t.sort((a,b) => a.val - b.val);
+            sevoZones = t;
+
+            // Build Target List UI
+            let listHtml = '';
+            for(let z of t) {
+                listHtml += `
+                    <div class="target" style="border-left-color: ${z.color};">
+                        <div style="font-weight:bold; color: var(--text-main);">${z.name}</div>
+                        <div class="target-value" style="color:${z.color};">${z.val.toFixed(2)}<small>vol%</small></div>
+                    </div>`;
+            }
+            document.getElementById('target-list').innerHTML = listHtml;
             document.getElementById('sevo-results').style.display = 'block';
-        });
+
+            // Configure Gauge Slider
+            const slider = document.getElementById('sevo-slider');
+            slider.max = (t[t.length-1].val * 1.15).toFixed(1); // 15% headroom above max
+            slider.value = (mac * 1.0 * oImm).toFixed(1); // Default to MAC 1
+            updateSevoSlider();
+        }
+
+        function updateSevoSlider() {
+            if (!sevoZones || sevoZones.length === 0) return;
+            const slider = document.getElementById('sevo-slider');
+            const vol = parseFloat(slider.value);
+            document.getElementById('sevo-vol-disp').innerText = vol.toFixed(1);
+            document.getElementById('sevo-mac-disp').innerText = (vol / currentSevoBaseline).toFixed(2);
+
+            let active = sevoZones[sevoZones.length - 1];
+            for (let i = 0; i < sevoZones.length; i++) {
+                if (vol <= sevoZones[i].val + 0.05) { active = sevoZones[i]; break; }
+            }
+
+            const badge = document.getElementById('sevo-badge');
+            badge.innerText = active.name;
+            badge.style.backgroundColor = active.color;
+            badge.style.color = (active.color === 'var(--iso-hypnotic)') ? '#000' : '#fff';
+            slider.style.borderColor = active.color;
+
+            // Build Hard-Stop Gradient for Sevo
+            const maxVol = parseFloat(slider.max);
+            let gradStops = [];
+            let lastPct = 0;
+
+            for(let i=0; i<sevoZones.length; i++) {
+                let pct = (sevoZones[i].val / maxVol) * 100;
+                if(pct > 100) pct = 100;
+                
+                gradStops.push(`${sevoZones[i].color} ${lastPct}% calc(${pct}% - 1px)`);
+                gradStops.push(`#000 calc(${pct}% - 1px) calc(${pct}% + 1px)`);
+                lastPct = pct;
+                if(pct === 100) break;
+            }
+            if(lastPct < 100) gradStops.push(`#444 ${lastPct}% 100%`);
+            slider.style.background = `linear-gradient(to right, ${gradStops.join(', ')})`;
+        }
 
         // --- WASHOUT PREDICTOR ---
         function calculateWashout() {
-            if(!currentSevoTargets) { alert("Calculate MAC targets first."); return; }
+            if(!sevoZones) { alert("Calculate targets first."); return; }
             const currentVol = parseFloat(document.getElementById('washout-current').value);
             const fgf = parseFloat(document.getElementById('washout-fgf').value);
             
-            if(isNaN(currentVol) || isNaN(fgf) || fgf <= 0) { alert("Enter valid current vol% and FGF."); return; }
-            if(currentVol <= currentSevoTargets.awake) { alert("Already at or below MAC-Awake."); return; }
+            const awakeTarget = sevoZones.find(z => z.name === 'MAC-Awake').val;
 
-            const vCircuit = 5.0; // Assume 5L circuit + FRC volume
+            if(isNaN(currentVol) || isNaN(fgf) || fgf <= 0) { alert("Enter valid vol% and FGF."); return; }
+            if(currentVol <= awakeTarget) { alert("Already at or below MAC-Awake."); return; }
+
+            const vCircuit = 5.0; 
             const tau = vCircuit / fgf;
-            
-            // Exponential decay: t = -tau * ln(C_target / C_current)
-            const timeMins = -tau * Math.log(currentSevoTargets.awake / currentVol);
+            const timeMins = -tau * Math.log(awakeTarget / currentVol);
             
             document.getElementById('washout-time').innerText = Math.round(timeMins);
+            
+            // Generate HH:MM
+            const targetDate = new Date(Date.now() + (timeMins * 60000));
+            const hh = targetDate.getHours().toString().padStart(2, '0');
+            const mm = targetDate.getMinutes().toString().padStart(2, '0');
+            document.getElementById('washout-clock').innerText = `[${hh}:${mm}]`;
+            
             document.getElementById('washout-result').style.display = 'block';
         }
 
@@ -519,13 +621,9 @@
             document.getElementById('nmb-total-ml').innerText = (nmbTotalMg / 10).toFixed(1);
         }
 
-        function requestNotificationPermission() {
-            if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") Notification.requestPermission();
-        }
-
         function startNMB(type) {
             if (ptWeight === 0) { alert("Please calculate Patient Parameters in the Induction tab first."); return; }
-            requestNotificationPermission(); 
+            if ("Notification" in window && Notification.permission !== "granted") Notification.requestPermission(); 
             clearInterval(nmbInterval);
             nmbNotified = false;
             
@@ -534,8 +632,7 @@
                 nmbDuration = 35 * 60; nmbWarningStart = 33 * 60;
                 addLog(`Intubation NMB dose administered.`);
             } else {
-                nmbTotalMg += 10;
-                nmbDuration = 15 * 60; nmbWarningStart = 13 * 60;
+                nmbTotalMg += 10; nmbDuration = 15 * 60; nmbWarningStart = 13 * 60;
                 addLog(`NMB Top-Up (10 mg) administered.`);
             }
             updateNMBSumUI();
@@ -562,7 +659,6 @@
             const bar = document.getElementById('nmb-bar');
             const text = document.getElementById('nmb-clock');
             const inst = document.getElementById('nmb-instruction');
-            
             let elapsed = nmbDuration - timeLeft;
             bar.style.width = ((timeLeft / nmbDuration) * 100) + '%';
             
@@ -576,7 +672,7 @@
             } else {
                 bar.style.backgroundColor = 'var(--iso-relaxant)'; text.classList.add('flashing'); inst.innerText = "TOP-UP DUE NOW. (Patient may move)";
                 if (!nmbNotified && "Notification" in window && Notification.permission === "granted") {
-                    new Notification("NMB Top-Up Due", { body: "Patient may begin to move. Check ventilator trend." });
+                    new Notification("NMB Top-Up Due", { body: "Patient may begin to move." });
                     nmbNotified = true;
                 }
             }
