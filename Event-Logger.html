@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anesthesia Event Logger</title>
+    <style>
+        :root {
+            /* Shared UI Colors */
+            --bg-color: #121212;
+            --text-main: #e0e0e0;
+            --text-muted: #888;
+            --card-bg: #1e1e1e;
+            --border-color: #333;
+            --input-bg: #2c2c2c;
+            
+            /* Action Colors */
+            --info-blue: #007bff;
+            --alert-green: #28a745;
+            --warning-yellow: #ffc107;
+            --danger-red: #ff4d4d;
+            --purple: #9c27b0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-bottom: 50px;
+        }
+
+        h3 { margin-top: 0; margin-bottom: 10px; font-size: 1.1em; color: var(--text-muted); text-transform: uppercase; }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        /* Nav */
+        .app-nav {
+            display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; 
+            width: 100%; max-width: 600px; padding: 10px 0 15px 0; border-bottom: 2px solid var(--border-color);
+            margin-bottom: 5px;
+        }
+        .app-nav a {
+            text-decoration: none; padding: 8px 16px; background-color: #6c757d; color: white; 
+            border-radius: 6px; font-weight: bold; font-size: 0.9em; text-align: center; flex: 1;
+        }
+        .app-nav a.active { background-color: var(--info-blue); }
+
+        /* Quick Buttons */
+        .btn-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .btn-log {
+            padding: 12px; border: 1px solid var(--border-color); border-radius: 8px;
+            background: var(--input-bg); color: var(--text-main); font-weight: bold; cursor: pointer;
+            transition: 0.1s; font-size: 0.9em;
+        }
+        .btn-log:active { transform: scale(0.98); background: var(--border-color); }
+        
+        /* Category specific borders for visual grouping */
+        .border-blue { border-left: 4px solid var(--info-blue); }
+        .border-green { border-left: 4px solid var(--alert-green); }
+        .border-yellow { border-left: 4px solid var(--warning-yellow); }
+        .border-red { border-left: 4px solid var(--danger-red); }
+
+        /* Custom Entry */
+        .custom-entry {
+            display: flex; gap: 8px; margin-bottom: 15px;
+        }
+        .custom-input {
+            flex: 1; background: var(--input-bg); border: 1px solid var(--border-color);
+            color: var(--text-main); border-radius: 8px; padding: 10px; font-size: 1em;
+        }
+        .btn-add {
+            padding: 10px 20px; background: var(--info-blue); color: white;
+            border: none; border-radius: 8px; font-weight: bold; cursor: pointer;
+        }
+
+        /* The Output Log */
+        .log-textarea {
+            width: 100%; height: 250px; background: #000; border: 1px solid var(--border-color);
+            color: var(--alert-green); border-radius: 8px; padding: 12px; font-family: monospace;
+            font-size: 0.95em; line-height: 1.5; resize: vertical; box-sizing: border-box;
+        }
+        
+        .btn-copy {
+            width: 100%; padding: 14px; background: var(--text-main); color: var(--bg-color);
+            border: none; border-radius: 8px; font-size: 1.1em; font-weight: bold; cursor: pointer;
+            margin-top: 10px;
+        }
+        .btn-copy:active { transform: scale(0.98); }
+
+    </style>
+</head>
+<body>
+
+    <div class="app-nav">
+        <a href="index.html">MAC</a>
+        <a href="ACLS-tracker.html">ACLS</a>
+        <a href="Anesthesia-calculator.html">Induction</a>
+        <a href="Event-Logger.html" class="active">Log</a>
+    </div>
+
+    <div class="container">
+        
+        <!-- Standard Events -->
+        <div class="card">
+            <h3>Standard Events</h3>
+            <div class="btn-grid">
+                <button class="btn-log border-blue" onclick="addLog('Patient in OR, monitors placed.')">Monitors Placed</button>
+                <button class="btn-log border-blue" onclick="addLog('Pre-oxygenation started.')">Pre-O2</button>
+                
+                <button class="btn-log border-green" onclick="addLog('Induction initiated.')">Induction</button>
+                <button class="btn-log border-green" onclick="addLog('Airway secured, ETCO2 confirmed.')">Airway Secured</button>
+                
+                <button class="btn-log border-yellow" onclick="addLog('Surgical incision.')">Incision</button>
+                <button class="btn-log border-yellow" onclick="addLog('Tourniquet inflated.')">Tourniquet UP</button>
+                
+                <button class="btn-log border-red" onclick="addLog('Extubation. Patient breathing spontaneously.')">Extubation</button>
+                <button class="btn-log border-red" onclick="addLog('Patient transferred to PACU/Recovery.')">To PACU</button>
+            </div>
+        </div>
+
+        <!-- Vitals & Meds Events -->
+        <div class="card">
+            <h3>Clinical Actions</h3>
+            <div class="btn-grid">
+                <button class="btn-log border-purple" onclick="addLog('Fluid bolus administered (Crystalloid).')">Fluid Bolus</button>
+                <button class="btn-log border-purple" onclick="addLog('Vasopressor administered.')">Pressor Given</button>
+                <button class="btn-log border-purple" onclick="addLog('Blood samples drawn for labs.')">Labs Drawn</button>
+                <button class="btn-log border-purple" onclick="addLog('Attending physician notified/consulted.')">Attending Consulted</button>
+            </div>
+
+            <div class="custom-entry" style="margin-top: 15px;">
+                <input type="text" id="custom-text" class="custom-input" placeholder="Specific drug or event (e.g., Ephedrine 5mg)">
+                <button class="btn-add" onclick="addCustomLog()">Log</button>
+            </div>
+        </div>
+
+        <!-- Compiled Record -->
+        <div class="card">
+            <h3 style="display: flex; justify-content: space-between;">
+                <span>Anesthesia Record</span>
+                <span style="font-size: 0.8em; cursor: pointer; color: var(--danger-red);" onclick="clearLog()">Clear</span>
+            </h3>
+            <textarea id="log-output" class="log-textarea" placeholder="Waiting for first event..."></textarea>
+            <button class="btn-copy" id="btn-copy" onclick="copyLog()">📋 Copy to Clipboard</button>
+        </div>
+
+    </div>
+
+    <script>
+        // Get current time in 24h format (HH:MM)
+        function getTime() {
+            const now = new Date();
+            let h = now.getHours().toString().padStart(2, '0');
+            let m = now.getMinutes().toString().padStart(2, '0');
+            return `${h}:${m}`;
+        }
+
+        // Add a line to the textarea
+        function addLog(text) {
+            const textarea = document.getElementById('log-output');
+            const timestamp = getTime();
+            const newEntry = `[${timestamp}] ${text}\n`;
+            
+            textarea.value += newEntry;
+            textarea.scrollTop = textarea.scrollHeight; // Auto-scroll to bottom
+        }
+
+        // Handle the custom text input box
+        function addCustomLog() {
+            const input = document.getElementById('custom-text');
+            const text = input.value.trim();
+            
+            if (text !== "") {
+                addLog(text);
+                input.value = ""; // Clear the box after logging
+            }
+        }
+
+        // Allow pressing "Enter" on the custom input
+        document.getElementById('custom-text').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                addCustomLog();
+            }
+        });
+
+        // Copy everything to the clipboard
+        function copyLog() {
+            const textarea = document.getElementById('log-output');
+            if(textarea.value.trim() === "") return;
+
+            textarea.select();
+            document.execCommand('copy');
+            
+            const btn = document.getElementById('btn-copy');
+            const originalText = btn.innerText;
+            btn.innerText = "✅ Copied!";
+            btn.style.backgroundColor = "var(--alert-green)";
+            btn.style.color = "#fff";
+            
+            setTimeout(() => {
+                btn.innerText = originalText;
+                btn.style.backgroundColor = "var(--text-main)";
+                btn.style.color = "var(--bg-color)";
+                window.getSelection().removeAllRanges(); // deselect text
+            }, 1500);
+        }
+
+        function clearLog() {
+            if(confirm("Are you sure you want to clear the entire record?")) {
+                document.getElementById('log-output').value = "";
+            }
+        }
+    </script>
+</body>
+</html>
