@@ -325,22 +325,22 @@
 
         <div id="main-log" class="tab-panel">
             
-            <div class="card" style="margin-bottom: 15px;">
-                <h3 style="color: var(--iso-opioid); margin-top: 0;">Analgesics & Steroids</h3>
-                <div class="nmb-sum-box" style="margin-bottom:10px;">
-                    <span style="color: var(--text-muted); font-size: 0.8em;">Fentanyl Total: </span>
-                    <strong id="fentanyl-total" style="font-size: 1.2em;">0</strong> <span style="color: var(--text-muted);">mcg</span>
-                </div>
-                <div class="log-grid">
-                    <button class="btn-log b-opioid" onclick="addFentanyl(50)">+ 50mcg Fentanyl</button>
-                    <button class="btn-log b-opioid" onclick="addFentanyl(100)">+ 100mcg Fentanyl</button>
-                    <button class="btn-log b-drug" onclick="addLog('Analgin (Metamizole) 1g given.')">Analgin 1g</button>
-                    <button class="btn-log b-drug" onclick="addLog('Paracetamol 1g given.')">Paracetamol 1g</button>
-                    <button class="btn-log b-drug" onclick="addLog('Dexketoprofen 50mg given.')">Dexketoprofen 50mg</button>
-                    <button class="btn-log b-drug" onclick="addLog('Dexamethasone 4mg given. *Note: PONV prophylaxis, peak 2-3h*')">Dexa 4mg (PONV)</button>
-                    <button class="btn-log b-drug" onclick="addLog('Methylprednisolone 40mg given.')">Methylpred 40mg</button>
-                </div>
-            </div>
+               <div class="card" style="margin-bottom: 15px;">
+    <h3 style="color: var(--iso-opioid); margin-top: 0;">Tallies: <span id="fentanyl-total">0</span>mcg Fent / <span id="propofol-total">0</span>mg Prop</h3>
+    <div class="log-grid">
+        <button class="btn-log b-opioid" onclick="addFentanyl(50)">+ 50mcg Fent</button>
+        <button class="btn-log b-opioid" onclick="addFentanyl(100)">+ 100mcg Fent</button>
+        <button class="btn-log b-drug" onclick="addPropofol(30)">+ 30mg Prop</button>
+        <button class="btn-log b-drug" onclick="addPropofol(50)">+ 50mg Prop</button>
+        <button class="btn-log b-drug" onclick="addLog('Analgin 1g given.')">Analgin 1g</button>
+        <button class="btn-log b-drug" onclick="addLog('Paracetamol 1g given.')">Para 1g</button>
+        <button class="btn-log b-drug" onclick="checkAnalgesia()">*Check Analgesia*</button>
+    </div>
+</div>
+<button class="btn" style="background: var(--info-blue);" onclick="generateSummary()">📊 Current Tally Summary</button>
+<button class="btn" style="background: var(--iso-relaxant);" onclick="endCase()">🛑 End Case / Save</button>
+<button class="btn" style="background: #444;" onclick="hardReset()">🔄 Reset Dashboard</button>
+
 
             <div class="section-label">Surgery Type Events</div>
             <div class="sub-tabs">
@@ -359,6 +359,8 @@
                         <button class="btn-log b-proc" onclick="addLog('Airway secured, ETCO2 confirmed.')">Airway Secured</button>
                         <button class="btn-log b-drug" onclick="addLog('Antibiotics administered.')">Antibiotics Given</button>
                         <button class="btn-log b-surg" onclick="addLog('Surgical incision.')">Incision</button>
+                        <button class="btn-log b-drug" onclick="addPropofol(30)">+ 30mg Prop</button>
+                        <button class="btn-log b-drug" onclick="addPropofol(50)">+ 50mg Prop</button>
                         <button class="btn-log b-surg" onclick="addLog('Tourniquet inflated.')">Tourniquet UP</button>
                         <button class="btn-log b-surg" onclick="addLog('Tourniquet deflated.')">Tourniquet DOWN</button>
                         <button class="btn-log b-surg" onclick="addLog('Analgesia review: Analgin/Paracetamol/Ketoprofen checked.')">*Check Analgesia*</button>
@@ -440,6 +442,7 @@
         let ghostVal = 0;
         let ghostInterval = null;
 
+        let propofolTotal = 0;
         let fentanylTotal = 0;
         let netBalance = 0;
 
@@ -451,6 +454,9 @@
             document.getElementById('net-balance').innerText = netBalance;
             nmbTotalMg = parseInt(localStorage.getItem('nmb_total')) || 0;
             updateNMBSumUI();
+            propofolTotal = parseInt(localStorage.getItem('propofol_total')) || 0;
+            if(document.getElementById('propofol-total')) document.getElementById('propofol-total').innerText = propofolTotal;
+
 
             const savedFGF = localStorage.getItem('fgf_val');
             if (savedFGF) {
@@ -468,6 +474,8 @@
             localStorage.setItem('fentanyl_total', fentanylTotal);
             localStorage.setItem('net_fluid', netBalance);
             localStorage.setItem('nmb_total', nmbTotalMg);
+            localStorage.setItem('propofol_total', propofolTotal);
+
         }
 
         // --- NAVIGATION LOGIC ---
@@ -883,28 +891,43 @@
         }
 
         // End Case & Reset
-        function endCase() {
-            if(confirm("🛑 Are you sure you want to END THIS CASE?\n\nThis will generate a final report, download the record, and ERASE all current data for the next patient.")) {
-                
-                // 1. Generate Summary
-                addLog(`\n--- CASE ENDED ---`);
-                addLog(`FINAL TOTALS:`);
-                addLog(`Fentanyl Administered: ${fentanylTotal} mcg`);
-                addLog(`Neuromuscular Blockade: ${nmbTotalMg} mg (${(nmbTotalMg/10).toFixed(1)} mL)`);
-                addLog(`Net Fluid Balance: ${netBalance} mL`);
-                
-                // 2. Auto-Download the record
-                downloadRecord();
-                
-                // 3. Clear Local Storage entirely
-                localStorage.clear();
-                
-                // 4. Hard Refresh the page to reset all variables and UI
-                setTimeout(() => {
-                    location.reload();
-                }, 1000);
-            }
-        }
+        function addPropofol(dose) {
+    propofolTotal += dose;
+    document.getElementById('propofol-total').innerText = propofolTotal;
+    saveState();
+    addLog(`Propofol ${dose}mg bolus given (Total: ${propofolTotal}mg).`);
+}
+
+function checkAnalgesia() {
+    const log = document.getElementById('log-output').value;
+    const hasAnalgin = log.includes('Analgin') ? '✅' : '❌';
+    const hasPara = log.includes('Paracetamol') ? '✅' : '❌';
+    const hasDex = log.includes('Dexketoprofen') ? '✅' : '❌';
+    addLog(`--- ANALGESIA CHECK ---`);
+    addLog(`${hasAnalgin} Analgin | ${hasPara} Paracetamol | ${hasDex} Dexketoprofen`);
+}
+
+function generateSummary() {
+    addLog(`--- RUNNING TALLY ---`);
+    addLog(`Fentanyl: ${fentanylTotal} mcg`);
+    addLog(`Propofol: ${propofolTotal} mg`);
+    addLog(`NMB: ${nmbTotalMg} mg`);
+    addLog(`Fluids: ${netBalance} mL`);
+    alert("Summary added to log.");
+}
+
+function endCase() {
+    generateSummary();
+    alert("Case Summary logged. Ensure you download the .TXT file before resetting.");
+}
+
+function hardReset() {
+    if(confirm("Are you sure? This deletes ALL data for this patient.")) {
+        localStorage.clear();
+        location.reload();
+    }
+}
+
     </script>
 </body>
 </html>
