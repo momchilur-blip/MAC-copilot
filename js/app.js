@@ -321,6 +321,29 @@ function calculateWashout() {
     document.getElementById('washout-clock').innerText = `[${hh}:${mm}]`;
     document.getElementById('washout-result').style.display = 'block';
 }
+// Auto-calculate Sevo targets when tab is opened
+document.querySelector('[onclick="setMainTab(\'maintenance\')"]').addEventListener('click', () => {
+    setTimeout(calculateSevo, 100); 
+});
+
+function updateSevoSlider() {
+    const slider = document.getElementById('sevo-slider');
+    const vol = parseFloat(slider.value);
+    document.getElementById('sevo-vol-disp').innerText = vol.toFixed(1);
+    
+    // Safety check: ensure baseline exists
+    if (currentSevoBaseline > 0) {
+        document.getElementById('sevo-mac-disp').innerText = (vol / currentSevoBaseline).toFixed(2);
+    }
+    
+    // Update badge color
+    let active = sevoZones[sevoZones.length - 1];
+    for (let z of sevoZones) { if (vol <= z.val + 0.05) { active = z; break; } }
+    
+    const badge = document.getElementById('sevo-badge');
+    badge.innerText = active.name;
+    badge.style.backgroundColor = active.color;
+}
 
 
         // --- NMB TRACKER ---
