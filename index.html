@@ -43,7 +43,6 @@
             <div class="section-label">Drug Profile</div>
             <div class="sub-tabs">
                 <button class="sub-tab-btn active" id="sub-nav-dosing" onclick="setSubTab('induction', 'dosing')">Dosing Guide</button>
-                <button class="sub-tab-btn" id="sub-nav-remi" onclick="setSubTab('induction', 'remi')">Remifentanil</button>
             </div>
 
             <div class="card tab-panel active induction-sub" id="sub-dosing">
@@ -52,7 +51,71 @@
                 </div>
             </div>
 
-            <div class="card tab-panel induction-sub" id="sub-remi">
+                <div id="main-maintenance" class="tab-panel">
+            <div class="sub-tabs">
+                <button class="sub-tab-btn active" id="sub-nav-sevo" onclick="setSubTab('maintenance', 'sevo')">Sevoflurane</button>
+                <button class="sub-tab-btn" id="sub-nav-remi" onclick="setSubTab('maintenance', 'remi')">Remifentanil</button>
+            </div>
+
+            <div id="sub-sevo" class="tab-panel active maintenance-sub">
+                <div class="card" style="margin-bottom: 15px;">
+                    <div class="slider-readout">
+                        <div class="rate-val"><span id="fgf-disp">1.5</span><span style="font-size:0.4em; color:var(--text-muted); margin-left:4px;">L/min</span></div>
+                        <div class="zone-badge" style="background:var(--info-blue);">Fresh Gas Flow</div>
+                    </div>
+                    <input type="range" class="custom-range" id="fgf-slider" min="0.5" max="10" step="0.5" value="1.5" oninput="updateFGF()">
+                    <div style="text-align: center; font-size: 0.85em; color: var(--text-muted);">
+                        Estimated Total Delay ($\tau$): <strong id="tau-disp" style="color:var(--text-main);">6.8</strong> min
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="switch-container" style="border-top: none; margin-top: 0; padding-top: 0;">
+                        <div>
+                            <strong style="color: var(--iso-opioid); font-size: 0.9em;">Concurrent Opioids Administered</strong><br>
+                            <span style="font-size: 0.75em; color: var(--text-muted);">e.g., Fentanyl ~1-2mcg/kg</span>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="opioid-toggle" onchange="calculateSevo()">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <button class="btn" style="background: var(--text-main); color: var(--bg-color); margin-top: 15px;" onclick="calculateSevo()">Calculate MAC Targets</button>
+                </div>
+
+                <div id="sevo-results" style="display: none;">
+                    <div class="card" style="margin-bottom: 15px; border-left: 4px solid var(--iso-hypnotic);">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <div style="font-size: 0.8em; color: var(--text-muted); text-transform: uppercase;">Baseline 1.0 MAC</div>
+                                <div style="font-size: 0.7em; color: var(--iso-hypnotic);" id="band-sub">—</div>
+                            </div>
+                            <div style="font-size: 1.8em; font-family: monospace; font-weight: bold; color: var(--text-main);" id="baseline-value">—</div>
+                        </div>
+                    </div>
+
+                    <div class="card" style="margin-bottom: 15px;">
+                        <div class="slider-readout">
+                            <div class="rate-val"><span id="sevo-vol-disp">0.0</span><span style="font-size:0.4em; color:var(--text-muted); margin-left:4px;">vol%</span></div>
+                            <div class="zone-badge" id="sevo-badge">Adjust Slider</div>
+                        </div>
+                        
+                        <div class="sevo-slider-container">
+                            <div class="sevo-track-bg" id="sevo-track-bg"></div>
+                            <input type="range" class="sevo-range" id="sevo-slider" min="0" max="3" step="0.1" value="0" oninput="updateSevoSlider()">
+                        </div>
+
+                        <div style="text-align: center; font-size: 0.9em; color: var(--text-muted);">
+                            Calculated fMAC: <strong id="sevo-mac-disp" style="color:var(--text-main); font-size:1.2em;">0.00</strong>
+                        </div>
+                        
+                        <button class="btn" style="background: var(--input-bg); color: var(--text-main); border: 1px solid var(--border-color); margin-top: 15px; font-size: 0.9em;" onclick="logSevoChange()">📝 Send EtSevo to Log</button>
+                    </div>
+                    <div class="target-list" id="target-list" style="margin-bottom: 15px;"></div>
+                </div>
+            </div>
+
+            <div class="card tab-panel maintenance-sub" id="sub-remi">
                 <div id="remi-content" style="display: none;">
                     <div style="font-size: 0.85em; color: var(--text-muted); margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
                         Assumes 2.5 mg in 50 mL = <strong style="color:var(--iso-opioid);">50 mcg/mL</strong><br>Calculations based strictly on <strong>IBW</strong>.
@@ -67,74 +130,10 @@
                     </div>
                     <button class="btn" style="background: var(--input-bg); color: var(--text-main); border: 1px solid var(--border-color); margin-top: 15px; font-size: 0.9em;" onclick="logRemiChange()">📝 Send Remi Rate to Log</button>
                 </div>
-                <div id="remi-placeholder" style="text-align: center; color: var(--text-muted); padding: 20px 0;">Calculate parameters first.</div>
+                <div id="remi-placeholder" style="text-align: center; color: var(--text-muted); padding: 20px 0;">Calculate parameters in Induction tab first.</div>
             </div>
         </div>
 
-        <div id="main-sevo" class="tab-panel">
-            
-            <div class="card" style="margin-bottom: 15px;">
-                <div class="slider-readout">
-                    <div class="rate-val"><span id="fgf-disp">1.5</span><span style="font-size:0.4em; color:var(--text-muted); margin-left:4px;">L/min</span></div>
-                    <div class="zone-badge" style="background:var(--info-blue);">Fresh Gas Flow</div>
-                </div>
-                <input type="range" class="custom-range" id="fgf-slider" min="0.5" max="10" step="0.5" value="1.5" oninput="updateFGF()">
-                <div style="text-align: center; font-size: 0.85em; color: var(--text-muted);">
-                    Estimated Total Delay ($\tau$): <strong id="tau-disp" style="color:var(--text-main);">6.8</strong> min
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="switch-container" style="border-top: none; margin-top: 0; padding-top: 0;">
-                    <div>
-                        <strong style="color: var(--iso-opioid); font-size: 0.9em;">Concurrent Opioids Administered</strong><br>
-                        <span style="font-size: 0.75em; color: var(--text-muted);">e.g., Fentanyl ~1-2mcg/kg (2ng/mL site conc.)</span>
-                    </div>
-                    <label class="switch">
-                        <input type="checkbox" id="opioid-toggle" onchange="calculateSevo()">
-                        <span class="slider"></span>
-                    </label>
-                </div>
-
-                <button class="btn" style="background: var(--text-main); color: var(--bg-color); margin-top: 15px;" onclick="calculateSevo()">Calculate MAC Targets</button>
-            </div>
-
-            <div id="sevo-results" style="display: none;">
-                <div class="card" style="margin-bottom: 15px; border-left: 4px solid var(--iso-hypnotic);">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <div>
-                            <div style="font-size: 0.8em; color: var(--text-muted); text-transform: uppercase;">Baseline 1.0 MAC</div>
-                            <div style="font-size: 0.7em; color: var(--iso-hypnotic);" id="band-sub">—</div>
-                        </div>
-                        <div style="font-size: 1.8em; font-family: monospace; font-weight: bold; color: var(--text-main);" id="baseline-value">—</div>
-                    </div>
-                </div>
-
-                <div class="card" style="margin-bottom: 15px;">
-                    <div class="slider-readout">
-                        <div class="rate-val"><span id="sevo-vol-disp">0.0</span><span style="font-size:0.4em; color:var(--text-muted); margin-left:4px;">vol%</span></div>
-                        <div class="zone-badge" id="sevo-badge">Adjust Slider</div>
-                    </div>
-                    
-                    <div class="sevo-slider-container">
-                        <div class="sevo-label-top" id="label-et">EtSevo</div>
-                        <div class="sevo-label-bottom" id="label-brain">Brain</div>
-                        
-                        <div class="sevo-track-bg" id="sevo-track-bg"></div>
-                        <input type="range" class="ghost-range" id="sevo-ghost-slider" min="0" max="3" step="0.1" value="0">
-                        <input type="range" class="sevo-range sevo-active-layer" id="sevo-slider" min="0" max="3" step="0.1" value="0" oninput="updateSevoSlider()">
-                    </div>
-
-                    <div style="text-align: center; font-size: 0.9em; color: var(--text-muted);">
-                        Calculated fMAC: <strong id="sevo-mac-disp" style="color:var(--text-main); font-size:1.2em;">0.00</strong>
-                    </div>
-                    
-                    <button class="btn" style="background: var(--input-bg); color: var(--text-main); border: 1px solid var(--border-color); margin-top: 15px; font-size: 0.9em;" onclick="logSevoChange()">📝 Send EtSevo to Log</button>
-                </div>
-                
-                <div class="target-list" id="target-list" style="margin-bottom: 15px;"></div>
-            </div>
-        </div>
 
         <div id="main-nmb" class="tab-panel">
             <div class="card">
