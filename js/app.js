@@ -535,3 +535,9 @@ function hardReset() {
         window.location.reload(true);
     }
 }
+
+// --- PRE-OP CHECKLIST RESET ---
+function resetChecklist() {
+    document.querySelectorAll('.checklist-item input[type="checkbox"]').forEach(cb => cb.checked = false);
+}
+
