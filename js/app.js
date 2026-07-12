@@ -16,10 +16,16 @@
             document.getElementById(`main-${tabId}`).classList.add('active');
         }
 
-        function setSubTab(parent, subId) {
+        
+                function setSubTab(parent, subId) {
             if (parent === 'induction') {
-                document.querySelectorAll('#sub-nav-dosing, #sub-nav-remi').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('#sub-nav-dosing').forEach(b => b.classList.remove('active'));
                 document.querySelectorAll('.induction-sub').forEach(p => p.classList.remove('active'));
+                document.getElementById(`sub-nav-${subId}`).classList.add('active');
+                document.getElementById(`sub-${subId}`).classList.add('active');
+            } else if (parent === 'maintenance') {
+                document.querySelectorAll('#sub-nav-sevo, #sub-nav-remi').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.maintenance-sub').forEach(p => p.classList.remove('active'));
                 document.getElementById(`sub-nav-${subId}`).classList.add('active');
                 document.getElementById(`sub-${subId}`).classList.add('active');
             } else if (parent === 'log') {
@@ -29,6 +35,7 @@
                 document.getElementById(`log-${subId}`).classList.add('active');
             }
         }
+
 
         // --- INDUCTION CALCULATION ---
         function setGender(g) {
@@ -149,23 +156,22 @@
         }
 
         // --- SEVO MAC CALCULATOR (OPIOID CROSSOVER LOGIC) ---
-        const sevoModeRadios = document.querySelectorAll('input[name="mode"]');
-        sevoModeRadios.forEach(r => r.addEventListener('change', () => {
-            const mode = document.querySelector('input[name="mode"]:checked').value;
-            document.getElementById('age-input').placeholder = mode === 'peds' ? 'e.g. 4 (Months)' : 'e.g. 45 (Years)';
-        }));
 
-        function calculateSevo() {
-            const mode = document.querySelector('input[name="mode"]:checked').value;
-            const age = parseFloat(document.getElementById('age-input').value);
-            if(isNaN(age) || age < 0) { alert("Enter a valid age."); return; }
+                function calculateSevo() {
+            // Pulls directly from the induction tab so you don't type it twice
+            const ageInput = document.getElementById('pt-age').value;
+            const age = parseFloat(ageInput);
+            
+            if(isNaN(age) || age < 0) { 
+                alert("Please enter the patient's Age in the Induction tab first."); 
+                return; 
+            }
 
+            // Auto-detects pediatric vs adult based on the age provided
             let mac = 0, band = '';
-            if (mode === 'peds') {
-                if (age < 1) { mac = 2.8; band = 'Neonate (< 1 month)'; }
-                else if (age <= 6) { mac = 3.2; band = 'Infant (1–6 months)'; }
-                else { mac = 2.9; band = 'Infant (7–12 months)'; }
-            } else {
+            if (age < 1) { mac = 2.8; band = 'Neonate (< 1 year)'; }
+            else if (age <= 12) { mac = 2.5; band = 'Pediatric (1-12 years)'; }
+            else {
                 mac = 2.0 * Math.pow(10, -0.00269 * (age - 40));
                 band = `Adult (Mapleson age ${age})`;
             }
@@ -176,10 +182,7 @@
 
             let oAwake = 1.0, oUnc = 1.0, oImm = 1.0, oBar = 1.0;
             if (document.getElementById('opioid-toggle').checked) {
-                oAwake = 0.85; 
-                oUnc = 0.85;   
-                oImm = 0.50;   
-                oBar = 0.25;   
+                oAwake = 0.85; oUnc = 0.85; oImm = 0.50; oBar = 0.25;   
             }
 
             let t = [
@@ -211,6 +214,14 @@
             slider.value = defaultVal; 
             updateSevoSlider();
         }
+
+        function logRemiChange() {
+            const mlh = document.getElementById('remi-ml-h').innerText;
+            const mcg = document.getElementById('remi-mcg-kg-min').innerText;
+            addLog(`Remifentanil adjusted to ${mlh} mL/h (${mcg} mcg/kg/min).`);
+            alert("Remifentanil rate sent to Event Log!");
+        }
+
 
         function updateSevoSlider() {
             if (!sevoZones || sevoZones.length === 0) return;
@@ -422,13 +433,16 @@ function giveAnalgin() { givenAnalgin = true; addLog('Analgin 1g given.'); }
 function giveParacetamol() { givenParacetamol = true; addLog('Paracetamol 1g given.'); }
 function giveKetoprofen() { givenKetoprofen = true; addLog('Ketoprofen (100mg) given.'); }
 
-function checkAnalgesia() {
-    if (givenAnalgin || givenParacetamol || givenKetoprofen) {
-        addLog("✅ Non-opioid analgesia confirmed. Safe to taper Sevoflurane/Remifentanil for extubation.");
-    } else {
-        addLog("⚠️ WARNING: No non-opioid analgesia recorded yet!");
-    }
-}
+        function checkAnalgesia() {
+            if (givenAnalgin || givenPara || givenDex) {
+                addLog("✅ Non-opioid analgesia confirmed. Safe to taper Sevoflurane/Remifentanil.");
+                alert("✅ Analgesia is on board.");
+            } else {
+                addLog("⚠️ WARNING: No non-opioid analgesia recorded yet!");
+                alert("⚠️ WARNING: No Paracetamol, Analgin, or Dexketoprofen has been given yet!");
+            }
+        }
+
 
 // --- MISSING RECORD & RESET LOGIC ---
 function downloadRecord() {
