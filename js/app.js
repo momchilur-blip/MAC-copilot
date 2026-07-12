@@ -7,6 +7,7 @@
 
         let currentSevoBaseline = 0;
         let sevoZones = [];
+        let ghostVal = 0; 
 
         // --- NAVIGATION LOGIC ---
         function setMainTab(tabId) {
