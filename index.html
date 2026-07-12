@@ -10,6 +10,282 @@
 </head>
 <body>
 
+    <div class="container">
+        
+        <div class="section-label">Master Modules</div>
+        <div class="master-nav">
+            <button class="nav-btn active" id="nav-induction" onclick="setMainTab('induction')">Induction</button>
+            <button class="nav-btn" id="nav-sevo" onclick="setMainTab('sevo')">Sevo MAC</button>
+            <button class="nav-btn" id="nav-nmb" onclick="setMainTab('nmb')">NMB</button>
+            <button class="nav-btn" id="nav-fluids" onclick="setMainTab('fluids')">Fluids</button>
+            <button class="nav-btn" id="nav-log" onclick="setMainTab('log')">Log</button>
+        </div>
+
+        <div id="main-induction" class="tab-panel active">
+            <div class="card" style="margin-bottom: 15px;">
+                <div class="input-grid">
+                    <div class="gender-toggle">
+                        <button class="gender-btn active" id="btn-male" onclick="setGender('male')">Male</button>
+                        <button class="gender-btn" id="btn-female" onclick="setGender('female')">Female</button>
+                    </div>
+                    <div class="field"><label>Age</label><input type="number" id="pt-age" placeholder="e.g. 45"></div>
+                    <div class="field"><label>Height (cm)</label><input type="number" id="pt-height" placeholder="170"></div>
+                    <div class="field" style="grid-column: span 2;"><label>Actual Wt (kg)</label><input type="number" id="pt-weight" placeholder="75"></div>
+                    <button class="btn-calc" onclick="calculate()">Calculate Patient</button>
+                </div>
+                <div style="display: flex; justify-content: space-around; text-align: center; font-size: 0.9em;">
+                    <div><span style="color:var(--text-muted); font-size: 0.8em; text-transform: uppercase;">IBW</span><br><strong id="out-ibw">-- kg</strong></div>
+                    <div><span style="color:var(--text-muted); font-size: 0.8em; text-transform: uppercase;">ABW</span><br><strong id="out-abw">-- kg</strong></div>
+                </div>
+            </div>
+
+            <div class="section-label">Drug Profile</div>
+            <div class="sub-tabs">
+                <button class="sub-tab-btn active" id="sub-nav-dosing" onclick="setSubTab('induction', 'dosing')">Dosing Guide</button>
+                <button class="sub-tab-btn" id="sub-nav-remi" onclick="setSubTab('induction', 'remi')">Remifentanil</button>
+            </div>
+
+            <div class="card tab-panel active induction-sub" id="sub-dosing">
+                <div id="induction-results" style="text-align: center; color: var(--text-muted); padding: 20px 0;">
+                    Enter parameters to calculate.
+                </div>
+            </div>
+
+            <div class="card tab-panel induction-sub" id="sub-remi">
+                <div id="remi-content" style="display: none;">
+                    <div style="font-size: 0.85em; color: var(--text-muted); margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+                        Assumes 2.5 mg in 50 mL = <strong style="color:var(--iso-opioid);">50 mcg/mL</strong><br>Calculations based strictly on <strong>IBW</strong>.
+                    </div>
+                    <div class="slider-readout">
+                        <div class="rate-val"><span id="remi-ml-h">0.0</span><span style="font-size:0.4em; color:var(--text-muted); margin-left:4px;">mL/h</span></div>
+                        <div class="zone-badge" id="remi-badge">Adjust Slider</div>
+                    </div>
+                    <input type="range" class="custom-range" id="remi-slider" min="0" max="30" step="0.5" value="0" oninput="updateRemi()">
+                    <div style="text-align: center; font-size: 0.9em; color: var(--text-muted);">
+                        Current Dose: <strong id="remi-mcg-kg-min" style="color:var(--iso-opioid); font-size:1.2em;">0.00</strong> mcg/kg/min
+                    </div>
+                    <button class="btn" style="background: var(--input-bg); color: var(--text-main); border: 1px solid var(--border-color); margin-top: 15px; font-size: 0.9em;" onclick="logRemiChange()">📝 Send Remi Rate to Log</button>
+                </div>
+                <div id="remi-placeholder" style="text-align: center; color: var(--text-muted); padding: 20px 0;">Calculate parameters first.</div>
+            </div>
+        </div>
+
+        <div id="main-sevo" class="tab-panel">
+            
+            <div class="card" style="margin-bottom: 15px;">
+                <div class="slider-readout">
+                    <div class="rate-val"><span id="fgf-disp">1.5</span><span style="font-size:0.4em; color:var(--text-muted); margin-left:4px;">L/min</span></div>
+                    <div class="zone-badge" style="background:var(--info-blue);">Fresh Gas Flow</div>
+                </div>
+                <input type="range" class="custom-range" id="fgf-slider" min="0.5" max="10" step="0.5" value="1.5" oninput="updateFGF()">
+                <div style="text-align: center; font-size: 0.85em; color: var(--text-muted);">
+                    Estimated Total Delay ($\tau$): <strong id="tau-disp" style="color:var(--text-main);">6.8</strong> min
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="switch-container" style="border-top: none; margin-top: 0; padding-top: 0;">
+                    <div>
+                        <strong style="color: var(--iso-opioid); font-size: 0.9em;">Concurrent Opioids Administered</strong><br>
+                        <span style="font-size: 0.75em; color: var(--text-muted);">e.g., Fentanyl ~1-2mcg/kg (2ng/mL site conc.)</span>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="opioid-toggle" onchange="calculateSevo()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <button class="btn" style="background: var(--text-main); color: var(--bg-color); margin-top: 15px;" onclick="calculateSevo()">Calculate MAC Targets</button>
+            </div>
+
+            <div id="sevo-results" style="display: none;">
+                <div class="card" style="margin-bottom: 15px; border-left: 4px solid var(--iso-hypnotic);">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-size: 0.8em; color: var(--text-muted); text-transform: uppercase;">Baseline 1.0 MAC</div>
+                            <div style="font-size: 0.7em; color: var(--iso-hypnotic);" id="band-sub">—</div>
+                        </div>
+                        <div style="font-size: 1.8em; font-family: monospace; font-weight: bold; color: var(--text-main);" id="baseline-value">—</div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-bottom: 15px;">
+                    <div class="slider-readout">
+                        <div class="rate-val"><span id="sevo-vol-disp">0.0</span><span style="font-size:0.4em; color:var(--text-muted); margin-left:4px;">vol%</span></div>
+                        <div class="zone-badge" id="sevo-badge">Adjust Slider</div>
+                    </div>
+                    
+                    <div class="sevo-slider-container">
+                        <div class="sevo-label-top" id="label-et">EtSevo</div>
+                        <div class="sevo-label-bottom" id="label-brain">Brain</div>
+                        
+                        <div class="sevo-track-bg" id="sevo-track-bg"></div>
+                        <input type="range" class="ghost-range" id="sevo-ghost-slider" min="0" max="3" step="0.1" value="0">
+                        <input type="range" class="sevo-range sevo-active-layer" id="sevo-slider" min="0" max="3" step="0.1" value="0" oninput="updateSevoSlider()">
+                    </div>
+
+                    <div style="text-align: center; font-size: 0.9em; color: var(--text-muted);">
+                        Calculated fMAC: <strong id="sevo-mac-disp" style="color:var(--text-main); font-size:1.2em;">0.00</strong>
+                    </div>
+                    
+                    <button class="btn" style="background: var(--input-bg); color: var(--text-main); border: 1px solid var(--border-color); margin-top: 15px; font-size: 0.9em;" onclick="logSevoChange()">📝 Send EtSevo to Log</button>
+                </div>
+                
+                <div class="target-list" id="target-list" style="margin-bottom: 15px;"></div>
+            </div>
+        </div>
+
+        <div id="main-nmb" class="tab-panel">
+            <div class="card">
+                <h3 style="text-align: center; color: var(--iso-relaxant);">Neuromuscular Blockade</h3>
+                
+                <div class="nmb-sum-box">
+                    <span style="color: var(--text-muted); font-size: 0.85em; text-transform: uppercase;">Total Administered</span><br>
+                    <strong style="font-size: 1.5em; color: var(--text-main);" id="nmb-total-mg">0</strong> mg 
+                    <span style="color: var(--text-muted);"> / <span id="nmb-total-ml">0.0</span> mL</span>
+                </div>
+
+                <button class="btn" style="background: var(--iso-relaxant); color: #fff;" onclick="startNMB('intubation')">💉 Intubating Dose (<span id="btn-intub-ml">?</span> mL)</button>
+                <button class="btn" style="background: var(--border-color); border: 1px solid var(--iso-relaxant); color: var(--text-main);" onclick="startNMB('topup')">+ 1 mL Top-Up (10 mg)</button>
+                
+                <div class="nmb-bar-bg"><div class="nmb-bar-fill" id="nmb-bar"></div></div>
+                <div class="nmb-timer-text" id="nmb-clock">00:00</div>
+                <div style="text-align: center; font-size: 0.9em; color: var(--text-muted); margin-bottom: 20px;" id="nmb-instruction">Awaiting initial dose...</div>
+
+                <button class="btn" style="background: transparent; border: 2px solid var(--alert-green); color: var(--alert-green);" onclick="stopNMB()">⏹ Emergence / Reversal</button>
+            </div>
+        </div>
+
+        <div id="main-fluids" class="tab-panel">
+            <div class="card">
+                <h3 style="text-align: center; color: var(--alert-green);">Fluid & Blood Balance</h3>
+                
+                <div class="input-grid" style="grid-template-columns: 1fr 1fr;">
+                    <div class="field"><label>Start Hgb (g/L)</label><input type="number" id="hgb-start" placeholder="e.g. 120"></div>
+                    <div class="field"><label>Target Hgb (g/L)</label><input type="number" id="hgb-target" placeholder="e.g. 70"></div>
+                    <button class="btn" style="background: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-main); grid-column: span 2;" onclick="calcABL()">Calculate ABL</button>
+                </div>
+                <div id="abl-result" style="text-align:center; margin:10px 0; color:var(--log-hemo); font-weight:bold;">ABL: -- mL</div>
+
+                <div class="nmb-sum-box" style="margin-top:20px;">
+                    <span style="color: var(--text-muted); font-size: 0.85em; text-transform: uppercase;">Net Fluid Balance</span><br>
+                    <strong style="font-size: 1.8em; color: var(--text-main);" id="net-balance">0</strong> mL
+                </div>
+
+                <div class="log-grid">
+                    <button class="btn-log b-proc" onclick="updateFluids(500, false, false)">+ 500 mL Cryst</button>
+                    <button class="btn-log b-drug" onclick="updateFluids(100, false, false)">+ 100 mL Drip (Abx/TXA)</button>
+                    <button class="btn-log b-hemo" onclick="updateFluids(250, true, false)">+ 250 mL Blood</button>
+                    <button class="btn-log b-prep" onclick="updateFluids(100, false, true)">- 100 mL Urine/Loss</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="main-log" class="tab-panel">
+            
+               <div class="card" style="margin-bottom: 15px;">
+    <h3 style="color: var(--iso-opioid); margin-top: 0;">Tallies: <span id="fentanyl-total">0</span>mcg Fent / <span id="propofol-total">0</span>mg Prop</h3>
+    <div class="log-grid">
+        <button class="btn-log b-opioid" onclick="addFentanyl(50)">+ 50mcg Fent</button>
+        <button class="btn-log b-opioid" onclick="addFentanyl(100)">+ 100mcg Fent</button>
+        <button class="btn-log b-drug" onclick="addPropofol(30)">+ 30mg Prop</button>
+        <button class="btn-log b-drug" onclick="addPropofol(50)">+ 50mg Prop</button>
+        <button class="btn-log b-drug" onclick="addLog('Analgin 1g given.')">Analgin 1g</button>
+        <button class="btn-log b-drug" onclick="addLog('Paracetamol 1g given.')">Para 1g</button>
+        <button class="btn-log b-drug" onclick="checkAnalgesia()">*Check Analgesia*</button>
+    </div>
+</div>
+<button class="btn" style="background: var(--info-blue);" onclick="generateSummary()">📊 Current Tally Summary</button>
+<button class="btn" style="background: var(--iso-relaxant);" onclick="endCase()">🛑 End Case / Save</button>
+<button class="btn" style="background: #444;" onclick="hardReset()">🔄 Reset Dashboard</button>
+
+
+            <div class="section-label">Surgery Type Events</div>
+            <div class="sub-tabs">
+                <button class="sub-tab-btn active" id="log-nav-std" onclick="setSubTab('log', 'std')">Standard</button>
+                <button class="sub-tab-btn" id="log-nav-neuro" onclick="setSubTab('log', 'neuro')">Neuro</button>
+                <button class="sub-tab-btn" id="log-nav-lap" onclick="setSubTab('log', 'lap')">Lap</button>
+                <button class="sub-tab-btn" id="log-nav-vasc" onclick="setSubTab('log', 'vasc')">Vasc/Thor</button>
+            </div>
+
+            <div class="card">
+                <div id="log-std" class="tab-panel active log-sub">
+                    <div class="log-grid">
+                        <button class="btn-log b-prep" onclick="addLog('Patient in OR, monitors placed.')">Monitors Placed</button>
+                        <button class="btn-log b-prep" onclick="addLog('Pre-oxygenation started.')">Pre-O2</button>
+                        <button class="btn-log b-proc" onclick="addLog('Induction initiated.')">Induction</button>
+                        <button class="btn-log b-proc" onclick="addLog('Airway secured, ETCO2 confirmed.')">Airway Secured</button>
+                        <button class="btn-log b-drug" onclick="addLog('Antibiotics administered.')">Antibiotics Given</button>
+                        <button class="btn-log b-surg" onclick="addLog('Surgical incision.')">Incision</button>
+                        <button class="btn-log b-drug" onclick="addPropofol(30)">+ 30mg Prop</button>
+                        <button class="btn-log b-drug" onclick="addPropofol(50)">+ 50mg Prop</button>
+                        <button class="btn-log b-surg" onclick="addLog('Tourniquet inflated.')">Tourniquet UP</button>
+                        <button class="btn-log b-surg" onclick="addLog('Tourniquet deflated.')">Tourniquet DOWN</button>
+                        <button class="btn-log b-surg" onclick="addLog('Analgesia review: Analgin/Paracetamol/Ketoprofen checked.')">*Check Analgesia*</button>
+                        <button class="btn-log b-surg" onclick="addLog('Skin closure initiated.')">Skin Closure</button>
+                        <button class="btn-log b-proc" onclick="addLog('Extubation. Patient breathing spontaneously.')">Extubation</button>
+                    </div>
+                </div>
+
+                <div id="log-neuro" class="tab-panel log-sub">
+                    <div class="log-grid">
+                        <button class="btn-log b-prep" onclick="addLog('Mayfield pins placed by surgical team.')">Mayfield Pins</button>
+                        <button class="btn-log b-pos" onclick="addLog('Patient positioned prone. Eyes/pressure points checked and free.')">Prone + Eyes Free</button>
+                        <button class="btn-log b-drug" onclick="addLog('Mannitol/Hypertonic saline administered.')">Osmotherapy</button>
+                        <button class="btn-log b-surg" onclick="addLog('Burr holes initiated.')">Burr Holes</button>
+                        <button class="btn-log b-surg" onclick="addLog('Dura opened.')">Dura Open</button>
+                        <button class="btn-log b-surg" onclick="addLog('CUSA / Ultrasound Aspirator in use.')">CUSA in Use</button>
+                        <button class="btn-log b-surg" onclick="addLog('Dura closed.')">Dura Closed</button>
+                        <button class="btn-log b-hemo" onclick="addLog('Hypotonia (MAP < 65) noted.')">MAP < 65</button>
+                    </div>
+                </div>
+
+                <div id="log-lap" class="tab-panel log-sub">
+                    <div class="log-grid">
+                        <button class="btn-log b-surg" onclick="addLog('Pneumoperitoneum insufflated.')">Insufflation</button>
+                        <button class="btn-log b-pos" onclick="addLog('Patient placed in Trendelenburg position.')">Trendelenburg</button>
+                        <button class="btn-log b-pos" onclick="addLog('Patient placed in Reverse Trendelenburg.')">Rev. Trendelenburg</button>
+                        <button class="btn-log b-surg" onclick="addLog('Desufflation complete.')">Desufflation</button>
+                        <button class="btn-log b-surg" onclick="addLog('Fascia closure initiated.')">Fascia Closure</button>
+                        <button class="btn-log b-hemo" onclick="addLog('Bradycardia noted.')">Bradycardia</button>
+                        <button class="btn-log b-hemo" onclick="addLog('Ephedrine administered.')">Ephedrine</button>
+                    </div>
+                </div>
+
+                <div id="log-vasc" class="tab-panel log-sub">
+                    <div class="log-grid">
+                        <button class="btn-log b-drug" onclick="promptHeparin()">Heparin Given</button>
+                        <button class="btn-log b-surg" onclick="addLog('Arterial cross-clamp applied.')">Cross-Clamp ON</button>
+                        <button class="btn-log b-surg" onclick="addLog('Arterial cross-clamp released.')">Cross-Clamp OFF</button>
+                        <button class="btn-log b-surg" onclick="addLog('One lung ventilation initiated.')">One Lung Vent (OLV)</button>
+                        <button class="btn-log b-surg" onclick="addLog('Recruitment maneuver performed.')">Recruitment Maneuver</button>
+                        <button class="btn-log b-hemo" onclick="addLog('Blood transfusion initiated.')">Transfusion Start</button>
+                        <button class="btn-log b-proc" onclick="addLog('Arterial line placed and secured.')">A-Line Placed</button>
+                        <button class="btn-log b-proc" onclick="addLog('Central venous catheter (CVC) placed.')">CVC Placed</button>
+                        <button class="btn-log b-drug" onclick="addLog('Furosemide administered.')">Furosemide</button>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 8px; margin: 15px 0;">
+                    <input type="text" id="custom-text" placeholder="Custom event (e.g. ABG drawn)" style="flex:1; background:var(--input-bg); border:1px solid var(--border-color); color:var(--text-main); padding:10px; border-radius:6px;">
+                    <button class="btn" style="width: auto; margin:0; background:var(--text-main); color:var(--bg-color);" onclick="addCustomLog()">Log</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 style="display: flex; justify-content: space-between; color: var(--text-muted); font-size: 0.9em; text-transform: uppercase;">
+                    Anesthesia Record
+                </h3>
+                <textarea id="log-output" class="log-textarea" placeholder="Waiting for first event..."></textarea>
+                <div style="display:flex; gap:10px; margin-top:10px;">
+                    <button class="btn" style="background: var(--text-main); color: var(--bg-color); margin:0;" onclick="copyLog()">📋 Copy</button>
+                    <button class="btn" style="background: var(--info-blue); margin:0;" onclick="downloadRecord()">💾 Save .TXT</button>
+                </div>
+                
+                <button class="btn" style="background: var(--iso-relaxant); color: #fff; margin-top: 20px;" onclick="endCase()">🛑 End Case / Reset Patient</button>
+            </div>
+        </div>
+    </div>
     <script src="js/app.js"></script>
 
 </body>
