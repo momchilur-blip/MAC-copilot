@@ -87,8 +87,30 @@ m
                 <button class="sub-tab-btn" id="sub-nav-remi" onclick="setSubTab('maintenance', 'remi')">Remifentanil</button>
             </div>
 
-              <div id="sub-sevo" class="tab-panel active maintenance-sub">
+                          <div id="sub-sevo" class="tab-panel active maintenance-sub">
                 
+                <div class="card" id="sevo-slider-card" style="display: none; margin-bottom: 15px;">
+                    <div class="slider-readout">
+                        <div class="rate-val"><span id="sevo-vol-disp">0.0</span><span style="font-size:0.4em; color:var(--text-muted); margin-left:4px;">vol%</span></div>
+                        <div class="zone-badge" id="sevo-badge">Adjust Slider</div>
+                    </div>
+                    
+                    <div class="sevo-slider-container">
+                        <div class="sevo-label-top" id="label-et">EtSevo</div>
+                        <div class="sevo-label-bottom" id="label-brain">Brain</div>
+                        
+                        <div class="sevo-track-bg" id="sevo-track-bg"></div>
+                        <input type="range" class="ghost-range" id="sevo-ghost-slider" min="0" max="3" step="0.1" value="0">
+                        <input type="range" class="sevo-range sevo-active-layer" id="sevo-slider" min="0" max="3" step="0.1" value="0" oninput="updateSevoSlider()">
+                    </div>
+
+                    <div style="text-align: center; font-size: 0.9em; color: var(--text-muted);">
+                        Calculated fMAC: <strong id="sevo-mac-disp" style="color:var(--text-main); font-size:1.2em;">0.00</strong>
+                    </div>
+                    
+                    <button class="btn" style="background: var(--input-bg); color: var(--text-main); border: 1px solid var(--border-color); margin-top: 15px; font-size: 0.9em;" onclick="logSevoChange()">📝 Send EtSevo to Log</button>
+                </div>
+
                 <div class="card" style="margin-bottom: 15px;">
                     <div class="switch-container" style="border-top: none; margin-top: 0; padding-top: 0;">
                         <div>
@@ -111,28 +133,6 @@ m
 
                     <div class="target-list" id="target-list"></div>
                 </div>
-
-                <div class="card" id="sevo-slider-card" style="display: none; margin-bottom: 15px;">
-                    <div class="slider-readout">
-                        <div class="rate-val"><span id="sevo-vol-disp">0.0</span><span style="font-size:0.4em; color:var(--text-muted); margin-left:4px;">vol%</span></div>
-                        <div class="zone-badge" id="sevo-badge">Adjust Slider</div>
-                    </div>
-                    
-                    <div class="sevo-slider-container">
-                        <div class="sevo-label-top" id="label-et">EtSevo</div>
-                        <div class="sevo-label-bottom" id="label-brain">Brain</div>
-                        
-                        <div class="sevo-track-bg" id="sevo-track-bg"></div>
-                        <input type="range" class="ghost-range" id="sevo-ghost-slider" min="0" max="3" step="0.1" value="0">
-                        <input type="range" class="sevo-range sevo-active-layer" id="sevo-slider" min="0" max="3" step="0.1" value="0" oninput="updateSevoSlider()">
-                    </div>
-
-                    <div style="text-align: center; font-size: 0.9em; color: var(--text-muted);">
-                        Calculated fMAC: <strong id="sevo-mac-disp" style="color:var(--text-main); font-size:1.2em;">0.00</strong>
-                    </div>
-                    
-                    <button class="btn" style="background: var(--input-bg); color: var(--text-main); border: 1px solid var(--border-color); margin-top: 15px; font-size: 0.9em;" onclick="logSevoChange()">📝 Send EtSevo to Log</button>
-                </div>
                 
                 <div class="card">
                     <h3 style="color: var(--alert-green); margin-top: 0; font-size: 1.1em;">Washout Predictor</h3>
@@ -142,9 +142,8 @@ m
                     </div>
                     <input type="range" class="custom-range" id="fgf-slider" min="0.5" max="10" step="0.5" value="1.5" oninput="updateFGF()">
                     <div style="text-align: center; font-size: 0.85em; color: var(--text-muted);">
-                    Estimated Total Delay (τ): <strong id="tau-disp" style="color:var(--text-main);">6.8</strong> min
+                        Estimated Total Delay (τ): <strong id="tau-disp" style="color:var(--text-main);">6.8</strong> min
                     </div>
-
                     
                     <div class="input-grid" style="grid-template-columns: 1fr; margin-top: 15px;">
                         <div class="field">
@@ -165,6 +164,7 @@ m
                 </div>
 
             </div>
+
             <div class="card tab-panel maintenance-sub" id="sub-remi">
                 <div id="remi-content"> 
                     <div style="font-size: 0.85em; color: var(--text-muted); margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
