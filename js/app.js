@@ -468,6 +468,39 @@ function updateFluids(amount, isBlood, isLoss) {
     
     addLog(`Fluid Updated: ${isLoss ? '-' : '+'}${amount} mL ${isBlood ? 'Blood' : (isLoss ? 'Loss/Urine' : 'Crystalloid/Med')}.`);
 }
+// --- MAINTENANCE FLUIDS LOGIC (4-2-1 Rule) ---
+function calcMaintenance() {
+    // Prevent calculation if the patient hasn't been set up yet
+    if (ptWeight === 0) {
+        alert("Please enter the patient's weight and calculate in the Induction tab first.");
+        return;
+    }
+    
+    const npoHours = parseFloat(document.getElementById('npo-hours').value) || 0;
+    
+    // 4-2-1 Rule Calculation based on actual Total Body Weight (ptWeight)
+    let hourlyRate = 0;
+    if (ptWeight > 20) {
+        // Standard shortcut for patients > 20kg: Weight + 40
+        hourlyRate = ptWeight + 40; 
+    } else if (ptWeight > 10) {
+        hourlyRate = 40 + ((ptWeight - 10) * 2);
+    } else {
+        hourlyRate = ptWeight * 4;
+    }
+    
+    // Clinical math
+    const deficit = hourlyRate * npoHours;
+    // Standard replacement: 50% of deficit in the first hour + the normal hourly rate
+    const firstHourSuggestion = hourlyRate + (deficit / 2); 
+    
+    // Update the UI
+    document.getElementById('maint-rate').innerText = Math.round(hourlyRate);
+    document.getElementById('maint-deficit').innerText = Math.round(deficit);
+    document.getElementById('maint-first-hr').innerText = Math.round(firstHourSuggestion);
+    
+    document.getElementById('maint-result').style.display = 'block';
+}
 
 // --- MISSING TALLY LOGIC ---
 function addFentanyl(mcg) { 
