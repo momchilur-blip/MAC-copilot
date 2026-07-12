@@ -266,32 +266,62 @@
             alert("Sent to Event Log!");
         }
 
-        // --- WASHOUT PREDICTOR (Hysteresis Math) ---
-        function calculateWashout() {
-            if(!sevoZones) { alert("Calculate targets first."); return; }
-            const currentVol = parseFloat(document.getElementById('washout-current').value);
-            const fgf = parseFloat(document.getElementById('washout-fgf').value);
-            
-            const awakeTarget = sevoZones.find(z => z.id === 'awake').val;
+        // --- DYNAMIC FGF UPDATE ---
+function updateFGF() {
+    const fgf = parseFloat(document.getElementById('fgf-slider').value);
+    document.getElementById('fgf-disp').innerText = fgf.toFixed(1);
+    
+    // Total delay (tau) = CNS delay (3.5 min) + Circuit delay (5.0 / FGF)
+    const tau = 3.5 + (5.0 / fgf);
+    document.getElementById('tau-disp').innerText = tau.toFixed(1);
 
-            if(isNaN(currentVol) || isNaN(fgf) || fgf <= 0) { alert("Enter valid vol% and FGF."); return; }
-            if(currentVol <= awakeTarget) { alert("Already at or below MAC-Awake."); return; }
+    // Reactively recalculate the washout time as the slider is dragged
+    calculateWashout();
+}
 
-            const tauCNS = 3.5;
-            const tauCircuit = 5.0 / fgf;
-            const tauTotal = tauCNS + tauCircuit; 
-            
-            const timeMins = -tauTotal * Math.log(awakeTarget / currentVol);
-            
-            document.getElementById('washout-time').innerText = Math.round(timeMins);
-            
-            const targetDate = new Date(Date.now() + (timeMins * 60000));
-            const hh = targetDate.getHours().toString().padStart(2, '0');
-            const mm = targetDate.getMinutes().toString().padStart(2, '0');
-            document.getElementById('washout-clock').innerText = `[${hh}:${mm}]`;
-            
-            document.getElementById('washout-result').style.display = 'block';
-        }
+// --- REACTIVE WASHOUT PREDICTOR ---
+function calculateWashout() {
+    // Fail silently if MAC targets haven't been calculated yet
+    if(!sevoZones || sevoZones.length === 0) return; 
+    
+    const currentVol = parseFloat(document.getElementById('washout-current').value);
+    
+    // Pulls the FGF rate directly from the dynamic slider above
+    const fgf = parseFloat(document.getElementById('fgf-slider').value); 
+    
+    // Hide results if input is cleared
+    if(isNaN(currentVol) || currentVol <= 0) {
+        document.getElementById('washout-result').style.display = 'none';
+        return; 
+    }
+    
+    const awakeTarget = sevoZones.find(z => z.id === 'awake').val;
+
+    // Handle the scenario where the patient is already awake
+    if(currentVol <= awakeTarget) { 
+        document.getElementById('washout-time').innerText = "0";
+        document.getElementById('washout-clock').innerText = "[Safe for Extubation]";
+        document.getElementById('washout-result').style.display = 'block';
+        return; 
+    }
+
+    const tauCNS = 3.5;
+    const tauCircuit = 5.0 / fgf;
+    const tauTotal = tauCNS + tauCircuit; 
+    
+    // First-order kinetics: t = -tau * ln(Target / Current)
+    const timeMins = -tauTotal * Math.log(awakeTarget / currentVol);
+    
+    document.getElementById('washout-time').innerText = Math.round(timeMins);
+    
+    const targetDate = new Date(Date.now() + (timeMins * 60000));
+    const hh = targetDate.getHours().toString().padStart(2, '0');
+    const mm = targetDate.getMinutes().toString().padStart(2, '0');
+    
+    document.getElementById('washout-clock').innerText = `[${hh}:${mm}]`;
+    document.getElementById('washout-result').style.display = 'block';
+}
+
 
         // --- NMB TRACKER ---
         function updateNMBSumUI() {
