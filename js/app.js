@@ -241,6 +241,7 @@
             badge.style.color = (active.color === 'var(--iso-hypnotic)') ? '#000' : '#fff';
             slider.style.borderColor = active.color;
 
+            // Restoring your original gradient track logic
             const maxVol = parseFloat(slider.max);
             let gradStops = [];
             let lastPct = 0;
@@ -257,6 +258,7 @@
             if(lastPct < 100) gradStops.push(`#444 ${lastPct}% 100%`);
             slider.style.background = `linear-gradient(to right, ${gradStops.join(', ')})`;
         }
+
 
         // Logs the current Sevo value to the event logger
         function logSevoChange() {
