@@ -8,6 +8,7 @@
         let currentSevoBaseline = 0;
         let sevoZones = [];
         let ghostVal = 0; 
+        let currentFGF = 1.5; // Centralized FGF state
 
         // --- NAVIGATION LOGIC ---
         function setMainTab(tabId) {
@@ -111,56 +112,72 @@
             updateRemi();
         }
 
-        // --- REMI SLIDER (HARD STOPS + BLACK DIVIDERS) ---
         function updateRemi() {
-            if (ibw === 0) return;
-            const slider = document.getElementById('remi-slider');
-            const rate = parseFloat(slider.value);
-            document.getElementById('remi-ml-h').innerText = rate.toFixed(1);
-            
-            const dose = (rate * 50) / (ibw * 60);
-            document.getElementById('remi-mcg-kg-min').innerText = dose.toFixed(2);
-            
-            const zones = [
-                { limit: 0.05, label: 'Sub-Analgesic', color: '#444' },
-                { limit: 0.10, label: 'Analgesic', color: '#17a2b8' },
-                { limit: 0.15, label: 'Light Maint.', color: 'var(--alert-green)' },
-                { limit: 0.20, label: 'Standard Maint.', color: 'var(--iso-hypnotic)' },
-                { limit: 0.25, label: 'Deep Maint.', color: 'var(--iso-relaxant)' },
-                { limit: Infinity, label: 'High Stimulus', color: '#b52a1f' }
-            ];
+    // Uses a visual fallback of 70kg if the user hasn't calculated IBW yet so the colors still render
+    const workingIbw = ibw > 0 ? ibw : 70; 
+    
+    const slider = document.getElementById('remi-slider');
+    const rate = parseFloat(slider.value);
+    document.getElementById('remi-ml-h').innerText = rate.toFixed(1);
+    
+    const dose = (rate * 50) / (workingIbw * 60);
+    document.getElementById('remi-mcg-kg-min').innerText = dose.toFixed(2);
+    
+    const zones = [
+        { limit: 0.05, label: 'Sub-Analgesic', color: '#444' },
+        { limit: 0.10, label: 'Analgesic', color: '#17a2b8' },
+        { limit: 0.15, label: 'Light Maint.', color: 'var(--alert-green)' },
+        { limit: 0.20, label: 'Standard Maint.', color: 'var(--iso-hypnotic)' },
+        { limit: 0.25, label: 'Deep Maint.', color: 'var(--iso-relaxant)' },
+        { limit: Infinity, label: 'High Stimulus', color: '#b52a1f' }
+    ];
 
-            let activeZone = zones[zones.length - 1];
-            for(let z of zones) { if(dose <= z.limit + 0.001) { activeZone = z; break; } }
-            
-            const badge = document.getElementById('remi-badge');
-            badge.innerText = activeZone.label;
-            badge.style.backgroundColor = activeZone.color;
-            badge.style.color = (activeZone.color === 'var(--iso-hypnotic)') ? '#000' : '#fff';
-            
-            const maxRate = parseFloat(slider.max);
-            let gradStops = [];
-            let lastPct = 0;
-            
-            for(let i=0; i<zones.length; i++) {
-                if (zones[i].limit === Infinity) { gradStops.push(`${zones[i].color} ${lastPct}% 100%`); break; }
-                const bndRate = (zones[i].limit * ibw * 60) / 50;
-                let pct = (bndRate / maxRate) * 100;
-                if(pct > 100) pct = 100;
-                
-                gradStops.push(`${zones[i].color} ${lastPct}% calc(${pct}% - 2px)`);
-                gradStops.push(`#000 calc(${pct}% - 2px) calc(${pct}% + 2px)`);
-                lastPct = pct;
-                if(pct === 100) break;
-            }
-            slider.style.background = `linear-gradient(to right, ${gradStops.join(', ')})`;
-        }
+    let activeZone = zones[zones.length - 1];
+    for(let z of zones) { if(dose <= z.limit + 0.001) { activeZone = z; break; } }
+    
+    const badge = document.getElementById('remi-badge');
+    badge.innerText = activeZone.label;
+    badge.style.backgroundColor = activeZone.color;
+    badge.style.color = (activeZone.color === 'var(--iso-hypnotic)') ? '#000' : '#fff';
+    
+    const maxRate = parseFloat(slider.max);
+    let gradStops = [];
+    let lastPct = 0;
+    
+    for(let i=0; i<zones.length; i++) {
+        if (zones[i].limit === Infinity) { gradStops.push(`${zones[i].color} ${lastPct}% 100%`); break; }
+        const bndRate = (zones[i].limit * workingIbw * 60) / 50;
+        let pct = (bndRate / maxRate) * 100;
+        if(pct > 100) pct = 100;
+        
+        gradStops.push(`${zones[i].color} ${lastPct}% calc(${pct}% - 2px)`);
+        gradStops.push(`#000 calc(${pct}% - 2px) calc(${pct}% + 2px)`);
+        lastPct = pct;
+        if(pct === 100) break;
+    }
+    // Fixed: using backgroundImage for iOS Safari
+    slider.style.backgroundImage = `linear-gradient(to right, ${gradStops.join(', ')})`;
+}
 
         // --- AUTO-CALCULATE LISTENER ---
 // Triggers the MAC calculation when you open the Maintenance tab
 document.querySelector('#nav-maintenance').addEventListener('click', () => {
     setTimeout(calculateSevo, 100); 
 });
+
+// --- SYNCHRONIZED FGF LOGIC ---
+function handleFGF(val) {
+    currentFGF = parseFloat(val);
+    
+    // Instantly update BOTH sliders and their text displays
+    document.querySelectorAll('.fgf-sync').forEach(s => s.value = currentFGF);
+    document.querySelectorAll('.fgf-disp-text').forEach(el => el.innerText = currentFGF.toFixed(1));
+    
+    const tauTotal = 3.5 + (5.0 / currentFGF);
+    document.querySelectorAll('.tau-disp-text').forEach(el => el.innerText = tauTotal.toFixed(1));
+    
+    calculateWashout();
+}
 
 // --- SEVO MAC CALCULATOR (Original Restored) ---
 function updateFGF() {
@@ -231,6 +248,7 @@ function calculateSevo() {
     updateSevoSlider();
 }
 
+// --- FIX FOR SEVO SLIDER ---
 function updateSevoSlider() {
     if (!sevoZones || sevoZones.length === 0) return;
     const slider = document.getElementById('sevo-slider');
@@ -256,7 +274,6 @@ function updateSevoSlider() {
     for(let i=0; i<sevoZones.length; i++) {
         let pct = (sevoZones[i].val / maxVol) * 100;
         if(pct > 100) pct = 100;
-        
         gradStops.push(`${sevoZones[i].color} ${lastPct}% calc(${pct}% - 2px)`);
         gradStops.push(`#000 calc(${pct}% - 2px) calc(${pct}% + 2px)`);
         lastPct = pct;
@@ -264,25 +281,30 @@ function updateSevoSlider() {
     }
     if(lastPct < 100) gradStops.push(`#444 ${lastPct}% 100%`);
     
+    // Using backgroundImage forces iOS Safari to render it
     const bgString = `linear-gradient(to right, ${gradStops.join(', ')})`;
-    document.getElementById('sevo-track-bg').style.background = bgString;
+    document.getElementById('sevo-track-bg').style.backgroundImage = bgString;
 
     const etLabel = document.getElementById('label-et');
     let pctActive = (vol / maxVol) * 100;
     etLabel.style.left = `calc(${pctActive}% + ${22 - (pctActive * 0.44)}px)`;
 }
 
+// --- BUTTERY SMOOTH BRAIN HYSTERESIS ---
 function animateGhostSlider() {
     if(!sevoZones || sevoZones.length === 0) return;
     const active = parseFloat(document.getElementById('sevo-slider').value);
     const ghost = document.getElementById('sevo-ghost-slider');
     const maxVol = parseFloat(ghost.max);
+    if(maxVol <= 0) return;
     
-    const fgf = parseFloat(document.getElementById('fgf-slider').value) || 1.5;
-    const tauTotal = 3.5 + (5.0 / fgf); 
-    const k = 1 - Math.exp(-1 / (60 * tauTotal)); 
+    // Calculates delay based on the centralized synchronized FGF
+    const tauTotal = 3.5 + (5.0 / currentFGF); 
     
-    if(Math.abs(active - ghostVal) > 0.005) {
+    // Math adjusted for 100ms (0.1s) intervals for smooth animation
+    const k = 1 - Math.exp(-0.1 / (60 * tauTotal)); 
+    
+    if(Math.abs(active - ghostVal) > 0.001) {
         ghostVal += (active - ghostVal) * k;
         ghost.value = ghostVal;
         
@@ -291,6 +313,9 @@ function animateGhostSlider() {
         brainLabel.style.left = `calc(${pctGhost}% + ${22 - (pctGhost * 0.44)}px)`;
     }
 }
+
+// Run 10 times a second for fluid motion instead of clunky 1-second ticks
+setInterval(animateGhostSlider, 100);
 
 function logSevoChange() {
     const vol = document.getElementById('sevo-vol-disp').innerText;
