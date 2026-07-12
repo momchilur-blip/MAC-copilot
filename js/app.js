@@ -156,108 +156,158 @@
             slider.style.background = `linear-gradient(to right, ${gradStops.join(', ')})`;
         }
 
-        // --- SEVO MAC CALCULATOR (OPIOID CROSSOVER LOGIC) ---
+        // --- AUTO-CALCULATE LISTENER ---
+// Triggers the MAC calculation when you open the Maintenance tab
+document.querySelector('#nav-maintenance').addEventListener('click', () => {
+    setTimeout(calculateSevo, 100); 
+});
 
-                function calculateSevo() {
-            // Pulls directly from the induction tab so you don't type it twice
-            const ageInput = document.getElementById('pt-age').value;
-            const age = parseFloat(ageInput);
-            
-            if(isNaN(age) || age < 0) { 
-                alert("Please enter the patient's Age in the Induction tab first."); 
-                return; 
-            }
+// --- SEVO MAC CALCULATOR (Original Restored) ---
+function updateFGF() {
+    const fgf = parseFloat(document.getElementById('fgf-slider').value);
+    document.getElementById('fgf-disp').innerText = fgf.toFixed(1);
+    const tauCircuit = 5.0 / fgf;
+    const tauTotal = 3.5 + tauCircuit;
+    document.getElementById('tau-disp').innerText = tauTotal.toFixed(1);
+    
+    // Triggers the washout predictor automatically
+    calculateWashout();
+}
 
-            // Auto-detects pediatric vs adult based on the age provided
-            let mac = 0, band = '';
-            if (age < 1) { mac = 2.8; band = 'Neonate (< 1 year)'; }
-            else if (age <= 12) { mac = 2.5; band = 'Pediatric (1-12 years)'; }
-            else {
-                mac = 2.0 * Math.pow(10, -0.00269 * (age - 40));
-                band = `Adult (Mapleson age ${age})`;
-            }
+function calculateSevo() {
+    const ageInput = document.getElementById('pt-age').value;
+    if(!ageInput) return; // Fails silently if age isn't entered yet
+    const age = parseFloat(ageInput);
 
-            currentSevoBaseline = mac;
-            document.getElementById('baseline-value').innerText = mac.toFixed(1) + ' vol%';
-            document.getElementById('band-sub').innerText = band;
+    let mac = 2.0 * Math.pow(10, -0.00269 * (age - 40));
+    let band = `Adult (Mapleson age ${age})`;
 
-            let oAwake = 1.0, oUnc = 1.0, oImm = 1.0, oBar = 1.0;
-            if (document.getElementById('opioid-toggle').checked) {
-                oAwake = 0.85; oUnc = 0.85; oImm = 0.50; oBar = 0.25;   
-            }
+    currentSevoBaseline = mac;
+    document.getElementById('baseline-value').innerText = mac.toFixed(1) + ' vol%';
+    document.getElementById('band-sub').innerText = band;
 
-            let t = [
-                { id: 'awake', name: 'MAC-Awake',   val: mac * 0.33 * oAwake, color: '#17a2b8', desc: 'Extubation Threshold' },
-                { id: 'unc',   name: 'Unconscious', val: mac * 0.70 * oUnc,   color: 'var(--alert-green)', desc: 'Awareness Prevention Floor' },
-                { id: 'mac1',  name: 'MAC 1',       val: mac * 1.00 * oImm,   color: 'var(--iso-hypnotic)', desc: '50% Immobility' },
-                { id: 'sd2',   name: '+2 SD',       val: mac * 1.20 * oImm,   color: 'var(--iso-relaxant)', desc: '95% Immobility' },
-                { id: 'sd3',   name: '+3 SD',       val: mac * 1.30 * oImm,   color: '#b52a1f', desc: '99.7% Immobility' },
-                { id: 'bar',   name: 'MAC-BAR',     val: mac * 1.45 * oBar,   color: 'var(--iso-pressor)', desc: 'Blunts Adrenergic Response' }
-            ];
-            
-            t.sort((a,b) => a.val - b.val);
-            sevoZones = t;
+    let oAwake = 1.0, oUnc = 1.0, oImm = 1.0, oBar = 1.0;
+    if (document.getElementById('opioid-toggle').checked) {
+        oAwake = 0.85; oUnc = 0.85; oImm = 0.50; oBar = 0.25;   
+    }
 
-            let listHtml = '';
-            for(let z of t) {
-                listHtml += `
-                    <div class="target" style="border-left-color: ${z.color};">
-                        <div><div style="font-weight:bold; color: var(--text-main);">${z.name}</div><div style="font-size:0.7em; color:var(--text-muted);">${z.desc}</div></div>
-                        <div class="target-value" style="color:${z.color};">${z.val.toFixed(2)}<small>vol%</small></div>
-                    </div>`;
-            }
-            document.getElementById('target-list').innerHTML = listHtml;
-            document.getElementById('sevo-results').style.display = 'block';
+    let t = [
+        { id: 'awake', name: 'MAC-Awake',   val: mac * 0.33 * oAwake, color: '#17a2b8', desc: 'Extubation Threshold' },
+        { id: 'unc',   name: 'Unconscious', val: mac * 0.70 * oUnc,   color: 'var(--alert-green)', desc: 'Awareness Prevention Floor' },
+        { id: 'mac1',  name: 'MAC 1',       val: mac * 1.00 * oImm,   color: 'var(--iso-hypnotic)', desc: '50% Immobility' },
+        { id: 'sd2',   name: '+2 SD',       val: mac * 1.20 * oImm,   color: 'var(--iso-relaxant)', desc: '95% Immobility' },
+        { id: 'sd3',   name: '+3 SD',       val: mac * 1.30 * oImm,   color: '#b52a1f', desc: '99.7% Immobility' },
+        { id: 'bar',   name: 'MAC-BAR',     val: mac * 1.45 * oBar,   color: 'var(--iso-pressor)', desc: 'Blunts Adrenergic Tone' }
+    ];
+    
+    t.sort((a,b) => a.val - b.val);
+    sevoZones = t;
 
-            const slider = document.getElementById('sevo-slider');
-            slider.max = (t[t.length-1].val * 1.15).toFixed(1); 
-            let defaultVal = (mac * 1.00 * oImm).toFixed(1);
-            slider.value = defaultVal; 
-            updateSevoSlider();
-        }
+    let listHtml = '';
+    for(let z of t) {
+        listHtml += `
+            <div class="target" style="border-left-color: ${z.color};">
+                <div><div style="font-weight:bold; color: var(--text-main);">${z.name}</div><div style="font-size:0.7em; color:var(--text-muted);">${z.desc}</div></div>
+                <div class="target-value" style="color:${z.color};">${z.val.toFixed(2)}<small>vol%</small></div>
+            </div>`;
+    }
+    document.getElementById('target-list').innerHTML = listHtml;
+    
+    // Reveal the hidden cards
+    document.getElementById('sevo-results-header').style.display = 'flex';
+    document.getElementById('sevo-slider-card').style.display = 'block';
+
+    const slider = document.getElementById('sevo-slider');
+    const ghost = document.getElementById('sevo-ghost-slider');
+    const newMax = (t[t.length-1].val * 1.15).toFixed(1);
+    slider.max = newMax; 
+    ghost.max = newMax;
+    
+    let defaultVal = (mac * 1.00 * oImm).toFixed(1);
+    slider.value = defaultVal; 
+    ghostVal = parseFloat(defaultVal);
+    ghost.value = ghostVal;
+    
+    updateSevoSlider();
+}
+
+function updateSevoSlider() {
+    if (!sevoZones || sevoZones.length === 0) return;
+    const slider = document.getElementById('sevo-slider');
+    const vol = parseFloat(slider.value);
+    const maxVol = parseFloat(slider.max);
+    
+    document.getElementById('sevo-vol-disp').innerText = vol.toFixed(1);
+    document.getElementById('sevo-mac-disp').innerText = (vol / currentSevoBaseline).toFixed(2);
+
+    let active = sevoZones[sevoZones.length - 1];
+    for (let i = 0; i < sevoZones.length; i++) {
+        if (vol <= sevoZones[i].val + 0.05) { active = sevoZones[i]; break; }
+    }
+
+    const badge = document.getElementById('sevo-badge');
+    badge.innerText = active.name;
+    badge.style.backgroundColor = active.color;
+    badge.style.color = (active.color === 'var(--iso-hypnotic)') ? '#000' : '#fff';
+
+    let gradStops = [];
+    let lastPct = 0;
+
+    for(let i=0; i<sevoZones.length; i++) {
+        let pct = (sevoZones[i].val / maxVol) * 100;
+        if(pct > 100) pct = 100;
+        
+        gradStops.push(`${sevoZones[i].color} ${lastPct}% calc(${pct}% - 2px)`);
+        gradStops.push(`#000 calc(${pct}% - 2px) calc(${pct}% + 2px)`);
+        lastPct = pct;
+        if(pct === 100) break;
+    }
+    if(lastPct < 100) gradStops.push(`#444 ${lastPct}% 100%`);
+    
+    const bgString = `linear-gradient(to right, ${gradStops.join(', ')})`;
+    document.getElementById('sevo-track-bg').style.background = bgString;
+
+    const etLabel = document.getElementById('label-et');
+    let pctActive = (vol / maxVol) * 100;
+    etLabel.style.left = `calc(${pctActive}% + ${22 - (pctActive * 0.44)}px)`;
+}
+
+function animateGhostSlider() {
+    if(!sevoZones || sevoZones.length === 0) return;
+    const active = parseFloat(document.getElementById('sevo-slider').value);
+    const ghost = document.getElementById('sevo-ghost-slider');
+    const maxVol = parseFloat(ghost.max);
+    
+    const fgf = parseFloat(document.getElementById('fgf-slider').value) || 1.5;
+    const tauTotal = 3.5 + (5.0 / fgf); 
+    const k = 1 - Math.exp(-1 / (60 * tauTotal)); 
+    
+    if(Math.abs(active - ghostVal) > 0.005) {
+        ghostVal += (active - ghostVal) * k;
+        ghost.value = ghostVal;
+        
+        const brainLabel = document.getElementById('label-brain');
+        let pctGhost = (ghostVal / maxVol) * 100;
+        brainLabel.style.left = `calc(${pctGhost}% + ${22 - (pctGhost * 0.44)}px)`;
+    }
+}
+
+function logSevoChange() {
+    const vol = document.getElementById('sevo-vol-disp').innerText;
+    const fmac = document.getElementById('sevo-mac-disp').innerText;
+    addLog(`EtSevo targeted to ${vol} vol% (fMAC: ${fmac}).`);
+    alert("Sent to Event Log!");
+}
+
+// Ensure the ghost slider animation ticks every second
+setInterval(animateGhostSlider, 1000);
+ 
 
         function logRemiChange() {
             const mlh = document.getElementById('remi-ml-h').innerText;
             const mcg = document.getElementById('remi-mcg-kg-min').innerText;
             addLog(`Remifentanil adjusted to ${mlh} mL/h (${mcg} mcg/kg/min).`);
             alert("Remifentanil rate sent to Event Log!");
-        }
-
-
-        function updateSevoSlider() {
-            if (!sevoZones || sevoZones.length === 0) return;
-            const slider = document.getElementById('sevo-slider');
-            const vol = parseFloat(slider.value);
-            document.getElementById('sevo-vol-disp').innerText = vol.toFixed(1);
-            document.getElementById('sevo-mac-disp').innerText = (vol / currentSevoBaseline).toFixed(2);
-
-            let active = sevoZones[sevoZones.length - 1];
-            for (let i = 0; i < sevoZones.length; i++) {
-                if (vol <= sevoZones[i].val + 0.05) { active = sevoZones[i]; break; }
-            }
-
-            const badge = document.getElementById('sevo-badge');
-            badge.innerText = active.name;
-            badge.style.backgroundColor = active.color;
-            badge.style.color = (active.color === 'var(--iso-hypnotic)') ? '#000' : '#fff';
-            slider.style.borderColor = active.color;
-
-            // Restoring your original gradient track logic
-            const maxVol = parseFloat(slider.max);
-            let gradStops = [];
-            let lastPct = 0;
-
-            for(let i=0; i<sevoZones.length; i++) {
-                let pct = (sevoZones[i].val / maxVol) * 100;
-                if(pct > 100) pct = 100;
-                
-                gradStops.push(`${sevoZones[i].color} ${lastPct}% calc(${pct}% - 2px)`);
-                gradStops.push(`#000 calc(${pct}% - 2px) calc(${pct}% + 2px)`);
-                lastPct = pct;
-                if(pct === 100) break;
-            }
-            if(lastPct < 100) gradStops.push(`#444 ${lastPct}% 100%`);
-            slider.style.background = `linear-gradient(to right, ${gradStops.join(', ')})`;
         }
 
 
