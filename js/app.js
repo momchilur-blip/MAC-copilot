@@ -423,7 +423,7 @@ function giveParacetamol() { givenParacetamol = true; addLog('Paracetamol 1g giv
 function giveKetoprofen() { givenKetoprofen = true; addLog('Ketoprofen (100mg) given.'); }
 
 function checkAnalgesia() {
-    if (givenAnalgin || givenPara || givenDex) {
+    if (givenAnalgin || givenParacetamol || givenKetoprofen) {
         addLog("✅ Non-opioid analgesia confirmed. Safe to taper Sevoflurane/Remifentanil for extubation.");
     } else {
         addLog("⚠️ WARNING: No non-opioid analgesia recorded yet!");
