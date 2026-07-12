@@ -353,3 +353,118 @@
         function promptHeparin() { let units = prompt("Enter Heparin dose (Units):", "5000"); if (units) addLog(`Heparin ${units} units administered.`); }
         function copyLog() { const ta = document.getElementById('log-output'); if(ta.value.trim() === "") return; ta.select(); document.execCommand('copy'); window.getSelection().removeAllRanges(); alert("Record copied to clipboard!"); }
         function clearLog() { if(confirm("Clear the entire record?")) document.getElementById('log-output').value = ""; }
+        
+        // --- MISSING GLOBAL STATES ---
+let fentTotal = 0;
+let propTotal = 0;
+let fluidCryst = 0;
+let fluidBlood = 0;
+let fluidLoss = 0;
+
+// Analgesia Tracking
+let givenAnalgin = false;
+let givenPara = false;
+let givenDex = false;
+
+// --- MISSING MAC & FGF LOGIC ---
+function updateFGF() {
+    const fgf = parseFloat(document.getElementById('fgf-slider').value);
+    document.getElementById('fgf-disp').innerText = fgf.toFixed(1);
+    
+    // Total delay (tau) = CNS delay (3.5 min) + Circuit delay (5.0 / FGF)
+    const tau = 3.5 + (5.0 / fgf);
+    document.getElementById('tau-disp').innerText = tau.toFixed(1);
+}
+
+// --- MISSING FLUIDS LOGIC ---
+function calcABL() {
+    const startHgb = parseFloat(document.getElementById('hgb-start').value);
+    const targetHgb = parseFloat(document.getElementById('hgb-target').value);
+    
+    if (!startHgb || !targetHgb || ibw === 0) { 
+        alert("Please calculate the patient in the Induction tab first, and ensure Hgb (g/L) values are entered."); 
+        return; 
+    }
+    
+    // Estimated Blood Volume: 75 mL/kg for males, 65 mL/kg for females
+    const ebv = gender === 'male' ? (ibw * 75) : (ibw * 65);
+    
+    // ABL = EBV * ((Start Hgb - Target Hgb) / Start Hgb)
+    const abl = ebv * ((startHgb - targetHgb) / startHgb);
+    document.getElementById('abl-result').innerText = `ABL: ${Math.round(abl)} mL`;
+}
+
+function updateFluids(amount, isBlood, isLoss) {
+    if (isLoss) fluidLoss += amount;
+    else if (isBlood) fluidBlood += amount;
+    else fluidCryst += amount;
+    
+    const net = (fluidCryst + fluidBlood) - fluidLoss;
+    document.getElementById('net-balance').innerText = net;
+    
+    addLog(`Fluid Updated: ${isLoss ? '-' : '+'}${amount} mL ${isBlood ? 'Blood' : (isLoss ? 'Loss/Urine' : 'Crystalloid/Med')}.`);
+}
+
+// --- MISSING TALLY LOGIC ---
+function addFentanyl(mcg) { 
+    fentTotal += mcg; 
+    document.getElementById('fentanyl-total').innerText = fentTotal; 
+    addLog(`Fentanyl ${mcg}mcg given.`); 
+}
+
+function addPropofol(mg) { 
+    propTotal += mg; 
+    document.getElementById('propofol-total').innerText = propTotal; 
+    addLog(`Propofol ${mg}mg given.`); 
+}
+
+function giveAnalgin() { givenAnalgin = true; addLog('Analgin 1g given.'); }
+function givePara() { givenPara = true; addLog('Paracetamol 1g given.'); }
+function giveDex() { givenDex = true; addLog('Dexketoprofen (2 ampoules) given.'); }
+
+function checkAnalgesia() {
+    if (givenAnalgin || givenPara || givenDex) {
+        addLog("✅ Non-opioid analgesia confirmed. Safe to taper Sevoflurane/Remifentanil for extubation.");
+    } else {
+        addLog("⚠️ WARNING: No non-opioid analgesia recorded yet!");
+    }
+}
+
+// --- MISSING RECORD & RESET LOGIC ---
+function downloadRecord() {
+    const logText = document.getElementById('log-output').value;
+    if (!logText) {
+        alert("Log is empty. Nothing to save.");
+        return;
+    }
+    
+    // Create a Blob file that Safari can download locally
+    const blob = new Blob([logText], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `Anesthesia_Record_${new Date().toISOString().slice(0,10)}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+function endCase() {
+    const netFluid = (fluidCryst + fluidBlood) - fluidLoss;
+    const summary = `
+\n--- END OF CASE SUMMARY ---
+Total Fentanyl: ${fentTotal} mcg
+Total Propofol: ${propTotal} mg
+Total NMB (Relaxant): ${nmbTotalMg} mg
+Net Fluid Balance: ${netFluid} mL
+---------------------------
+🛑 Case ended.`;
+    
+    addLog(summary);
+}
+
+function hardReset() {
+    if (confirm("Are you sure you want to clear all data, timers, and start a new case?")) {
+        localStorage.clear();
+        window.location.reload(true);
+    }
+}
