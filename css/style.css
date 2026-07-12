@@ -135,16 +135,34 @@
         .target-value { font-family: monospace; font-size:1.3rem; font-weight:bold; }
         .target-value small { font-size:0.6em; margin-left: 2px; color: var(--text-muted);}
 
-.sevo-slider-container { width: 100%; position: relative; margin: 20px 0; }
-.sevo-range { 
-    -webkit-appearance: none; width: 100%; height: 12px; 
-    background: #444; border-radius: 6px; outline: none; 
+/* --- BULLETPROOF SEVO SLIDER --- */
+.sevo-slider-container { position: relative; height: 110px; margin: 30px 0; width: 100%; display: block; }
+.sevo-track-bg { position: absolute; top: 30px; left: 0; width: 100%; height: 34px; border-radius: 8px; z-index: 1; border: 1px solid var(--border-color); }
+
+.sevo-label-top, .sevo-label-bottom { position: absolute; transform: translateX(-50%); font-weight: bold; font-size: 0.85em; white-space: nowrap; transition: left 0.1s; }
+.sevo-label-top { top: 0; color: var(--text-main); z-index: 5;}
+.sevo-label-bottom { top: 75px; color: var(--text-muted); z-index: 4;}
+
+/* Force iOS to drop native styles */
+.sevo-range, .ghost-range { 
+    -webkit-appearance: none; appearance: none; 
+    width: 100%; height: 34px; position: absolute; top: 30px; left: 0; 
+    background: transparent; outline: none; margin: 0; padding: 0; 
 }
-/* Ensure the thumb is visible and click-able */
-.sevo-range::-webkit-slider-thumb {
-    -webkit-appearance: none; width: 24px; height: 24px; 
-    background: var(--text-main); border-radius: 50%; cursor: pointer;
+.sevo-range { z-index: 4; }
+.ghost-range { pointer-events: none; z-index: 3; opacity: 0.8; }
+
+.sevo-range::-webkit-slider-thumb { 
+    -webkit-appearance: none; appearance: none; 
+    width: 44px; height: 44px; border-radius: 50%; background: #fff; cursor: pointer; 
+    box-shadow: 0 0 8px rgba(0,0,0,0.9); border: 5px solid #333; margin-top: -5px; 
 }
+.ghost-range::-webkit-slider-thumb { 
+    -webkit-appearance: none; appearance: none; 
+    width: 44px; height: 44px; border-radius: 50%; background: var(--bg-color); 
+    border: 4px dashed #fff; box-shadow: 0 0 10px rgba(255,255,255,0.3); margin-top: -5px; 
+}
+
 
 
         /* Checkbox switch for Opioid toggle */
