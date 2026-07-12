@@ -135,33 +135,32 @@
         .target-value { font-family: monospace; font-size:1.3rem; font-weight:bold; }
         .target-value small { font-size:0.6em; margin-left: 2px; color: var(--text-muted);}
 
-/* --- BULLETPROOF SEVO SLIDER --- */
+/* --- BULLETPROOF IOS SLIDERS --- */
+.slider-readout { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 15px; }
+.rate-val { font-size: 2em; font-weight: bold; color: var(--text-main); }
+.zone-badge { padding: 6px 12px; border-radius: 4px; font-size: 0.8em; font-weight: bold; text-transform: uppercase; background: #333; }
+
+/* Force Safari to destroy the native white/gray tracks */
+.custom-range, .sevo-range, .ghost-range { -webkit-appearance: none; appearance: none; background: transparent; outline: none; width: 100%; margin: 0; }
+.custom-range::-webkit-slider-runnable-track, .sevo-range::-webkit-slider-runnable-track, .ghost-range::-webkit-slider-runnable-track { background: transparent; border: none; }
+
+.custom-range { height: 24px; border-radius: 6px; margin: 15px 0; border: 1px solid var(--border-color); }
+.custom-range::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 30px; height: 30px; border-radius: 50%; background: #fff; cursor: pointer; box-shadow: 0 0 5px rgba(0,0,0,0.8); border: 4px solid #333; margin-top: -3px;}
+
 .sevo-slider-container { position: relative; height: 110px; margin: 30px 0; width: 100%; display: block; }
 .sevo-track-bg { position: absolute; top: 30px; left: 0; width: 100%; height: 34px; border-radius: 8px; z-index: 1; border: 1px solid var(--border-color); }
 
-.sevo-label-top, .sevo-label-bottom { position: absolute; transform: translateX(-50%); font-weight: bold; font-size: 0.85em; white-space: nowrap; transition: left 0.1s; }
-.sevo-label-top { top: 0; color: var(--text-main); z-index: 5;}
-.sevo-label-bottom { top: 75px; color: var(--text-muted); z-index: 4;}
+/* Removed the CSS transition so the fast JS interval can run smoothly */
+.sevo-label-top, .sevo-label-bottom { position: absolute; transform: translateX(-50%); font-weight: bold; font-size: 0.85em; white-space: nowrap; }
+.sevo-label-top { top: 0; color: var(--text-main); z-index: 5; left: 0;}
+.sevo-label-bottom { top: 75px; color: var(--text-muted); z-index: 4; left: 0;}
 
-/* Force iOS to drop native styles */
-.sevo-range, .ghost-range { 
-    -webkit-appearance: none; appearance: none; 
-    width: 100%; height: 34px; position: absolute; top: 30px; left: 0; 
-    background: transparent; outline: none; margin: 0; padding: 0; 
-}
-.sevo-range { z-index: 4; }
-.ghost-range { pointer-events: none; z-index: 3; opacity: 0.8; }
+.sevo-range { height: 34px; position: absolute; top: 30px; left: 0; z-index: 4; }
+.ghost-range { height: 34px; position: absolute; top: 30px; left: 0; pointer-events: none; z-index: 3; opacity: 0.8; }
 
-.sevo-range::-webkit-slider-thumb { 
-    -webkit-appearance: none; appearance: none; 
-    width: 44px; height: 44px; border-radius: 50%; background: #fff; cursor: pointer; 
-    box-shadow: 0 0 8px rgba(0,0,0,0.9); border: 5px solid #333; margin-top: -5px; 
-}
-.ghost-range::-webkit-slider-thumb { 
-    -webkit-appearance: none; appearance: none; 
-    width: 44px; height: 44px; border-radius: 50%; background: var(--bg-color); 
-    border: 4px dashed #fff; box-shadow: 0 0 10px rgba(255,255,255,0.3); margin-top: -5px; 
-}
+.sevo-range::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 44px; height: 44px; border-radius: 50%; background: #fff; cursor: pointer; box-shadow: 0 0 8px rgba(0,0,0,0.9); border: 5px solid #333; margin-top: -5px;}
+.ghost-range::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 44px; height: 44px; border-radius: 50%; background: var(--bg-color); border: 4px dashed #fff; box-shadow: 0 0 10px rgba(255,255,255,0.3); margin-top: -5px;}
+
 
 
 
