@@ -419,8 +419,8 @@ function addPropofol(mg) {
 }
 
 function giveAnalgin() { givenAnalgin = true; addLog('Analgin 1g given.'); }
-function givePara() { givenPara = true; addLog('Paracetamol 1g given.'); }
-function giveDex() { givenDex = true; addLog('Dexketoprofen (2 ampoules) given.'); }
+function giveParacetamol() { givenParacetamol = true; addLog('Paracetamol 1g given.'); }
+function giveKetoprofen() { givenKetoprofen = true; addLog('Ketoprofen (100mg) given.'); }
 
 function checkAnalgesia() {
     if (givenAnalgin || givenPara || givenDex) {
