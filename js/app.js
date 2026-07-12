@@ -627,3 +627,53 @@ function resetChecklist() {
     document.querySelectorAll('.checklist-item input[type="checkbox"]').forEach(cb => cb.checked = false);
 }
 
+// --- REACTIVE WASHOUT PREDICTOR ---
+function calculateWashout() {
+    // Fail silently if MAC targets haven't been calculated yet
+    if(!sevoZones || sevoZones.length === 0) return; 
+    
+    const currentVol = parseFloat(document.getElementById('washout-current').value);
+    const fgf = parseFloat(document.getElementById('fgf-slider').value); 
+    
+    // Hide results if input is cleared or invalid
+    if(isNaN(currentVol) || currentVol <= 0 || isNaN(fgf)) {
+        document.getElementById('washout-result').style.display = 'none';
+        return; 
+    }
+    
+    // Find the dynamic awake threshold (factors in concurrent opioids)
+    const awakeTarget = sevoZones.find(z => z.id === 'awake').val;
+
+    // Handle scenario where patient is already at or below MAC-Awake
+    if(currentVol <= awakeTarget) { 
+        document.getElementById('washout-time').innerText = "0";
+        document.getElementById('washout-clock').innerText = "[Safe to Extubate]";
+        document.getElementById('washout-result').style.display = 'block';
+        return; 
+    }
+
+    // Time constant math
+    const tauTotal = 3.5 + (5.0 / fgf); 
+    const timeMins = -tauTotal * Math.log(awakeTarget / currentVol);
+    
+    // Update the UI with the calculation
+    document.getElementById('washout-time').innerText = Math.round(timeMins);
+    
+    const targetDate = new Date(Date.now() + (timeMins * 60000));
+    const hh = targetDate.getHours().toString().padStart(2, '0');
+    const mm = targetDate.getMinutes().toString().padStart(2, '0');
+    
+    document.getElementById('washout-clock').innerText = `[${hh}:${mm}]`;
+    document.getElementById('washout-result').style.display = 'block';
+}
+
+// Make sure updateFGF calls it!
+function updateFGF() {
+    const fgf = parseFloat(document.getElementById('fgf-slider').value);
+    document.getElementById('fgf-disp').innerText = fgf.toFixed(1);
+    const tauTotal = 3.5 + (5.0 / fgf);
+    document.getElementById('tau-disp').innerText = tauTotal.toFixed(1);
+    
+    // Recalculate washout time dynamically
+    calculateWashout(); 
+}
