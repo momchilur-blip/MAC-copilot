@@ -112,7 +112,8 @@
             updateRemi();
         }
 
-        function updateRemi() {
+      // --- FIX FOR SILENT REMI SLIDER ---
+function updateRemi() {
     // Uses a visual fallback of 70kg if the user hasn't calculated IBW yet so the colors still render
     const workingIbw = ibw > 0 ? ibw : 70; 
     
@@ -358,16 +359,13 @@ function updateFGF() {
 }
 
 // --- REACTIVE WASHOUT PREDICTOR ---
+    slider.style.backgroundImage = `linear-gradient(to right, ${gradStops.join(', ')})`;
+}
+
 function calculateWashout() {
-    // Fail silently if MAC targets haven't been calculated yet
     if(!sevoZones || sevoZones.length === 0) return; 
-    
     const currentVol = parseFloat(document.getElementById('washout-current').value);
     
-    // Pulls the FGF rate directly from the dynamic slider above
-    const fgf = parseFloat(document.getElementById('fgf-slider').value); 
-    
-    // Hide results if input is cleared
     if(isNaN(currentVol) || currentVol <= 0) {
         document.getElementById('washout-result').style.display = 'none';
         return; 
@@ -375,13 +373,19 @@ function calculateWashout() {
     
     const awakeTarget = sevoZones.find(z => z.id === 'awake').val;
 
-    // Handle the scenario where the patient is already awake
     if(currentVol <= awakeTarget) { 
         document.getElementById('washout-time').innerText = "0";
-        document.getElementById('washout-clock').innerText = "[Safe for Extubation]";
         document.getElementById('washout-result').style.display = 'block';
         return; 
     }
+
+    const tauTotal = 3.5 + (5.0 / currentFGF); 
+    const timeMins = -tauTotal * Math.log(awakeTarget / currentVol);
+    
+    document.getElementById('washout-time').innerText = Math.round(timeMins);
+    document.getElementById('washout-result').style.display = 'block';
+}
+
 
     const tauCNS = 3.5;
     const tauCircuit = 5.0 / fgf;
