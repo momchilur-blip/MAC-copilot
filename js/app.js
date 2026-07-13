@@ -11,32 +11,42 @@
         let currentFGF = 1.5; // Centralized FGF state
 
         // --- NAVIGATION LOGIC ---
-        function setMainTab(tabId) {
-            document.querySelectorAll('.master-nav .nav-btn').forEach(btn => btn.classList.remove('active'));
-            document.querySelectorAll('.container > .tab-panel').forEach(panel => panel.classList.remove('active'));
-            document.getElementById(`nav-${tabId}`).classList.add('active');
-            document.getElementById(`main-${tabId}`).classList.add('active');
-        }
+function setMainTab(tabId) {
+    // 1. Clear all active states
+    document.querySelectorAll('.master-nav .nav-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.container > .tab-panel').forEach(panel => panel.classList.remove('active'));
+    
+    // 2. Safely apply active state to the selected tab
+    const navBtn = document.getElementById(`nav-${tabId}`);
+    const mainTab = document.getElementById(`main-${tabId}`);
+    if (navBtn) navBtn.classList.add('active');
+    if (mainTab) mainTab.classList.add('active');
 
-        
-                function setSubTab(parent, subId) {
-            if (parent === 'induction') {
-                document.querySelectorAll('#sub-nav-dosing').forEach(b => b.classList.remove('active'));
-                document.querySelectorAll('.induction-sub').forEach(p => p.classList.remove('active'));
-                document.getElementById(`sub-nav-${subId}`).classList.add('active');
-                document.getElementById(`sub-${subId}`).classList.add('active');
-            } else if (parent === 'maintenance') {
-                document.querySelectorAll('#sub-nav-sevo, #sub-nav-remi').forEach(b => b.classList.remove('active'));
-                document.querySelectorAll('.maintenance-sub').forEach(p => p.classList.remove('active'));
-                document.getElementById(`sub-nav-${subId}`).classList.add('active');
-                document.getElementById(`sub-${subId}`).classList.add('active');
-            } else if (parent === 'log') {
-                document.querySelectorAll('#log-nav-std, #log-nav-neuro, #log-nav-lap, #log-nav-vasc').forEach(b => b.classList.remove('active'));
-                document.querySelectorAll('.log-sub').forEach(p => p.classList.remove('active'));
-                document.getElementById(`log-nav-${subId}`).classList.add('active');
-                document.getElementById(`log-${subId}`).classList.add('active');
-            }
-        }
+    // 3. Auto-calculate Sevo safely when entering the Maintenance tab
+    if (tabId === 'maintenance' && typeof calculateSevo === 'function') {
+        setTimeout(calculateSevo, 100);
+    }
+}
+
+function setSubTab(parent, subId) {
+    // 1. Clear active states based on the parent tab
+    if (parent === 'induction') {
+        document.querySelectorAll('#sub-nav-dosing').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.induction-sub').forEach(p => p.classList.remove('active'));
+    } else if (parent === 'maintenance') {
+        document.querySelectorAll('#sub-nav-sevo, #sub-nav-remi').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.maintenance-sub').forEach(p => p.classList.remove('active'));
+    } else if (parent === 'log') {
+        document.querySelectorAll('#log-nav-std, #log-nav-neuro, #log-nav-lap, #log-nav-vasc').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.log-sub').forEach(p => p.classList.remove('active'));
+    }
+    
+    // 2. Safely apply active state to the selected sub-tab
+    const subNavBtn = document.getElementById(`sub-nav-${subId}`);
+    const subTabPanel = document.getElementById(`sub-${subId}`);
+    if (subNavBtn) subNavBtn.classList.add('active');
+    if (subTabPanel) subTabPanel.classList.add('active');
+}
 
 
         // --- INDUCTION CALCULATION ---
@@ -159,12 +169,6 @@ function updateRemi() {
     // Fixed: using backgroundImage for iOS Safari
     slider.style.backgroundImage = `linear-gradient(to right, ${gradStops.join(', ')})`;
 }
-
-        // --- AUTO-CALCULATE LISTENER ---
-// Triggers the MAC calculation when you open the Maintenance tab
-document.querySelector('#nav-maintenance').addEventListener('click', () => {
-    setTimeout(calculateSevo, 100); 
-});
 
 // --- SYNCHRONIZED FGF LOGIC ---
 function handleFGF(val) {
