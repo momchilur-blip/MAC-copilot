@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ТИВА & Вазопресори</title>
+    <style>
+        /* --- CORE VARIABLES --- */
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --input-bg: #2a2a2a;
+            --border-color: #333;
+            --text-main: #f0f0f0;
+            --text-muted: #a0a0a0;
+            --alert-green: #28a745;
+            --iso-relaxant: #dc3545; 
+            --warning-yellow: #ffc107;
+            --propofol-yellow: #e6c200;
+            --remi-blue: #007bff;
+        }
+
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg-color); color: var(--text-main); margin: 0; padding: 15px; padding-top: 60px; }
+
+        /* --- NAVIGATION --- */
+        .top-bar { position: fixed; top: 0; left: 0; width: 100%; background: var(--card-bg); border-bottom: 1px solid var(--border-color); padding: 15px; display: flex; align-items: center; z-index: 100; box-sizing: border-box; }
+        .back-btn { color: var(--text-muted); text-decoration: none; font-weight: bold; margin-right: 15px; padding: 5px 10px; background: var(--input-bg); border-radius: 6px; }
+        .top-bar h2 { margin: 0; font-size: 1.2em; }
+
+        /* --- CARDS & TYPOGRAPHY --- */
+        .card { background: var(--card-bg); border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 1px solid var(--border-color); }
+        .card-title { margin-top: 0; margin-bottom: 15px; font-size: 1.2em; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
+        
+        /* --- WEIGHT INPUT --- */
+        .weight-container { display: flex; align-items: center; background: var(--input-bg); padding: 15px; border-radius: 12px; margin-bottom: 25px; border: 1px solid var(--alert-green); }
+        .weight-container label { font-size: 1.2em; font-weight: bold; flex: 1; color: var(--alert-green); }
+        .weight-input { width: 80px; background: transparent; border: none; color: #fff; font-size: 2em; font-weight: bold; text-align: right; outline: none; border-bottom: 2px solid var(--alert-green); padding: 0 5px; }
+        .weight-unit { font-size: 1.2em; color: var(--text-muted); margin-left: 10px; }
+
+        /* --- RECIPE BOX --- */
+        .recipe-box { background: rgba(255, 255, 255, 0.05); padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 0.9em; border-left: 3px solid var(--text-muted); }
+        .recipe-box strong { color: var(--text-main); }
+        .recipe-box .concentration { float: right; font-family: monospace; color: var(--alert-green); background: rgba(40, 167, 69, 0.2); padding: 2px 6px; border-radius: 4px; }
+
+        /* --- SLIDERS & OUTPUT --- */
+        .control-group { margin-bottom: 20px; }
+        .control-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 10px; }
+        .dose-label { font-size: 0.9em; color: var(--text-muted); }
+        .dose-value { font-size: 1.3em; font-weight: bold; font-family: monospace; }
+        
+        input[type="range"] { width: 100%; appearance: none; background: transparent; cursor: pointer; }
+        input[type="range"]::-webkit-slider-runnable-track { background: var(--input-bg); height: 8px; border-radius: 4px; border: 1px solid var(--border-color); }
+        input[type="range"]::-webkit-slider-thumb { appearance: none; height: 24px; width: 24px; background: #fff; border-radius: 50%; margin-top: -8px; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+        
+        .output-box { background: #000; padding: 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border-color); margin-top: 15px; }
+        .output-label { font-size: 0.85em; color: var(--text-muted); text-transform: uppercase; }
+        .output-rate { font-size: 2.2em; font-family: monospace; font-weight: bold; color: #fff; }
+        
+        /* Specific Colors */
+        .propofol-text { color: var(--propofol-yellow); }
+        .remi-text { color: var(--remi-blue); }
+        .nora-text { color: var(--iso-relaxant); }
+
+        /* --- TOGGLES --- */
+        .segmented-control { display: flex; background: var(--input-bg); border-radius: 8px; overflow: hidden; border: 1px solid var(--border-color); margin-bottom: 15px; }
+        .segmented-control input[type="radio"] { display: none; }
+        .segmented-control label { flex: 1; text-align: center; padding: 8px; font-size: 0.9em; font-weight: bold; color: var(--text-muted); cursor: pointer; border-right: 1px solid var(--border-color); }
+        .segmented-control label:last-child { border-right: none; }
+        .segmented-control input[type="radio"]:checked + label { background: #444; color: var(--text-main); }
+    </style>
+</head>
+<body>
+
+    <nav class="top-bar">
+        <a href="../index.html" class="back-btn">⬅</a>
+        <h2>Инфузии и Вазопресори</h2>
+    </nav>
+
+    <!-- WEIGHT INPUT -->
+    <div class="weight-container">
+        <label for="pt-weight">Тегло на пациента</label>
+        <input type="number" id="pt-weight" class="weight-input" value="80" oninput="calculateAll()">
+        <span class="weight-unit">кг</span>
+    </div>
+
+    <!-- TIVA CARD: PROPOFOL -->
+    <div class="card" style="border-top: 3px solid var(--propofol-yellow);">
+        <div class="card-title propofol-text">Пропофол (TIVA)</div>
+        
+        <div class="segmented-control">
+            <input type="radio" name="prop-conc" id="prop-1" value="10" onchange="calculateAll()" checked><label for="prop-1">1% (10 mg/mL)</label>
+            <input type="radio" name="prop-conc" id="prop-2" value="20" onchange="calculateAll()"><label for="prop-2">2% (20 mg/mL)</label>
+        </div>
+
+        <div class="control-group">
+            <div class="control-header">
+                <span class="dose-label">Целева доза:</span>
+                <span class="dose-value propofol-text"><span id="prop-dose-val">4.0</span> <span style="font-size: 0.6em; color: var(--text-muted);">mg/kg/hr</span></span>
+            </div>
+            <input type="range" id="prop-slider" min="1.0" max="12.0" step="0.5" value="4.0" oninput="updatePropSlider()">
+        </div>
+
+        <div class="output-box">
+            <div class="output-label">Скорост на<br>перфузора:</div>
+            <div class="output-rate propofol-text"><span id="prop-rate">32.0</span> <span style="font-size: 0.4em; color: var(--text-muted);">mL/hr</span></div>
+        </div>
+    </div>
+
+    <!-- TIVA CARD: REMIFENTANIL -->
+    <div class="card" style="border-top: 3px solid var(--remi-blue);">
+        <div class="card-title remi-text">Ремифентанил (Ultiva)</div>
+        
+        <div class="recipe-box">
+            <strong>Рецепта:</strong> 2 mg ампула в 40 mL NaCl.
+            <div class="concentration">50 mcg/mL</div>
+        </div>
+
+        <div class="control-group">
+            <div class="control-header">
+                <span class="dose-label">Целева доза:</span>
+                <span class="dose-value remi-text"><span id="remi-dose-val">0.20</span> <span style="font-size: 0.6em; color: var(--text-muted);">mcg/kg/min</span></span>
+            </div>
+            <input type="range" id="remi-slider" min="0.05" max="0.50" step="0.01" value="0.20" oninput="updateRemiSlider()">
+        </div>
+
+        <div class="output-box">
+            <div class="output-label">Скорост на<br>перфузора:</div>
+            <div class="output-rate remi-text"><span id="remi-rate">19.2</span> <span style="font-size: 0.4em; color: var(--text-muted);">mL/hr</span></div>
+        </div>
+    </div>
+
+    <!-- VASOPRESSOR CARD: NOREPINEPHRINE -->
+    <div class="card" style="border-top: 3px solid var(--iso-relaxant);">
+        <div class="card-title nora-text">Норадреналин (Инфузия)</div>
+        
+        <div class="segmented-control">
+            <input type="radio" name="nora-mix" id="nora-mix-1" value="20" onchange="calculateAll()" checked><label for="nora-mix-1">1 mg в 50 mL</label>
+            <input type="radio" name="nora-mix" id="nora-mix-4" value="80" onchange="calculateAll()"><label for="nora-mix-4">4 mg в 50 mL</label>
+        </div>
+
+        <div class="recipe-box" id="nora-recipe-text">
+            <strong>Рецепта:</strong> 1 ампула (1mg) + 49 mL NaCl.
+            <div class="concentration">20 mcg/mL</div>
+        </div>
+
+        <div class="control-group">
+            <div class="control-header">
+                <span class="dose-label">Целева доза:</span>
+                <span class="dose-value nora-text"><span id="nora-dose-val">0.05</span> <span style="font-size: 0.6em; color: var(--text-muted);">mcg/kg/min</span></span>
+            </div>
+            <input type="range" id="nora-slider" min="0.01" max="0.30" step="0.01" value="0.05" oninput="updateNoraSlider()">
+        </div>
+
+        <div class="output-box">
+            <div class="output-label">Скорост на<br>перфузора:</div>
+            <div class="output-rate nora-text"><span id="nora-rate">12.0</span> <span style="font-size: 0.4em; color: var(--text-muted);">mL/hr</span></div>
+        </div>
+    </div>
+
+    <!-- EMERGENCY SYRINGES CHEAT SHEET -->
+    <h3 style="color: var(--text-muted); text-transform: uppercase; font-size: 0.85em; margin-top: 30px; margin-bottom: 10px; padding-left: 5px;">Спешни спринцовки (Болус)</h3>
+    <div class="card" style="background: #111;">
+        
+        <div style="margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+            <strong style="color: var(--text-main); font-size: 1.1em;">Ефедрин</strong><br>
+            <span style="color: var(--text-muted); font-size: 0.85em;">Симпатикомиметик (Повишава АН и Пулса)</span>
+            <div style="background: var(--input-bg); padding: 10px; border-radius: 6px; margin-top: 8px; font-family: monospace;">
+                <span style="color: var(--alert-green);">Смес:</span> 1 амп. (50mg) се разрежда до 10 mL<br>
+                <span style="color: #17a2b8;">Конц:</span> 5 mg / mL<br>
+                <span style="color: var(--warning-yellow);">Болус:</span> 1 до 2 mL (5-10 mg)
+            </div>
+        </div>
+
+        <div style="margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+            <strong style="color: var(--text-main); font-size: 1.1em;">Фенилефрин / Мезатон</strong><br>
+            <span style="color: var(--text-muted); font-size: 0.85em;">Алфа-агонист (Повишава АН, Сваля Пулса)</span>
+            <div style="background: var(--input-bg); padding: 10px; border-radius: 6px; margin-top: 8px; font-family: monospace;">
+                <span style="color: var(--alert-green);">Смес:</span> 1 амп. (10mg) в 100 mL банка NaCl<br>
+                <span style="color: #17a2b8;">Конц:</span> 100 mcg / mL<br>
+                <span style="color: var(--warning-yellow);">Болус:</span> 1 mL (100 mcg)
+            </div>
+        </div>
+
+        <div>
+            <strong style="color: var(--text-main); font-size: 1.1em;">Атропин</strong><br>
+            <span style="color: var(--text-muted); font-size: 0.85em;">Антихолинергик (Тежка брадикардия)</span>
+            <div style="background: var(--input-bg); padding: 10px; border-radius: 6px; margin-top: 8px; font-family: monospace;">
+                <span style="color: var(--alert-green);">Смес:</span> Директно от ампулата (Не се разрежда)<br>
+                <span style="color: #17a2b8;">Конц:</span> 1 mg / 1 mL<br>
+                <span style="color: var(--warning-yellow);">Болус:</span> 0.5 mL (0.5 mg)
+            </div>
+        </div>
+
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        function getWeight() {
+            let w = parseFloat(document.getElementById('pt-weight').value);
+            return isNaN(w) || w <= 0 ? 80 : w; // Default to 80kg if empty
+        }
+
+        function calculatePropofol() {
+            const weight = getWeight();
+            const dose = parseFloat(document.getElementById('prop-slider').value);
+            const concentration = parseFloat(document.querySelector('input[name="prop-conc"]:checked').value); // 10 or 20 mg/mL
+            
+            // Formula: (Dose [mg/kg/hr] * Weight [kg]) / Concentration [mg/mL] = Rate [mL/hr]
+            const rate = (dose * weight) / concentration;
+            document.getElementById('prop-rate').innerText = rate.toFixed(1);
+        }
+
+        function updatePropSlider() {
+            const dose = parseFloat(document.getElementById('prop-slider').value).toFixed(1);
+            document.getElementById('prop-dose-val').innerText = dose;
+            calculatePropofol();
+        }
+
+        function calculateRemi() {
+            const weight = getWeight();
+            const dose = parseFloat(document.getElementById('remi-slider').value);
+            const concentration = 50; // Standard mix: 50 mcg/mL
+            
+            // Formula: (Dose [mcg/kg/min] * Weight [kg] * 60 [min/hr]) / Concentration [mcg/mL] = Rate [mL/hr]
+            const rate = (dose * weight * 60) / concentration;
+            document.getElementById('remi-rate').innerText = rate.toFixed(1);
+        }
+
+        function updateRemiSlider() {
+            const dose = parseFloat(document.getElementById('remi-slider').value).toFixed(2);
+            document.getElementById('remi-dose-val').innerText = dose;
+            calculateRemi();
+        }
+
+        function calculateNora() {
+            const weight = getWeight();
+            const dose = parseFloat(document.getElementById('nora-slider').value);
+            
+            // Update Recipe Text based on toggle
+            const concToggle = document.querySelector('input[name="nora-mix"]:checked').value;
+            const recipeBox = document.getElementById('nora-recipe-text');
+            let concentration = 20; // Default 20 mcg/mL
+
+            if (concToggle === "20") {
+                concentration = 20;
+                recipeBox.innerHTML = `<strong>Рецепта:</strong> 1 ампула (1mg) + 49 mL NaCl.<div class="concentration">20 mcg/mL</div>`;
+            } else {
+                concentration = 80;
+                recipeBox.innerHTML = `<strong>Рецепта:</strong> 4 ампули (4mg) до 50 mL NaCl.<div class="concentration">80 mcg/mL</div>`;
+            }
+            
+            // Formula: (Dose [mcg/kg/min] * Weight [kg] * 60 [min/hr]) / Concentration [mcg/mL] = Rate [mL/hr]
+            const rate = (dose * weight * 60) / concentration;
+            document.getElementById('nora-rate').innerText = rate.toFixed(1);
+        }
+
+        function updateNoraSlider() {
+            const dose = parseFloat(document.getElementById('nora-slider').value).toFixed(2);
+            document.getElementById('nora-dose-val').innerText = dose;
+            calculateNora();
+        }
+
+        // Global recalculate when weight or toggles change
+        function calculateAll() {
+            calculatePropofol();
+            calculateRemi();
+            calculateNora();
+        }
+
+        // Run once on load to set initial values
+        calculateAll();
+    </script>
+</body>
+</html>
