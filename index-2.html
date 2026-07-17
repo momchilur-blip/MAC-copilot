@@ -330,17 +330,15 @@
     <div class="log-grid">
         <button class="btn-log b-opioid" onclick="addFentanyl(50)">+ 50mcg Fent</button>
         <button class="btn-log b-opioid" onclick="addFentanyl(100)">+ 100mcg Fent</button>
-        <button class="btn-log b-drug" onclick="addPropofol(30)">+ 30mg Prop</button>
-        <button class="btn-log b-drug" onclick="addPropofol(50)">+ 50mg Prop</button>
         <button class="btn-log b-drug" onclick="addLog('Analgin 1g given.')">Analgin 1g</button>
         <button class="btn-log b-drug" onclick="addLog('Paracetamol 1g given.')">Para 1g</button>
+        <button class="btn-log b-drug" onclick="addLog('Dexamethasone 4mg given.')">Dexa 1g</button>
         <button class="btn-log b-drug" onclick="checkAnalgesia()">*Check Analgesia*</button>
+        <button class="btn-log b-drug" onclick="addPropofol(30)">+ 30mg Prop</button>
+        <button class="btn-log b-drug" onclick="addPropofol(50)">+ 50mg Prop</button>
     </div>
 </div>
 <button class="btn" style="background: var(--info-blue);" onclick="generateSummary()">📊 Current Tally Summary</button>
-<button class="btn" style="background: var(--iso-relaxant);" onclick="endCase()">🛑 End Case / Save</button>
-<button class="btn" style="background: #444;" onclick="hardReset()">🔄 Reset Dashboard</button>
-
 
             <div class="section-label">Surgery Type Events</div>
             <div class="sub-tabs">
@@ -359,11 +357,8 @@
                         <button class="btn-log b-proc" onclick="addLog('Airway secured, ETCO2 confirmed.')">Airway Secured</button>
                         <button class="btn-log b-drug" onclick="addLog('Antibiotics administered.')">Antibiotics Given</button>
                         <button class="btn-log b-surg" onclick="addLog('Surgical incision.')">Incision</button>
-                        <button class="btn-log b-drug" onclick="addPropofol(30)">+ 30mg Prop</button>
-                        <button class="btn-log b-drug" onclick="addPropofol(50)">+ 50mg Prop</button>
                         <button class="btn-log b-surg" onclick="addLog('Tourniquet inflated.')">Tourniquet UP</button>
                         <button class="btn-log b-surg" onclick="addLog('Tourniquet deflated.')">Tourniquet DOWN</button>
-                        <button class="btn-log b-surg" onclick="addLog('Analgesia review: Analgin/Paracetamol/Ketoprofen checked.')">*Check Analgesia*</button>
                         <button class="btn-log b-surg" onclick="addLog('Skin closure initiated.')">Skin Closure</button>
                         <button class="btn-log b-proc" onclick="addLog('Extubation. Patient breathing spontaneously.')">Extubation</button>
                     </div>
@@ -424,7 +419,8 @@
                     <button class="btn" style="background: var(--info-blue); margin:0;" onclick="downloadRecord()">💾 Save .TXT</button>
                 </div>
                 
-                <button class="btn" style="background: var(--iso-relaxant); color: #fff; margin-top: 20px;" onclick="endCase()">🛑 End Case / Reset Patient</button>
+                <button class="btn" style="background: var(--iso-relaxant); color: #fff; margin-top: 20px;" onclick="endCase()">🛑 End Case </button>
+                <button class="btn" style="background: #444;" onclick="hardReset()">🔄 Reset Dashboard</button>
             </div>
         </div>
     </div>
