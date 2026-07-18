@@ -765,26 +765,40 @@
             }).catch(err => alert("Грешка при копиране: " + err));
         }
 
-        // --- 2. SHARE OR DOWNLOAD FILE ---
+        // --- 2. DOWNLOAD TXT FILE ---
         function shareReport() {
             const data = gatherClinicalData();
             const note = buildStructuredNote(data);
-            const fileName = `Preop_${data.ptId.replace(/\s+/g, '_')}.txt`;
-
-            if (navigator.share) {
-                navigator.share({
-                    title: `Предоперативна оценка: ${data.ptId}`,
-                    text: note
-                }).catch(console.error);
+            
+            // Get current date in DD-MM-YYYY format
+            const today = new Date();
+            const dateStr = String(today.getDate()).padStart(2, '0') + '-' + 
+                            String(today.getMonth() + 1).padStart(2, '0') + '-' + 
+                            today.getFullYear();
+            
+            // Sanitize patient ID (replaces spaces, slashes, and invalid file chars with underscores)
+            let safePtId = data.ptId.trim();
+            if (!safePtId || safePtId === "Неизвестен пациент") {
+                safePtId = "Unknown";
             } else {
-                const blob = new Blob([note], { type: 'text/plain' });
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(blob);
-                link.download = fileName;
-                link.click();
+                safePtId = safePtId.replace(/[\s/\\:*?"<>|]+/g, '_');
             }
-        }
+            
+            // Construct filename: e.g., Preop_Ivan_Ivanov_18-07-2026.txt
+            const fileName = `Preop_${safePtId}_${dateStr}.txt`;
 
+            // Force download of the .txt file
+            const blob = new Blob([note], { type: 'text/plain;charset=utf-8' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = fileName;
+            
+            // Append, click, and remove (required for compatibility with Firefox/iOS)
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(link.href);
+        }
         // --- 3. PRINT FORMAT ---
         function printWardInstructions() {
             const data = gatherClinicalData();
@@ -809,13 +823,14 @@
                 <p><strong>Дата на операцията:</strong> _______________________</p>
                 
                 ${data.flags.length > 0 ? `<div class="warning">ВНИМАНИЕ (Отбелязани рискове):<br>${data.flags.join(', ')}</div>` : ''}
-                ${data.missingTests.length > 0 ? `<div class="warning">⚠️ ЗАБЕЛЕЖКА КЪМ ХИРУРГА: Изискват се следните предоперативни консултации/изследвания: ${data.missingTests.join(', ')}</div>` : ''}
+                ${data.missingTests.length > 0 ? `<div class="warning">⚠️ БЕЛЕЖКА КЪМ ХИРУРГА: 
+                Изискват се следните предоперативни консултации/изследвания: ${data.missingTests.join(', ')}</div>` : ''}
 
                 <div class="box">
                     🛑 ГЛАДУВАНЕ (NPO Статус)
                     <ul>
                         <li><strong>Твърда храна се спира в:</strong> ${data.npoSolid}</li>
-                        <li><strong>Бистри течности (вода/сок без пулп) се спират в:</strong> ${data.npoClear}</li>
+                        <li><strong>Пиенето на вода се спира в:</strong> ${data.npoClear}</li>
                     </ul>
                 </div>
 
@@ -825,7 +840,7 @@
                         <li><input type="checkbox"> Пациентът <strong>ДА ПРИЕМЕ</strong> своите бета-блокери.</li>
                         <li><input type="checkbox"> Пациентът <strong>ДА НЕ ПРИЕМА</strong> ACE инхибитори / АРБ.</li>
                         <li><input type="checkbox"> Перорални антидиабетни средства се спират сутринта.</li>
-                        <li>Други инструкции: ____________________________________________________</li>
+                        <li>Други инструкции: ______________________________________</li>
                     </ul>
                 </div>
 
