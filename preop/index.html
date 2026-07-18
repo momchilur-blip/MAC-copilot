@@ -446,8 +446,53 @@
         }
         calculateAC();
         
-        function generateChartNote() { alert("Функцията за копиране е налична само в пълния изглед."); }
-        function printWardInstructions() { alert("Функцията за принтиране е налична само в пълния изглед."); }
+                function generateChartNote() {
+            const ptId = document.getElementById('pt-id').value || "Неизвестен пациент";
+            const airway = document.getElementById('airway-status').innerText;
+            const asa = document.getElementById('asa-status').options[document.getElementById('asa-status').selectedIndex].text;
+            const rcriScore = document.getElementById('rcri-points').innerText;
+            const rcriRisk = document.getElementById('rcri-risk').innerText;
+            const ponvScore = document.getElementById('ponv-points').innerText;
+            const npoClear = document.getElementById('npo-clear').innerText;
+            
+            // Build the formatted text
+            let note = `Предоперативна оценка\nПациент: ${ptId}\n`;
+            note += `---------------------------\n`;
+            note += `${asa}\n`;
+            note += `Дихателни пътища: ${airway.replace('✓ ', '').replace('⚠️ ', '')}\n`;
+            note += `RCRI (Кардиологичен риск): ${rcriScore} точки (${rcriRisk})\n`;
+            note += `Apfel (PONV риск): ${ponvScore} точки\n`;
+            note += `Гладуване: Бистри течности позволени до ${npoClear}\n`;
+            
+            // Catch any active Red Flags
+            let flags = [];
+            document.querySelectorAll('.red-flag-toggle').forEach(t => { 
+                if (t.checked) flags.push(t.dataset.warning.split(':')[0]); 
+            });
+            if (flags.length > 0) {
+                note += `\n🚨 КРИТИЧНИ ФЛАГОВЕ: ${flags.join(', ')}\n`;
+            }
+
+            // Copy to device clipboard
+            navigator.clipboard.writeText(note).then(() => {
+                const btn = document.querySelector('button[onclick="generateChartNote()"]');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = "✅ Копирано успешно!";
+                btn.style.background = "var(--alert-green)";
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.style.background = "#17a2b8";
+                }, 2000);
+            }).catch(err => {
+                alert("Възникна грешка при копирането: " + err);
+            });
+        }
+
+        function printWardInstructions() {
+            // Hides the top bar and Rapid Mode button so they don't print, then triggers native print
+            window.print();
+        }
+
     </script>
 </body>
 </html>
