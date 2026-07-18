@@ -255,7 +255,91 @@
                 <strong>Стратегия:</strong> <span id="ponv-strategy">Нисък риск. Без профилактика или само един медикамент.</span>
             </div>
         </div>
+		
+<!-- CRITICAL EXAM FINDINGS CARD -->
+    <div class="card" style="border-top: 3px solid #fd7e14;">
+        <div class="card-title" style="color: #fd7e14;">🩺 Критични клинични находки</div>
+        
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+            <label style="display: flex; align-items: center; cursor: pointer; color: var(--text-main);">
+                <input type="checkbox" class="exam-check" value="Сърдечен шум / Съмнение за АС (ПЛАН: Поддържай SVR, избягвай тахикардия, внимателна индукция)" style="width: 20px; height: 20px; margin-right: 10px; accent-color: #fd7e14;">
+                Сърдечен шум (Съмнение за АС)
+            </label>
+            <label style="display: flex; align-items: center; cursor: pointer; color: var(--text-main);">
+                <input type="checkbox" class="exam-check" value="Свиркане / Бронхоспазъм (ПЛАН: Бронходилататори, дълбока индукция, избягвай Десфлуран)" style="width: 20px; height: 20px; margin-right: 10px; accent-color: #fd7e14;">
+                Свиркащо дишане / Бронхоспазъм
+            </label>
+            <label style="display: flex; align-items: center; cursor: pointer; color: var(--text-main);">
+                <input type="checkbox" class="exam-check" value="Влажни хрипове / Застой (ПЛАН: Рестриктивна течностна терапия, обмисли диуретик)" style="width: 20px; height: 20px; margin-right: 10px; accent-color: #fd7e14;">
+                Влажни хрипове / Белодробен застой
+            </label>
+            <label style="display: flex; align-items: center; cursor: pointer; color: var(--warning-yellow);">
+                <input type="checkbox" class="exam-check" value="Хиповолемия / Нестабилност (ПЛАН: Ресусцитиране с течности ПРЕДИ индукция, щадящи анестетици като Кетамин/Етомидат)" style="width: 20px; height: 20px; margin-right: 10px; accent-color: #ffc107;">
+                Хиповолемия (Удължен cap. refill / Хипотония)
+            </label>
+        </div>
+    </div>
 
+<!-- ESAIC SPECIFIC RISKS CARD -->
+    <div class="card" style="border-top: 3px solid #17a2b8;">
+        <div class="card-title" style="color: #17a2b8;">⚠️ Специфични рискове (ESAIC)</div>
+        
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+			<label style="display: flex; align-items: center; cursor: pointer; color: var(--warning-yellow);">
+                <input type="checkbox" class="esaic-check" value="Антикоагуланти / DOACs (ПЛАН: Провери времето от последната доза. Стриктни ESAIC интервали преди невроаксиален блок. Риск от епидурален хематом!)" style="width: 20px; height: 20px; margin-right: 10px; accent-color: #ffc107;">
+                Антикоагуланти / DOACs (Невроаксиален риск)
+            </label>
+			
+			 <label style="display: flex; align-items: center; cursor: pointer; color: var(--text-main);">
+                <input type="checkbox" class="esaic-check" value="Крехкост / Риск от Делириум (ПЛАН: БЕЗ Мидазолам! Редуцирай индукцията с 30-50%. Води по клинични белези, избягвай дълбока релаксация.)" style="width: 20px; height: 20px; margin-right: 10px; accent-color: #17a2b8;">
+                Крехкост (Frailty) / Възраст > 70г.
+            </label>
+			
+            <label style="display: flex; align-items: center; cursor: pointer; color: var(--text-main);">
+                <input type="checkbox" class="esaic-check" value="Тежка ОСА / Висок STOP-BANG (ПЛАН: Опиоид-спестяваща техника, екстубация напълно буден в седнало положение, готовност за CPAP)" style="width: 20px; height: 20px; margin-right: 10px; accent-color: #17a2b8;">
+                Тежка ОСА / Сънна апнея (STOP-BANG)
+            </label>
+        </div>
+    </div>
+		
+<!-- NEUROSURGERY CARD -->
+    <div class="card" style="border-top: 3px solid #9c27b0;">
+        <div class="card-title" style="color: #e040fb;">🧠 Неврохирургичен профил</div>
+        
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+            <label style="display: flex; align-items: center; cursor: pointer; color: var(--text-main);">
+                <input type="checkbox" class="neuro-check" value="Повишено ВЧН (Риск от херниация. План: Избягвай хипоксия/хиперкапния)" style="width: 20px; height: 20px; margin-right: 10px; accent-color: #9c27b0;">
+                Повишено ВЧН (Симптоматично)
+            </label>
+            <label style="display: flex; align-items: center; cursor: pointer; color: var(--text-main);">
+                <input type="checkbox" class="neuro-check" value="Епилепсия / Антиконвулсанти (Възможна ензимна индукция -> нужни по-високи дози анестетици)" style="width: 20px; height: 20px; margin-right: 10px; accent-color: #9c27b0;">
+                Епилепсия / Антиконвулсанти
+            </label>
+            <label style="display: flex; align-items: center; cursor: pointer; color: var(--text-main);">
+                <input type="checkbox" class="neuro-check" value="Базов неврологичен дефицит (Документиран преди индукция!)" style="width: 20px; height: 20px; margin-right: 10px; accent-color: #9c27b0;">
+                Базов неврологичен дефицит
+            </label>
+            <label style="display: flex; align-items: center; cursor: pointer; color: var(--text-main);">
+                <input type="checkbox" class="neuro-check" value="Кортикостероидна терапия (Обмисли стрес доза хидрокортизон; проследи КЗ)" style="width: 20px; height: 20px; margin-right: 10px; accent-color: #9c27b0;">
+                Кортикостероиди (напр. Дексаметазон)
+            </label>
+            
+            <div style="border-top: 1px solid var(--border-color); margin-top: 5px; padding-top: 10px; color: var(--text-muted); font-size: 0.9em; text-transform: uppercase;">Хирургични специфики</div>
+            
+            <label style="display: flex; align-items: center; cursor: pointer; color: var(--text-main);">
+                <input type="checkbox" class="neuro-check" value="Прона позиция (Внимание: Очи, тръба, свободен корем за избягване на епидурален венозен стаз)" style="width: 20px; height: 20px; margin-right: 10px; accent-color: #9c27b0;">
+                Прона позиция (Гръбначна хирургия)
+            </label>
+            <label style="display: flex; align-items: center; cursor: pointer; color: var(--text-main);">
+                <input type="checkbox" class="neuro-check" value="Mayfield фиксация (План: Дълбока аналгезия преди поставяне)" style="width: 20px; height: 20px; margin-right: 10px; accent-color: #9c27b0;">
+                Mayfield фиксация
+            </label>
+            <label style="display: flex; align-items: center; cursor: pointer; color: #17a2b8; font-weight: bold;">
+                <input type="checkbox" class="neuro-check" value="Невромониторинг (ПЛАН: Задължителна TIVA, без миорелаксанти след интубация)" style="width: 20px; height: 20px; margin-right: 10px; accent-color: #17a2b8;">
+                Невромониторинг (MEP/SSEP)
+            </label>
+        </div>
+    </div>
         <!-- NPO CARD (HOSPITAL REALITY) -->
         <div class="card" id="npo-card">
             <div class="card-title">Предоперативен режим (ESAIC)</div>
@@ -310,11 +394,11 @@
 
         <!-- EXPORT CENTER -->
         <div class="card" style="border: 1px solid var(--alert-green);">
-            <div style="display: flex; flex-direction: column; gap: 15px;">
+            <div style="display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap;">
                 <input type="text" id="pt-id" class="select-input" style="margin-bottom: 0;" placeholder="Име / ИЗ / Стая">
-                <button class="btn" style="background: #17a2b8; color: #fff; padding: 15px; border-radius: 8px; font-weight: bold; font-size: 1.1em; cursor: pointer; border: none;" onclick="generateChartNote()">📋 Копирай бележка</button>
-                <button class="btn" style="background: var(--text-main); color: var(--bg-color); padding: 15px; border-radius: 8px; font-weight: bold; font-size: 1.1em; cursor: pointer; border: none;" onclick="printWardInstructions()">🖨️ Отпечатай инструкции</button>
-                <textarea id="clipboard-area" style="display: none;"></textarea>
+               <button onclick="generateChartNote()" style="flex: 1; padding: 15px; background: #17a2b8; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 1em; cursor: pointer;">📋 Копирай за гама / Специалист </button>
+            <button onclick="shareReport()" style="flex: 1; padding: 15px; background: #007bff; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 1em; cursor: pointer;">📤 Сподели / Файл</button>
+            <button onclick="printWardInstructions()" style="flex: 1; padding: 15px; background: #ffc107; color: black; border: none; border-radius: 8px; font-weight: bold; font-size: 1em; cursor: pointer;">🖨️ Лист за Отделението</button>
             </div>
         </div>
     </div> <!-- END OF DETAILED SECTIONS -->
@@ -446,51 +530,186 @@
         }
         calculateAC();
         
-                function generateChartNote() {
+                // --- HELPER: GATHER CLINICAL DATA ---
+        function gatherClinicalData() {
             const ptId = document.getElementById('pt-id').value || "Неизвестен пациент";
-            const airway = document.getElementById('airway-status').innerText;
+            const airway = document.getElementById('airway-status').innerText.replace('✓ ', '').replace('⚠️ ', '');
             const asa = document.getElementById('asa-status').options[document.getElementById('asa-status').selectedIndex].text;
-            const rcriScore = document.getElementById('rcri-points').innerText;
+            const rcriScore = parseInt(document.getElementById('rcri-points').innerText) || 0;
             const rcriRisk = document.getElementById('rcri-risk').innerText;
-            const ponvScore = document.getElementById('ponv-points').innerText;
+            const ponvScore = parseInt(document.getElementById('ponv-points').innerText) || 0;
             const npoClear = document.getElementById('npo-clear').innerText;
-            
-            // Build the formatted text
-            let note = `Предоперативна оценка\nПациент: ${ptId}\n`;
-            note += `---------------------------\n`;
-            note += `${asa}\n`;
-            note += `Дихателни пътища: ${airway.replace('✓ ', '').replace('⚠️ ', '')}\n`;
-            note += `RCRI (Кардиологичен риск): ${rcriScore} точки (${rcriRisk})\n`;
-            note += `Apfel (PONV риск): ${ponvScore} точки\n`;
-            note += `Гладуване: Бистри течности позволени до ${npoClear}\n`;
-            
-            // Catch any active Red Flags
+            const npoSolid = document.getElementById('npo-solid').innerText;
+
             let flags = [];
             document.querySelectorAll('.red-flag-toggle').forEach(t => { 
                 if (t.checked) flags.push(t.dataset.warning.split(':')[0]); 
             });
-            if (flags.length > 0) {
-                note += `\n🚨 КРИТИЧНИ ФЛАГОВЕ: ${flags.join(', ')}\n`;
+			let neuroFlags = [];
+            document.querySelectorAll('.neuro-check').forEach(t => { 
+                if (t.checked) neuroFlags.push(t.value); 
+            });
+			let examFlags = [];
+            document.querySelectorAll('.exam-check').forEach(t => { 
+                if (t.checked) examFlags.push(t.value); 
+            });
+			let esaicFlags = [];
+            document.querySelectorAll('.esaic-check').forEach(t => { 
+                if (t.checked) esaicFlags.push(t.value); 
+            });
+
+            // Generate Management Plans based on scores
+            let rcriPlan = rcriScore >= 2 ? "Повишен риск. Изисква актуално ЕКГ. Обсъждане за следоперативно мониториране на Тропонин/ЕКГ." : "Базов мониторинг.";
+            let ponvPlan = ponvScore >= 2 ? `Висок риск (${ponvScore}/4). План: TIVA или профилактика с 2+ антиеметика (напр. Дексаметазон + Ондансетрон).` : "Базов риск. Стандартна профилактика.";
+            let airwayPlan = flags.includes("Труден ДП") ? "ВНИМАНИЕ: Очакван труден дихателен път. Подготовка на фиброоптика/видеоларингоскоп. DAS алгоритъм." : "Стандартна интубация/LMA.";
+
+            return { ptId, airway, asa, rcriScore, rcriRisk, ponvScore, npoClear, npoSolid, flags, neuroFlags, examFlags, esaicFlags, rcriPlan, ponvPlan, airwayPlan };
+        }
+
+        // --- HELPER: FORMAT THE MEDICAL NOTE ---
+        function buildStructuredNote(data) {
+            let note = `ПРЕДОПЕРАТИВНА АНЕСТЕЗИОЛОГИЧНА ОЦЕНКА\n`;
+            note += `Пациент: ${data.ptId}\n`;
+            note += `Дата: ${new Date().toLocaleDateString('bg-BG')}\n`;
+            note += `=========================================\n\n`;
+            
+            note += `[ СТАТУС И РИСК ]\n`;
+            note += `- Клас: ${data.asa}\n`;
+            note += `- Дихателни пътища: ${data.airway}\n`;
+            note += `- Сърдечен риск (RCRI): ${data.rcriScore} т. (${data.rcriRisk})\n`;
+            note += `- PONV риск (Apfel): ${data.ponvScore} т.\n\n`;
+
+            if (data.flags.length > 0) {
+                note += `[ 🚨 КРИТИЧНИ ФЛАГОВЕ ]\n`;
+                data.flags.forEach(f => note += `- ${f}\n`);
+                note += `\n`;
             }
 
-            // Copy to device clipboard
+			if (data.examFlags && data.examFlags.length > 0) {
+                note += `[ 🩺 КРИТИЧЕН ФИЗИКАЛЕН СТАТУС ]\n`;
+                data.examFlags.forEach(f => note += `- ${f}\n`);
+                note += `\n`;
+            }
+		
+			if (data.esaicFlags && data.esaicFlags.length > 0) {
+                note += `[ ⚠️ ПЕРИОПЕРАТИВНИ РИСКОВЕ (ESAIC) ]\n`;
+                data.esaicFlags.forEach(f => note += `- ${f}\n`);
+                note += `\n`;
+            }
+			
+			if (data.neuroFlags && data.neuroFlags.length > 0) {
+                note += `[ 🧠 НЕВРОХИРУРГИЧЕН ПРОФИЛ ]\n`;
+                data.neuroFlags.forEach(f => note += `- ${f}\n`);
+                note += `\n`;
+            }
+
+            note += `[ ПЛАН ЗА ПОВЕДЕНИЕ И МЕНИДЖМЪНТ ]\n`;
+            note += `1. ДП: ${data.airwayPlan}\n`;
+            note += `2. Хемодинамика: ${data.rcriPlan}\n`;
+            note += `3. PONV: ${data.ponvPlan}\n\n`;
+
+            note += `[ ИНСТРУКЦИИ КЪМ ОТДЕЛЕНИЕТО ]\n`;
+            note += `- Спиране на твърда храна: ${data.npoSolid}\n`;
+            note += `- Спиране на бистри течности: ${data.npoClear}\n`;
+            note += `- Медикаменти: Да се спази стандартният протокол за прием на сутрешни медикаменти с глътка вода (с изкл. на ACE инхибитори/АРБ според преценката).\n`;
+
+            return note;
+        }
+
+        // --- 1. COPY TO CLIPBOARD (EHR / ATTENDING) ---
+        function generateChartNote() {
+            const data = gatherClinicalData();
+            const note = buildStructuredNote(data);
+
             navigator.clipboard.writeText(note).then(() => {
                 const btn = document.querySelector('button[onclick="generateChartNote()"]');
                 const originalText = btn.innerHTML;
                 btn.innerHTML = "✅ Копирано успешно!";
-                btn.style.background = "var(--alert-green)";
-                setTimeout(() => {
-                    btn.innerHTML = originalText;
-                    btn.style.background = "#17a2b8";
-                }, 2000);
-            }).catch(err => {
-                alert("Възникна грешка при копирането: " + err);
-            });
+                setTimeout(() => btn.innerHTML = originalText, 2000);
+            }).catch(err => alert("Грешка при копиране: " + err));
         }
 
+        // --- 2. SHARE OR DOWNLOAD FILE ---
+        function shareReport() {
+            const data = gatherClinicalData();
+            const note = buildStructuredNote(data);
+            const fileName = `Preop_${data.ptId.replace(/\s+/g, '_')}.txt`;
+
+            // Use native sharing on mobile devices (iOS/Android)
+            if (navigator.share) {
+                navigator.share({
+                    title: `Предоперативна оценка: ${data.ptId}`,
+                    text: note
+                }).catch(console.error);
+            } else {
+                // Fallback for PC: Generate a downloadable .txt file
+                const blob = new Blob([note], { type: 'text/plain' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = fileName;
+                link.click();
+            }
+        }
+
+        // --- 3. PRINT FORMAT FOR PATIENT BINDER / NURSES ---
         function printWardInstructions() {
-            // Hides the top bar and Rapid Mode button so they don't print, then triggers native print
-            window.print();
+            const data = gatherClinicalData();
+            
+            // Create a clean, isolated window specifically formatted for paper
+            const printWindow = window.open('', '', 'height=800,width=800');
+            
+            const html = `
+            <html>
+            <head>
+                <title>Инструкции за Отделението - ${data.ptId}</title>
+                <style>
+                    body { font-family: Arial, sans-serif; padding: 40px; color: black; background: white; line-height: 1.6; }
+                    h1 { border-bottom: 2px solid black; padding-bottom: 10px; text-transform: uppercase; }
+                    .box { border: 2px solid black; padding: 15px; margin-bottom: 20px; font-size: 1.2em; font-weight: bold; background: #f9f9f9; }
+                    .warning { color: red; font-weight: bold; border: 2px solid red; padding: 10px; margin-bottom: 20px; }
+                    ul { font-size: 1.1em; }
+                    .signature { margin-top: 50px; border-top: 1px solid black; width: 300px; padding-top: 10px; text-align: center; }
+                </style>
+            </head>
+            <body>
+                <h1>Анестезиологичен Лист за Отделението</h1>
+                <p><strong>Име на пациента / ID:</strong> ${data.ptId}</p>
+                <p><strong>Дата на операцията:</strong> _______________________</p>
+                
+                ${data.flags.length > 0 ? `<div class="warning">ВНИМАНИЕ (Отбелязани рискове):<br>${data.flags.join(', ')}</div>` : ''}
+
+                <div class="box">
+                    🛑 ГЛАДУВАНЕ (NPO Статус)
+                    <ul>
+                        <li><strong>Твърда храна се спира в:</strong> ${data.npoSolid}</li>
+                        <li><strong>Бистри течности (вода/сок без пулп) се спират в:</strong> ${data.npoClear}</li>
+                    </ul>
+                </div>
+
+                <div class="box">
+                    💊 СУТРЕШНИ МЕДИКАМЕНТИ (В деня на операцията)
+                    <ul>
+                        <li><input type="checkbox"> Пациентът <strong>ДА ПРИЕМЕ</strong> своите бета-блокери.</li>
+                        <li><input type="checkbox"> Пациентът <strong>ДА НЕ ПРИЕМА</strong> ACE инхибитори / АРБ.</li>
+                        <li><input type="checkbox"> Перорални антидиабетни средства се спират сутринта.</li>
+                        <li>Други инструкции: ____________________________________________________</li>
+                    </ul>
+                </div>
+
+                <p><em>Забележка за сестрите: Разрешените сутрешни медикаменти да се приемат с не повече от 1-2 глътки вода.</em></p>
+
+                <div class="signature">Подпис на анестезиолог / Лекар</div>
+            </body>
+            </html>
+            `;
+
+            printWindow.document.write(html);
+            printWindow.document.close();
+            
+            // Wait slightly for DOM to render in the new window, then trigger print
+            setTimeout(() => {
+                printWindow.print();
+            }, 250);
         }
 
     </script>
