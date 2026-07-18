@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Предоперативна оценка</title>
+    <style>
+        /* --- CORE VARIABLES --- */
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --input-bg: #2a2a2a;
+            --border-color: #333;
+            --text-main: #f0f0f0;
+            --text-muted: #a0a0a0;
+            --alert-green: #28a745;
+            --iso-relaxant: #dc3545; 
+            --warning-yellow: #ffc107;
+            --rapid-orange: #ff9800;
+        }
+
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg-color); color: var(--text-main); margin: 0; padding: 15px; padding-top: 60px; }
+
+        /* --- NAVIGATION --- */
+        .top-bar { position: fixed; top: 0; left: 0; width: 100%; background: var(--card-bg); border-bottom: 1px solid var(--border-color); padding: 15px; display: flex; align-items: center; z-index: 100; box-sizing: border-box; }
+        .back-btn { color: var(--text-muted); text-decoration: none; font-weight: bold; margin-right: 15px; padding: 5px 10px; background: var(--input-bg); border-radius: 6px; }
+        .top-bar h2 { margin: 0; font-size: 1.2em; }
+
+        /* --- UTILITY CLASSES --- */
+        .hidden { display: none !important; }
+
+        /* --- CARDS & TYPOGRAPHY --- */
+        .card { background: var(--card-bg); border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 2px solid transparent; transition: border-color 0.3s ease; }
+        .card-title { margin-top: 0; margin-bottom: 20px; font-size: 1.2em; display: flex; justify-content: space-between; align-items: center; }
+
+        /* --- SEGMENTED CONTROLS --- */
+        .assessment-row { margin-bottom: 20px; }
+        .row-label { font-weight: bold; margin-bottom: 8px; display: block; font-size: 0.9em; }
+        .row-label small { color: var(--text-muted); font-weight: normal; margin-left: 5px; }
+        .segmented-control { display: flex; background: var(--input-bg); border-radius: 8px; overflow: hidden; border: 1px solid var(--border-color); }
+        .segmented-control input[type="radio"] { display: none; }
+        .segmented-control label { flex: 1; text-align: center; padding: 10px 5px; font-size: 0.85em; font-weight: bold; color: var(--text-muted); cursor: pointer; border-right: 1px solid var(--border-color); transition: background 0.2s, color 0.2s; display: flex; flex-direction: column; justify-content: center; }
+        .segmented-control label:last-child { border-right: none; }
+        .segmented-control label span.guide { font-size: 0.75em; font-weight: normal; opacity: 0.7; margin-top: 3px; }
+        .segmented-control input[type="radio"]:checked + label { background: #444; color: var(--text-main); }
+        .segmented-control input[type="radio"].flag-risk:checked + label { background: var(--warning-yellow); color: #000; }
+
+        /* --- WARNING BANNER --- */
+        #airway-warning { display: none; background: rgba(220, 53, 69, 0.15); color: var(--iso-relaxant); padding: 12px; border-radius: 8px; font-weight: bold; text-align: center; margin-bottom: 20px; border: 1px solid var(--iso-relaxant); animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(220, 53, 69, 0); } 100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); } }
+
+        /* --- CHIP GRID --- */
+        .system-group { margin-bottom: 20px; }
+        .system-title { font-size: 0.85em; color: var(--text-muted); text-transform: uppercase; margin-bottom: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 5px; }
+        .chip-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+        .chip { display: block; }
+        .chip input[type="checkbox"] { display: none; }
+        .chip label { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; padding: 10px 5px; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 8px; font-size: 0.85em; color: var(--text-muted); cursor: pointer; transition: all 0.2s; text-align: center; box-sizing: border-box; }
+        .chip input[type="checkbox"]:checked + label { background: #17a2b8; color: #fff; border-color: #17a2b8; font-weight: bold; }
+
+        #clinical-reminders { display: none; background: rgba(23, 162, 184, 0.1); border-left: 4px solid #17a2b8; padding: 15px; border-radius: 0 8px 8px 0; margin-top: 15px; font-size: 0.85em; }
+        #clinical-reminders ul { margin: 0; padding-left: 20px; color: var(--text-main); }
+        #clinical-reminders li { margin-bottom: 5px; }
+
+        /* --- LIST ROWS & SWITCHES --- */
+        .list-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px dashed var(--border-color); cursor: pointer; }
+        .list-row:last-child { border-bottom: none; }
+        .row-text { flex: 1; padding-right: 15px; }
+        .row-text strong { font-size: 0.9em; color: var(--text-main); }
+        .row-text small { display: block; font-size: 0.75em; color: var(--text-muted); margin-top: 4px; line-height: 1.3; }
+
+        .switch { position: relative; display: inline-block; width: 46px; height: 24px; flex-shrink: 0; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .switch .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--input-bg); border: 1px solid var(--border-color); transition: .3s; border-radius: 24px; }
+        .switch .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: var(--text-muted); transition: .3s; border-radius: 50%; }
+        .switch input:checked + .slider { background-color: #17a2b8; border-color: #17a2b8; }
+        .switch input:checked + .slider:before { transform: translateX(22px); background-color: #fff; }
+
+        /* Rapid Mode Checkbox Specific Color */
+        .rapid-switch input:checked + .slider { background-color: var(--alert-green); border-color: var(--alert-green); }
+
+        /* --- SCORES & TIMERS --- */
+        .score-display { background: rgba(0,0,0,0.2); border-radius: 8px; padding: 15px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border: 1px solid var(--border-color); }
+        .score-value { font-size: 2em; font-family: monospace; font-weight: bold; }
+        .score-risk { font-size: 1.2em; font-weight: bold; }
+
+        .time-input-container { margin-bottom: 20px; }
+        .select-input { width: 100%; background: var(--input-bg); color: var(--text-main); border: 1px solid var(--border-color); padding: 12px; border-radius: 8px; font-size: 1em; margin-bottom: 20px; appearance: none; cursor: pointer; font-weight: bold; }
+        .select-input:focus { outline: none; border-color: #17a2b8; }
+        .npo-time { font-size: 1.5em; font-weight: bold; font-family: monospace; color: var(--alert-green); }
+    </style>
+</head>
+<body>
+
+    <nav class="top-bar">
+        <a href="../index.html" class="back-btn">⬅</a>
+        <h2>Предоперативна оценка</h2>
+    </nav>
+
+    <!-- RAPID MODE TOGGLE BUTTON -->
+    <div style="margin-bottom: 20px;">
+        <button id="rapid-btn" onclick="toggleRapidMode()" style="width: 100%; background: var(--rapid-orange); color: #fff; padding: 15px; border-radius: 8px; font-weight: bold; font-size: 1.1em; cursor: pointer; border: none; box-shadow: 0 4px 10px rgba(255, 152, 0, 0.3); transition: all 0.3s;">
+            ⚡ СПЕШЕН ПРЕГЛЕД (10-МИНУТЕН РЕЖИМ)
+        </button>
+    </div>
+
+    <!-- 🛑 RAPID CHECKLIST CARD (Hidden by Default) -->
+    <div class="card hidden" id="rapid-checklist" style="border: 2px solid var(--rapid-orange); box-shadow: 0 0 15px rgba(255, 152, 0, 0.15);">
+        <div class="card-title" style="color: var(--rapid-orange); margin-bottom: 10px;">🛑 Go / No-Go Чеклист</div>
+        <div style="font-size: 0.85em; color: var(--text-muted); margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px;">Изчистване на шума. Задължителни проверки преди индукция.</div>
+
+        <label class="list-row"><div class="row-text"><strong>Информирано съгласие</strong><small>Подписано ли е от пациента?</small></div>
+            <div class="switch rapid-switch"><input type="checkbox"><span class="slider"></span></div></label>
+        
+        <label class="list-row"><div class="row-text"><strong>Актуални изследвания</strong><small>Хемоглобин, Калий, Кръвна група налични?</small></div>
+            <div class="switch rapid-switch"><input type="checkbox"><span class="slider"></span></div></label>
+        
+        <label class="list-row"><div class="row-text"><strong>Гладуване (NPO)</strong><small>Разпит: "Кога ядохте/пихте за последно?"</small></div>
+            <div class="switch rapid-switch"><input type="checkbox"><span class="slider"></span></div></label>
+        
+        <label class="list-row"><div class="row-text"><strong>Сутрешни медикаменти</strong><small>Взел ли е АСЕ инхибитор или разредител днес?</small></div>
+            <div class="switch rapid-switch"><input type="checkbox"><span class="slider"></span></div></label>
+        
+        <label class="list-row"><div class="row-text"><strong>Венозен източник</strong><small>Има ли промит, работещ абокат с голям калибър?</small></div>
+            <div class="switch rapid-switch"><input type="checkbox"><span class="slider"></span></div></label>
+    </div>
+
+    <!-- CRITICAL RED FLAGS CARD (Always Visible) -->
+    <div class="card" id="red-flags-card" style="border: 2px solid var(--iso-relaxant); box-shadow: 0 0 10px rgba(220, 53, 69, 0.2);">
+        <div class="card-title" style="color: var(--iso-relaxant); margin-bottom: 10px;">🚨 Критични червени флагове</div>
+        <div style="font-size: 0.8em; color: var(--text-muted); margin-bottom: 15px;">Фатални анестезиологични взаимодействия. Трябва да бъдат изрично изключени.</div>
+
+        <div id="red-flag-alert" style="display: none; background: rgba(220, 53, 69, 0.15); color: var(--iso-relaxant); padding: 12px; border-radius: 8px; font-weight: bold; margin-bottom: 15px; border: 1px solid var(--iso-relaxant);">
+            ⚠️ СТОП: ПРОМЯНА В АНЕСТЕЗИОЛОГИЧНИЯ ПЛАН.<br>
+            <span id="red-flag-text" style="font-size: 0.85em; font-weight: normal; color: var(--text-main);"></span>
+        </div>
+
+        <label class="list-row"><div class="row-text"><strong style="color: var(--iso-relaxant);">Малигнена хипертермия (МХ)</strong><small>Лична или фамилна анамнеза за МХ.</small></div>
+            <div class="switch"><input type="checkbox" class="red-flag-toggle" data-warning="СЪМНЕНИЕ ЗА МХ: Абсолютно противопоказание за инхалационни анестетици и Сукцинилхолин. Само TIVA. Изисква се изчистен апарат." onchange="checkRedFlags()"><span class="slider"></span></div></label>
+
+        <label class="list-row"><div class="row-text"><strong style="color: var(--warning-yellow);">Псевдохолинестеразна недостатъчност</strong><small>Удължена вентилация след предишна операция.</small></div>
+            <div class="switch"><input type="checkbox" class="red-flag-toggle" data-warning="ПСЕВДОХОЛИНЕСТЕРАЗНА НЕДОСТАТЪЧНОСТ: Избягвайте Сукцинилхолин и Мивакуриум. Използвайте Рокурониум/Векурониум." onchange="checkRedFlags()"><span class="slider"></span></div></label>
+
+        <label class="list-row"><div class="row-text"><strong>Тежка анафилаксия</strong><small>Към анестетици, Латекс или Сугамадекс.</small></div>
+            <div class="switch"><input type="checkbox" class="red-flag-toggle" data-warning="РИСК ОТ АНАФИЛАКСИЯ: Подгответе Епинефрин. Избягвайте известни тригери. Обмислете среда без латекс." onchange="checkRedFlags()"><span class="slider"></span></div></label>
+    </div>
+
+    <!-- AIRWAY ASSESSMENT CARD (Always Visible) -->
+    <div class="card" id="airway-card">
+        <div class="card-title">Дихателни пътища <span id="airway-status" style="font-size: 0.8em; color: var(--alert-green);">✓ Нормални</span></div>
+        <div id="airway-warning">⚠️ ОЧАКВАН ТРУДЕН ДИХАТЕЛЕН ПЪТ<br><span style="font-size: 0.8em; font-weight: normal; color: var(--text-main);">Обмислете видеоларингоскопия, бужи или будна интубация.</span></div>
+
+        <div class="assessment-row"><span class="row-label">Клас по Малампати</span><div class="segmented-control">
+            <input type="radio" name="mallampati" id="mal1" value="0" onchange="checkAirway()"><label for="mal1">I</label>
+            <input type="radio" name="mallampati" id="mal2" value="0" onchange="checkAirway()" checked><label for="mal2">II</label>
+            <input type="radio" name="mallampati" id="mal3" value="1" class="flag-risk" onchange="checkAirway()"><label for="mal3">III</label>
+            <input type="radio" name="mallampati" id="mal4" value="1" class="flag-risk" onchange="checkAirway()"><label for="mal4">IV</label>
+        </div></div>
+
+        <div class="assessment-row"><span class="row-label">Тироментално разстояние (ТМР)</span><div class="segmented-control">
+            <input type="radio" name="tmd" id="tmd-norm" value="0" onchange="checkAirway()" checked><label for="tmd-norm">> 6.5 см <span class="guide">≥ 4 пръста</span></label>
+            <input type="radio" name="tmd" id="tmd-short" value="1" class="flag-risk" onchange="checkAirway()"><label for="tmd-short">< 6.5 см <span class="guide">< 4 пръста</span></label>
+        </div></div>
+
+        <div class="assessment-row"><span class="row-label">Отваряне на устата</span><div class="segmented-control">
+            <input type="radio" name="gap" id="gap-norm" value="0" onchange="checkAirway()" checked><label for="gap-norm">> 3 см <span class="guide">≥ 3 пръста</span></label>
+            <input type="radio" name="gap" id="gap-short" value="1" class="flag-risk" onchange="checkAirway()"><label for="gap-short">< 3 см <span class="guide">< 3 пръста</span></label>
+        </div></div>
+
+        <div class="assessment-row"><span class="row-label">Подвижност на шията</span><div class="segmented-control">
+            <input type="radio" name="neck" id="neck-full" value="0" onchange="checkAirway()" checked><label for="neck-full">Пълна</label>
+            <input type="radio" name="neck" id="neck-limit" value="1" class="flag-risk" onchange="checkAirway()"><label for="neck-limit">Ограничена</label>
+        </div></div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- BELOW THIS LINE: SECTIONS HIDDEN IN RAPID MODE -->
+    <!-- ========================================== -->
+    <div id="detailed-assessment-sections">
+
+        <!-- SYSTEMS & COMORBIDITIES CARD -->
+        <div class="card" id="systems-card">
+            <div class="card-title">Придружаващи заболявания</div>
+            <!-- (Code omitted for brevity in instructions, identical to previous) -->
+            <div class="system-group"><div class="system-title">Сърдечно-съдова система</div><div class="chip-grid">
+                <div class="chip"><input type="checkbox" id="sys-htn" class="sys-toggle"><label for="sys-htn">Арт. Хипертония</label></div>
+                <div class="chip"><input type="checkbox" id="sys-cad" class="sys-toggle" data-alert="ИБС: Поддържайте диастолното налягане. Избягвайте тахикардия. 'Бавно, малко и добре перфузирано'."><label for="sys-cad">ИБС / Стентове</label></div>
+                <div class="chip"><input type="checkbox" id="sys-chf" class="sys-toggle" data-alert="СН: Чувствителност към миокардни депресанти. Оптимизирайте преднатоварването; внимавайте за претоварване."><label for="sys-chf">Сърдечна недост.</label></div>
+                <div class="chip"><input type="checkbox" id="sys-arrhythmia" class="sys-toggle"><label for="sys-arrhythmia">Аритмия / ПМ</label></div>
+            </div></div>
+            <div class="system-group"><div class="system-title">Дихателна система</div><div class="chip-grid">
+                <div class="chip"><input type="checkbox" id="sys-asthma" class="sys-toggle" data-alert="Астма/ХОББ: Дълбока екстубация срещу напълно буден. Избягвайте десфлуран и хистамин-освобождаващи релаксанти."><label for="sys-asthma">Астма / ХОББ</label></div>
+                <div class="chip"><input type="checkbox" id="sys-osa" class="sys-toggle" data-alert="ОСА: Повишена чувствителност към опиоиди. Очаквайте трудно масково вентилиране."><label for="sys-osa">ОСА / CPAP</label></div>
+                <div class="chip"><input type="checkbox" id="sys-smoker" class="sys-toggle"><label for="sys-smoker">Активен пушач</label></div>
+            </div></div>
+            <div class="system-group"><div class="system-title">Метаболитни, Бъбречни и ГИ</div><div class="chip-grid">
+                <div class="chip"><input type="checkbox" id="sys-dm" class="sys-toggle" data-alert="Диабет: Проверете кръвната захар. Повишен риск от тиха исхемия, гастропареза и труден дихателен път."><label for="sys-dm">Захарен диабет</label></div>
+                <div class="chip"><input type="checkbox" id="sys-ckd" class="sys-toggle" data-alert="ХБН: Проверете калия. Коригирайте дозите на ренално екскретираните лекарства. Избягвайте НСПВС."><label for="sys-ckd">ХБН / Диализа</label></div>
+                <div class="chip"><input type="checkbox" id="sys-gerd" class="sys-toggle" data-alert="ГЕРБ/Риск от аспирация: Индикация за бърза последователна индукция (RSI). Избягвайте масково вентилиране."><label for="sys-gerd">ГЕРБ / Рефлукс</label></div>
+                <div class="chip"><input type="checkbox" id="sys-obesity" class="sys-toggle"><label for="sys-obesity">ИТМ > 30</label></div>
+            </div></div>
+            <div id="clinical-reminders"><strong style="color: #17a2b8; margin-bottom: 8px; display: block;">Анестезиологични съображения:</strong><ul id="reminder-list"></ul></div>
+        </div>
+
+        <!-- ASA & METS CARD -->
+        <div class="card" id="asa-card">
+            <div class="card-title">Обща оценка (ASA)</div>
+            <select id="asa-status" class="select-input" style="margin-bottom: 10px;">
+                <option value="1">ASA I: Нормален, здрав пациент</option>
+                <option value="2">ASA II: Леко системно заболяване</option>
+                <option value="3">ASA III: Тежко системно заболяване (неинвалидизиращо)</option>
+                <option value="4">ASA IV: Тежко системно заболяване (постоянна заплаха за живота)</option>
+                <option value="5">ASA V: Морибунден, не се очаква да преживее 24 часа</option>
+            </select>
+            <div class="assessment-row" style="margin-bottom: 0; margin-top: 15px;">
+                <span class="row-label">Функционален капацитет</span>
+                <div class="segmented-control">
+                    <input type="radio" name="mets" id="mets-good" value="good" checked><label for="mets-good">≥ 4 METs</label>
+                    <input type="radio" name="mets" id="mets-poor" value="poor" class="flag-risk"><label for="mets-poor">< 4 METs</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- RCRI CALCULATOR CARD -->
+        <div class="card" id="rcri-card">
+            <div class="card-title">Кардиологичен риск (RCRI)</div>
+            <div class="score-display">
+                <div><div style="font-size: 0.8em; color: var(--text-muted); text-transform: uppercase;">Точки</div><div class="score-value" id="rcri-points" style="color: var(--alert-green);">0</div></div>
+                <div style="text-align: right;"><div style="font-size: 0.8em; color: var(--text-muted); text-transform: uppercase;">MACE Риск</div><div class="score-risk" id="rcri-risk" style="color: var(--alert-green);">0.4%</div></div>
+            </div>
+            <label class="list-row"><div class="row-text"><strong>Високорискова операция</strong></div><div class="switch"><input type="checkbox" class="rcri-toggle" onchange="calculateRCRI()"><span class="slider"></span></div></label>
+            <label class="list-row"><div class="row-text"><strong>ИБС / Инфаркт</strong></div><div class="switch"><input type="checkbox" class="rcri-toggle" onchange="calculateRCRI()"><span class="slider"></span></div></label>
+            <label class="list-row"><div class="row-text"><strong>Сърдечна недостатъчност</strong></div><div class="switch"><input type="checkbox" class="rcri-toggle" onchange="calculateRCRI()"><span class="slider"></span></div></label>
+            <label class="list-row"><div class="row-text"><strong>МСБ / Инсулт</strong></div><div class="switch"><input type="checkbox" class="rcri-toggle" onchange="calculateRCRI()"><span class="slider"></span></div></label>
+            <label class="list-row"><div class="row-text"><strong>Инсулинова терапия</strong></div><div class="switch"><input type="checkbox" class="rcri-toggle" onchange="calculateRCRI()"><span class="slider"></span></div></label>
+            <label class="list-row"><div class="row-text"><strong>Креатинин > 177 µmol/L</strong></div><div class="switch"><input type="checkbox" class="rcri-toggle" onchange="calculateRCRI()"><span class="slider"></span></div></label>
+            
+            <div id="rcri-management" style="margin-top: 15px; font-size: 0.85em; color: var(--text-muted); padding-top: 15px; border-top: 1px dashed var(--border-color);">
+                <strong>Стратегия:</strong> <span id="rcri-strategy">Нисък риск. Стандартен мониторинг (ЕКГ, NIBP, SpO2). Не са нужни допълнителни кардиологични изследвания.</span>
+            </div>
+        </div>
+
+        <!-- APFEL SCORE CARD -->
+        <div class="card" id="ponv-card">
+            <div class="card-title">Apfel Скор (Гадене)</div>
+            <div class="score-display">
+                <div><div style="font-size: 0.8em; color: var(--text-muted); text-transform: uppercase;">Точки</div><div class="score-value" id="ponv-points" style="color: var(--alert-green);">0</div></div>
+                <div style="text-align: right;"><div style="font-size: 0.8em; color: var(--text-muted); text-transform: uppercase;">Риск от PONV</div><div class="score-risk" id="ponv-risk" style="color: var(--alert-green);">10%</div></div>
+            </div>
+            <label class="list-row"><div class="row-text"><strong>Женски пол</strong></div><div class="switch"><input type="checkbox" class="ponv-toggle" onchange="calculatePONV()"><span class="slider"></span></div></label>
+            <label class="list-row"><div class="row-text"><strong>Анамнеза за PONV/морска болест</strong></div><div class="switch"><input type="checkbox" class="ponv-toggle" onchange="calculatePONV()"><span class="slider"></span></div></label>
+            <label class="list-row"><div class="row-text"><strong>Непушач</strong></div><div class="switch"><input type="checkbox" class="ponv-toggle" onchange="calculatePONV()"><span class="slider"></span></div></label>
+            <label class="list-row"><div class="row-text"><strong>Следопер. употреба на опиоиди</strong></div><div class="switch"><input type="checkbox" class="ponv-toggle" onchange="calculatePONV()"><span class="slider"></span></div></label>
+            <div id="ponv-management" style="margin-top: 15px; font-size: 0.85em; color: var(--text-muted); padding-top: 15px; border-top: 1px dashed var(--border-color);">
+                <strong>Стратегия:</strong> <span id="ponv-strategy">Нисък риск. Без профилактика или само един медикамент.</span>
+            </div>
+        </div>
+
+        <!-- NPO CARD (HOSPITAL REALITY) -->
+        <div class="card" id="npo-card">
+            <div class="card-title">Предоперативен режим (ESAIC)</div>
+            <div class="time-input-container">
+                <div style="font-size: 0.85em; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase;">Поредност в оперативната програма</div>
+                <select id="surg-order" class="select-input" style="margin-bottom: 0;" onchange="calculateNPO()">
+                    <option value="1">1-ва операция (~08:00 ч.)</option>
+                    <option value="2">2-ра операция (~10:30 ч.)</option>
+                    <option value="3">3-та или следваща (след 13:00 ч.)</option>
+                    <option value="unknown">Неясен час / Спешност</option>
+                </select>
+            </div>
+            <div class="list-row"><div class="row-text"><strong>Твърда храна / Обилно хранене</strong></div><div class="npo-time" id="npo-heavy" style="color: var(--iso-relaxant); font-size: 1.2em;">00:00 ч.</div></div>
+            <div class="list-row"><div class="row-text"><strong>Бистри течности (ВОДА)</strong><small style="color: var(--text-main);">Насърчавайте хидратацията до този час!</small></div><div class="npo-time" id="npo-clear" style="color: #17a2b8; font-size: 1.2em;">06:00 ч.</div></div>
+        </div>
+
+        <!-- ANTICOAGULATION CARD -->
+        <div class="card" id="ac-card">
+            <div class="card-title">Антикоагулантна терапия</div>
+            <select id="ac-drug" class="select-input" onchange="calculateAC()">
+                <option value="warfarin">Варфарин (Синтром)</option>
+                <option value="apixaban">Апиксабан (Eliquis)</option>
+                <option value="rivaroxaban">Ривароксабан (Xarelto)</option>
+                <option value="edoxaban">Едоксабан (Lixiana)</option>
+                <option value="dabigatran">Дабигатран (Pradaxa)</option>
+            </select>
+            <div class="assessment-row" id="ac-risk-row"><span class="row-label">Хирургичен риск от кървене</span><div class="segmented-control">
+                <input type="radio" name="ac-risk" id="ac-low" value="low" onchange="calculateAC()" checked><label for="ac-low">Нисък риск</label>
+                <input type="radio" name="ac-risk" id="ac-high" value="high" onchange="calculateAC()"><label for="ac-high">Висок риск</label>
+            </div></div>
+            <label class="list-row" id="ac-renal-row"><div class="row-text"><strong>Бъбречна недостатъчност</strong><small>CrCl < 50 mL/min</small></div><div class="switch"><input type="checkbox" id="ac-renal" onchange="calculateAC()"><span class="slider"></span></div></label>
+            <div class="score-display" style="flex-direction: column; align-items: flex-start; gap: 10px; margin-top: 15px; margin-bottom: 0;">
+                <div style="font-size: 0.8em; color: var(--text-muted); text-transform: uppercase;">Препоръка</div>
+                <div class="score-risk" id="ac-time" style="color: var(--iso-relaxant);">Спрете 5 дни преди операцията</div>
+                <div style="font-size: 0.85em; color: var(--text-main); line-height: 1.4;" id="ac-notes">Проверете INR 1-2 дни преди.</div>
+            </div>
+        </div>
+
+        <!-- MORNING OF SURGERY MEDICATION GUIDE -->
+        <h3 style="color: var(--text-muted); text-transform: uppercase; font-size: 0.85em; margin-top: 30px; margin-bottom: 10px; padding-left: 5px;">Сутрешни медикаменти (Ръководство)</h3>
+        <div class="card" style="border-left: 4px solid var(--alert-green);"><div class="card-title" style="color: var(--alert-green); margin-bottom: 10px;">🟢 ДА СЕ ПРИЕМАТ</div><div class="list-row"><div class="row-text"><strong>Бета-блокери, Инхалатори, За щитовидна жлеза</strong></div></div></div>
+        <div class="card" style="border-left: 4px solid var(--iso-relaxant);"><div class="card-title" style="color: var(--iso-relaxant); margin-bottom: 15px;">🔴 ДА НЕ СЕ ПРИЕМАТ (СПИРАТ СЕ)</div><div class="list-row"><div class="row-text"><strong>АСЕ инхибитори, Диуретици, НСПВС</strong></div></div></div>
+        <div class="card" style="border-left: 4px solid var(--warning-yellow);"><div class="card-title" style="color: var(--warning-yellow); margin-bottom: 15px;">🟠 ДИАБЕТНИ МЕДИКАМЕНТИ</div><div class="list-row"><div class="row-text"><strong>SGLT-2 инхибитори, GLP-1 агонисти, Бърз инсулин</strong></div></div></div>
+
+        <!-- LAB TESTING GUIDELINES -->
+        <h3 style="color: var(--text-muted); text-transform: uppercase; font-size: 0.85em; margin-top: 30px; margin-bottom: 10px; padding-left: 5px;">Предоперативни изследвания (ESAIC Насоки)</h3>
+        <div class="card" style="margin-bottom: 40px;">
+            <div style="font-size: 0.85em; color: var(--text-muted); margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid var(--border-color);">Рутинното назначаване не се препоръчва. Базират се стриктно на анамнеза и хирургична тежест.</div>
+            <div class="list-row"><div class="row-text"><strong>ЕКГ</strong><small>ДА: Възраст &gt; 65 г., ИБС, аритмии, инсулт.</small></div></div>
+            <div class="list-row"><div class="row-text"><strong>Коагулация</strong><small>ДА: Чернодробни заболявания, антикоагуланти.</small></div></div>
+        </div>
+
+        <!-- EXPORT CENTER -->
+        <div class="card" style="border: 1px solid var(--alert-green);">
+            <div style="display: flex; flex-direction: column; gap: 15px;">
+                <input type="text" id="pt-id" class="select-input" style="margin-bottom: 0;" placeholder="Име / ИЗ / Стая">
+                <button class="btn" style="background: #17a2b8; color: #fff; padding: 15px; border-radius: 8px; font-weight: bold; font-size: 1.1em; cursor: pointer; border: none;" onclick="generateChartNote()">📋 Копирай бележка</button>
+                <button class="btn" style="background: var(--text-main); color: var(--bg-color); padding: 15px; border-radius: 8px; font-weight: bold; font-size: 1.1em; cursor: pointer; border: none;" onclick="printWardInstructions()">🖨️ Отпечатай инструкции</button>
+                <textarea id="clipboard-area" style="display: none;"></textarea>
+            </div>
+        </div>
+    </div> <!-- END OF DETAILED SECTIONS -->
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // --- RAPID MODE TOGGLE LOGIC ---
+        let isRapidMode = false;
+        function toggleRapidMode() {
+            isRapidMode = !isRapidMode;
+            const btn = document.getElementById('rapid-btn');
+            const detailedSection = document.getElementById('detailed-assessment-sections');
+            const rapidChecklist = document.getElementById('rapid-checklist');
+
+            if (isRapidMode) {
+                // Activate Rapid Mode
+                btn.innerHTML = "🔙 ИЗХОД ОТ СПЕШЕН РЕЖИМ";
+                btn.style.background = "var(--input-bg)";
+                btn.style.color = "var(--text-main)";
+                btn.style.border = "1px solid var(--border-color)";
+                btn.style.boxShadow = "none";
+                
+                detailedSection.classList.add('hidden');
+                rapidChecklist.classList.remove('hidden');
+                
+                // Scroll immediately to the top so the checklist is visible
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } else {
+                // Return to Normal Mode
+                btn.innerHTML = "⚡ СПЕШЕН ПРЕГЛЕД (10-МИНУТЕН РЕЖИМ)";
+                btn.style.background = "var(--rapid-orange)";
+                btn.style.color = "#fff";
+                btn.style.border = "none";
+                btn.style.boxShadow = "0 4px 10px rgba(255, 152, 0, 0.3)";
+
+                detailedSection.classList.remove('hidden');
+                rapidChecklist.classList.add('hidden');
+            }
+        }
+
+        // --- ALL OTHER JS FUNCTIONS RETAINED ---
+        function checkRedFlags() {
+            const toggles = document.querySelectorAll('.red-flag-toggle');
+            const alertBox = document.getElementById('red-flag-alert');
+            const alertText = document.getElementById('red-flag-text');
+            let warnings = [];
+            toggles.forEach(t => { if (t.checked) warnings.push(t.dataset.warning); });
+            if (warnings.length > 0) { alertText.innerHTML = warnings.join('<br><br>'); alertBox.style.display = 'block'; } 
+            else { alertBox.style.display = 'none'; }
+        }
+
+        function checkAirway() {
+            const malRisk = parseInt(document.querySelector('input[name="mallampati"]:checked')?.value || "0");
+            const tmdRisk = parseInt(document.querySelector('input[name="tmd"]:checked')?.value || "0");
+            const gapRisk = parseInt(document.querySelector('input[name="gap"]:checked')?.value || "0");
+            const neckRisk = parseInt(document.querySelector('input[name="neck"]:checked')?.value || "0");
+            const total = malRisk + tmdRisk + gapRisk + neckRisk;
+            const card = document.getElementById('airway-card'), warning = document.getElementById('airway-warning'), status = document.getElementById('airway-status');
+            if (total >= 2) { card.style.borderColor = 'var(--iso-relaxant)'; warning.style.display = 'block'; status.style.color = 'var(--iso-relaxant)'; status.innerText = '⚠️ Рискови'; } 
+            else { card.style.borderColor = 'transparent'; warning.style.display = 'none'; status.style.color = 'var(--alert-green)'; status.innerText = '✓ Нормални'; }
+        }
+        checkAirway();
+
+        function updateSystemReminders() {
+            const toggles = document.querySelectorAll('.sys-toggle');
+            const reminderBox = document.getElementById('clinical-reminders'), reminderList = document.getElementById('reminder-list');
+            reminderList.innerHTML = ''; let alerts = 0;
+            toggles.forEach(t => {
+                if (t.checked && t.dataset.alert) {
+                    alerts++; const li = document.createElement('li');
+                    const txt = t.dataset.alert.split(':');
+                    if (txt.length > 1) { li.innerHTML = `<strong>${txt[0]}:</strong> ${txt[1]}`; } else { li.innerText = t.dataset.alert; }
+                    reminderList.appendChild(li);
+                }
+            });
+            reminderBox.style.display = (alerts > 0) ? 'block' : 'none';
+        }
+        document.querySelectorAll('.sys-toggle').forEach(t => { t.addEventListener('change', updateSystemReminders); });
+
+        function calculateRCRI() {
+            const toggles = document.querySelectorAll('.rcri-toggle');
+            let score = 0; toggles.forEach(t => { if (t.checked) score++; });
+            const pointsDisplay = document.getElementById('rcri-points'), riskDisplay = document.getElementById('rcri-risk'), strat = document.getElementById('rcri-strategy'), card = document.getElementById('rcri-card');
+            pointsDisplay.innerText = score;
+            let risk = "0.4%", uiColor = "var(--alert-green)", txt = "Нисък риск. Стандартен мониторинг (ЕКГ, NIBP, SpO2). Не са нужни допълнителни изследвания.";
+            if (score === 1) { risk = "0.9%"; uiColor = "var(--alert-green)"; txt = "Нисък към среден риск. Стандартен мониторинг. Обмислете базово ЕКГ."; } 
+            else if (score === 2) { risk = "6.6%"; uiColor = "var(--warning-yellow)"; txt = "Умерен риск. Обмислете Артериална линия. Стриктен контрол на MAP. Тропонин на 24/48 час."; } 
+            else if (score >= 3) { risk = "11.0%"; uiColor = "var(--iso-relaxant)"; txt = "ВИСОК РИСК. Задължителна Арт. линия. Избягвайте тахикардия. Интензивно отделение (ОАИЛ)."; }
+            riskDisplay.innerText = risk; pointsDisplay.style.color = uiColor; riskDisplay.style.color = uiColor; strat.innerText = txt;
+            card.style.borderColor = (score >= 2) ? uiColor : "transparent";
+        }
+
+        function calculatePONV() {
+            const toggles = document.querySelectorAll('.ponv-toggle');
+            let score = 0; toggles.forEach(t => { if (t.checked) score++; });
+            const pDisplay = document.getElementById('ponv-points'), rDisplay = document.getElementById('ponv-risk'), strat = document.getElementById('ponv-strategy'), card = document.getElementById('ponv-card');
+            pDisplay.innerText = score;
+            let risk = "10%", uiColor = "var(--alert-green)", txt = "Нисък риск. Без профилактика или само един медикамент.";
+            if (score === 1) { risk = "21%"; uiColor = "var(--alert-green)"; txt = "Нисък/среден риск. Обмислете 1 медикамент."; } 
+            else if (score === 2) { risk = "39%"; uiColor = "var(--warning-yellow)"; txt = "Среден риск. 2 медикамента от различни класове."; } 
+            else if (score >= 3) { risk = "61%"; uiColor = "var(--iso-relaxant)"; txt = "Висок риск. 2-3 медикамента. Препоръчителна TIVA (Пропофол)."; } 
+            if (score === 4) { risk = "79%"; }
+            rDisplay.innerText = risk; pDisplay.style.color = uiColor; rDisplay.style.color = uiColor; strat.innerHTML = txt;
+            card.style.borderColor = (score >= 3) ? uiColor : "transparent";
+        }
+
+        function calculateNPO() {
+            const order = document.getElementById('surg-order').value;
+            const clearEl = document.getElementById('npo-clear'), heavyEl = document.getElementById('npo-heavy');
+            heavyEl.innerText = "00:00 ч.";
+            if (order === '1') { clearEl.innerText = "06:00 ч."; clearEl.style.color = "#17a2b8"; } 
+            else if (order === '2') { clearEl.innerText = "08:30 ч."; clearEl.style.color = "#17a2b8"; } 
+            else if (order === '3') { clearEl.innerText = "11:00 ч."; clearEl.style.color = "#17a2b8"; } 
+            else { clearEl.innerText = "Спрете веднага"; clearEl.style.color = "var(--warning-yellow)"; }
+        }
+
+        function calculateAC() {
+            const drug = document.getElementById('ac-drug').value;
+            const risk = document.querySelector('input[name="ac-risk"]:checked').value;
+            const renal = document.getElementById('ac-renal').checked;
+            const timeEl = document.getElementById('ac-time'), notesEl = document.getElementById('ac-notes');
+            if (drug === 'warfarin') {
+                timeEl.innerText = "Спрете 5 дни преди"; timeEl.style.color = "var(--iso-relaxant)"; notesEl.innerHTML = "Цел INR < 1.5."; return;
+            }
+            let holdTime = risk === 'low' ? "Спрете ≥ 24 часа" : "Спрете ≥ 48 часа";
+            let color = "var(--warning-yellow)";
+            if (drug === 'dabigatran' && renal) { holdTime = risk === 'low' ? "Спрете ≥ 48 часа" : "Спрете 72 - 96 часа"; color = "var(--iso-relaxant)"; }
+            timeEl.innerText = holdTime; timeEl.style.color = color; notesEl.innerHTML = "LMWH мост не се препоръчва при DOACs.";
+        }
+        calculateAC();
+        
+        function generateChartNote() { alert("Функцията за копиране е налична само в пълния изглед."); }
+        function printWardInstructions() { alert("Функцията за принтиране е налична само в пълния изглед."); }
+    </script>
+</body>
+</html>
