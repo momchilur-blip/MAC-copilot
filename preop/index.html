@@ -33,6 +33,16 @@
         .card { background: var(--card-bg); border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 2px solid transparent; transition: border-color 0.3s ease; }
         .card-title { margin-top: 0; margin-bottom: 20px; font-size: 1.2em; display: flex; justify-content: space-between; align-items: center; }
 
+        /* --- COLLAPSIBLE CARDS ENGINE --- */
+        .card-title.collapsible { cursor: pointer; user-select: none; margin-bottom: 0; padding-bottom: 0; border-bottom: none; transition: all 0.2s; }
+        .card-title.collapsible:hover { opacity: 0.8; }
+        .chevron { transition: transform 0.3s ease; font-size: 0.8em; color: var(--text-main); }
+        .card.is-open .card-title.collapsible { margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color); }
+        .card.is-open .chevron { transform: rotate(180deg); }
+        .collapsible-content { display: none; }
+        .card.is-open .collapsible-content { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+
         /* --- SEGMENTED CONTROLS --- */
         .assessment-row { margin-bottom: 20px; }
         .row-label { font-weight: bold; margin-bottom: 8px; display: block; font-size: 0.9em; }
@@ -76,7 +86,6 @@
         .switch input:checked + .slider { background-color: #17a2b8; border-color: #17a2b8; }
         .switch input:checked + .slider:before { transform: translateX(22px); background-color: #fff; }
 
-        /* Rapid Mode Checkbox Specific Color */
         .rapid-switch input:checked + .slider { background-color: var(--alert-green); border-color: var(--alert-green); }
 
         /* --- SCORES & TIMERS --- */
@@ -255,83 +264,95 @@
             </div>
         </div>
         
-        <!-- CRITICAL EXAM FINDINGS CARD -->
+        <!-- CRITICAL EXAM FINDINGS CARD (Collapsed by Default) -->
         <div class="card" style="border-top: 3px solid #fd7e14;">
-            <div class="card-title" style="color: #fd7e14;">🩺 Критични клинични находки</div>
-            
-            <div style="display: flex; flex-direction: column; gap: 12px;">
-                <label style="display: flex; align-items: center; cursor: pointer; color: var(--text-main);">
-                    <input type="checkbox" class="exam-check" value="Сърдечен шум / Съмнение за АС (ПЛАН: Поддържай SVR, избягвай тахикардия, внимателна индукция)" style="width: 20px; height: 20px; margin-right: 10px; accent-color: #fd7e14;">
-                    Сърдечен шум (Съмнение за АС)
-                </label>
-                <label style="display: flex; align-items: center; cursor: pointer; color: var(--text-main);">
-                    <input type="checkbox" class="exam-check" value="Свиркане / Бронхоспазъм (ПЛАН: Бронходилататори, дълбока индукция, избягвай Десфлуран)" style="width: 20px; height: 20px; margin-right: 10px; accent-color: #fd7e14;">
-                    Свиркащо дишане / Бронхоспазъм
-                </label>
-                <label style="display: flex; align-items: center; cursor: pointer; color: var(--text-main);">
-                    <input type="checkbox" class="exam-check" value="Влажни хрипове / Застой (ПЛАН: Рестриктивна течностна терапия, обмисли диуретик)" style="width: 20px; height: 20px; margin-right: 10px; accent-color: #fd7e14;">
-                    Влажни хрипове / Белодробен застой
-                </label>
-                <label style="display: flex; align-items: center; cursor: pointer; color: var(--warning-yellow);">
-                    <input type="checkbox" class="exam-check" value="Хиповолемия / Нестабилност (ПЛАН: Ресусцитиране с течности ПРЕДИ индукция, щадящи анестетици като Кетамин/Етомидат)" style="width: 20px; height: 20px; margin-right: 10px; accent-color: #ffc107;">
-                    Хиповолемия (Удължен cap. refill / Хипотония)
-                </label>
+            <div class="card-title collapsible" style="color: #fd7e14;" onclick="toggleCard(this)">
+                <span>🩺 Критични клинични находки</span>
+                <span class="chevron">▼</span>
+            </div>
+            <div class="collapsible-content">
+                <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 15px;">
+                    <label style="display: flex; align-items: center; cursor: pointer; color: var(--text-main);">
+                        <input type="checkbox" class="exam-check" value="Сърдечен шум / Съмнение за АС (ПЛАН: Поддържай SVR, избягвай тахикардия, внимателна индукция)" style="width: 20px; height: 20px; margin-right: 10px; accent-color: #fd7e14;">
+                        Сърдечен шум (Съмнение за АС)
+                    </label>
+                    <label style="display: flex; align-items: center; cursor: pointer; color: var(--text-main);">
+                        <input type="checkbox" class="exam-check" value="Свиркане / Бронхоспазъм (ПЛАН: Бронходилататори, дълбока индукция, избягвай Десфлуран)" style="width: 20px; height: 20px; margin-right: 10px; accent-color: #fd7e14;">
+                        Свиркащо дишане / Бронхоспазъм
+                    </label>
+                    <label style="display: flex; align-items: center; cursor: pointer; color: var(--text-main);">
+                        <input type="checkbox" class="exam-check" value="Влажни хрипове / Застой (ПЛАН: Рестриктивна течностна терапия, обмисли диуретик)" style="width: 20px; height: 20px; margin-right: 10px; accent-color: #fd7e14;">
+                        Влажни хрипове / Белодробен застой
+                    </label>
+                    <label style="display: flex; align-items: center; cursor: pointer; color: var(--warning-yellow);">
+                        <input type="checkbox" class="exam-check" value="Хиповолемия / Нестабилност (ПЛАН: Ресусцитиране с течности ПРЕДИ индукция, щадящи анестетици като Кетамин/Етомидат)" style="width: 20px; height: 20px; margin-right: 10px; accent-color: #ffc107;">
+                        Хиповолемия (Удължен cap. refill / Хипотония)
+                    </label>
+                </div>
             </div>
         </div>
 
-        <!-- ESAIC SPECIFIC RISKS CARD -->
+        <!-- ESAIC SPECIFIC RISKS CARD (Collapsed by Default) -->
         <div class="card" style="border-top: 3px solid #17a2b8;">
-            <div class="card-title" style="color: #17a2b8;">⚠️ Специфични рискове (ESAIC)</div>
-            
-            <div style="display: flex; flex-direction: column; gap: 12px;">
-                <label style="display: flex; align-items: center; cursor: pointer; color: var(--text-main);">
-                    <input type="checkbox" class="esaic-check" value="Крехкост / Риск от Делириум (ПЛАН: БЕЗ Мидазолам! Редуцирай индукцията с 30-50%. Води по клинични белези, избягвай дълбока релаксация.)" style="width: 20px; height: 20px; margin-right: 10px; accent-color: #17a2b8;">
-                    Крехкост (Frailty) / Възраст > 70г.
-                </label>
-                
-                <label style="display: flex; align-items: center; cursor: pointer; color: var(--text-main);">
-                    <input type="checkbox" class="esaic-check" value="Тежка ОСА / Висок STOP-BANG (ПЛАН: Опиоид-спестяваща техника, екстубация напълно буден в седнало положение, готовност за CPAP)" style="width: 20px; height: 20px; margin-right: 10px; accent-color: #17a2b8;">
-                    Тежка ОСА / Сънна апнея (STOP-BANG)
-                </label>
+            <div class="card-title collapsible" style="color: #17a2b8;" onclick="toggleCard(this)">
+                <span>⚠️ Специфични рискове (ESAIC)</span>
+                <span class="chevron">▼</span>
+            </div>
+            <div class="collapsible-content">
+                <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 15px;">
+                    <label style="display: flex; align-items: center; cursor: pointer; color: var(--text-main);">
+                        <input type="checkbox" class="esaic-check" value="Крехкост / Риск от Делириум (ПЛАН: БЕЗ Мидазолам! Редуцирай индукцията с 30-50%. Води по клинични белези, избягвай дълбока релаксация.)" style="width: 20px; height: 20px; margin-right: 10px; accent-color: #17a2b8;">
+                        Крехкост (Frailty) / Възраст > 70г.
+                    </label>
+                    
+                    <label style="display: flex; align-items: center; cursor: pointer; color: var(--text-main);">
+                        <input type="checkbox" class="esaic-check" value="Тежка ОСА / Висок STOP-BANG (ПЛАН: Опиоид-спестяваща техника, екстубация напълно буден в седнало положение, готовност за CPAP)" style="width: 20px; height: 20px; margin-right: 10px; accent-color: #17a2b8;">
+                        Тежка ОСА / Сънна апнея (STOP-BANG)
+                    </label>
+                </div>
             </div>
         </div>
         
-        <!-- NEUROSURGERY CARD -->
+        <!-- NEUROSURGERY CARD (Collapsed by Default) -->
         <div class="card" style="border-top: 3px solid #9c27b0;">
-            <div class="card-title" style="color: #e040fb;">🧠 Неврохирургичен профил</div>
-            
-            <div style="display: flex; flex-direction: column; gap: 12px;">
-                <label style="display: flex; align-items: center; cursor: pointer; color: var(--text-main);">
-                    <input type="checkbox" class="neuro-check" value="Повишено ВЧН (Риск от херниация. План: Избягвай хипоксия/хиперкапния)" style="width: 20px; height: 20px; margin-right: 10px; accent-color: #9c27b0;">
-                    Повишено ВЧН (Симптоматично)
-                </label>
-                <label style="display: flex; align-items: center; cursor: pointer; color: var(--text-main);">
-                    <input type="checkbox" class="neuro-check" value="Епилепсия / Антиконвулсанти (Възможна ензимна индукция -> нужни по-високи дози анестетици)" style="width: 20px; height: 20px; margin-right: 10px; accent-color: #9c27b0;">
-                    Епилепсия / Антиконвулсанти
-                </label>
-                <label style="display: flex; align-items: center; cursor: pointer; color: var(--text-main);">
-                    <input type="checkbox" class="neuro-check" value="Базов неврологичен дефицит (Документиран преди индукция!)" style="width: 20px; height: 20px; margin-right: 10px; accent-color: #9c27b0;">
-                    Базов неврологичен дефицит
-                </label>
-                <label style="display: flex; align-items: center; cursor: pointer; color: var(--text-main);">
-                    <input type="checkbox" class="neuro-check" value="Кортикостероидна терапия (Обмисли стрес доза хидрокортизон; проследи КЗ)" style="width: 20px; height: 20px; margin-right: 10px; accent-color: #9c27b0;">
-                    Кортикостероиди (напр. Дексаметазон)
-                </label>
-                
-                <div style="border-top: 1px solid var(--border-color); margin-top: 5px; padding-top: 10px; color: var(--text-muted); font-size: 0.9em; text-transform: uppercase;">Хирургични специфики</div>
-                
-                <label style="display: flex; align-items: center; cursor: pointer; color: var(--text-main);">
-                    <input type="checkbox" class="neuro-check" value="Прона позиция (Внимание: Очи, тръба, свободен корем за избягване на епидурален венозен стаз)" style="width: 20px; height: 20px; margin-right: 10px; accent-color: #9c27b0;">
-                    Прона позиция (Гръбначна хирургия)
-                </label>
-                <label style="display: flex; align-items: center; cursor: pointer; color: var(--text-main);">
-                    <input type="checkbox" class="neuro-check" value="Mayfield фиксация (План: Дълбока аналгезия преди поставяне)" style="width: 20px; height: 20px; margin-right: 10px; accent-color: #9c27b0;">
-                    Mayfield фиксация
-                </label>
-                <label style="display: flex; align-items: center; cursor: pointer; color: #17a2b8; font-weight: bold;">
-                    <input type="checkbox" class="neuro-check" value="Невромониторинг (ПЛАН: Задължителна TIVA, без миорелаксанти след интубация)" style="width: 20px; height: 20px; margin-right: 10px; accent-color: #17a2b8;">
-                    Невромониторинг (MEP/SSEP)
-                </label>
+            <div class="card-title collapsible" style="color: #e040fb;" onclick="toggleCard(this)">
+                <span>🧠 Неврохирургичен профил</span>
+                <span class="chevron">▼</span>
+            </div>
+            <div class="collapsible-content">
+                <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 15px;">
+                    <label style="display: flex; align-items: center; cursor: pointer; color: var(--text-main);">
+                        <input type="checkbox" class="neuro-check" value="Повишено ВЧН (Риск от херниация. План: Избягвай хипоксия/хиперкапния)" style="width: 20px; height: 20px; margin-right: 10px; accent-color: #9c27b0;">
+                        Повишено ВЧН (Симптоматично)
+                    </label>
+                    <label style="display: flex; align-items: center; cursor: pointer; color: var(--text-main);">
+                        <input type="checkbox" class="neuro-check" value="Епилепсия / Антиконвулсанти (Възможна ензимна индукция -> нужни по-високи дози анестетици)" style="width: 20px; height: 20px; margin-right: 10px; accent-color: #9c27b0;">
+                        Епилепсия / Антиконвулсанти
+                    </label>
+                    <label style="display: flex; align-items: center; cursor: pointer; color: var(--text-main);">
+                        <input type="checkbox" class="neuro-check" value="Базов неврологичен дефицит (Документиран преди индукция!)" style="width: 20px; height: 20px; margin-right: 10px; accent-color: #9c27b0;">
+                        Базов неврологичен дефицит
+                    </label>
+                    <label style="display: flex; align-items: center; cursor: pointer; color: var(--text-main);">
+                        <input type="checkbox" class="neuro-check" value="Кортикостероидна терапия (Обмисли стрес доза хидрокортизон; проследи КЗ)" style="width: 20px; height: 20px; margin-right: 10px; accent-color: #9c27b0;">
+                        Кортикостероиди (напр. Дексаметазон)
+                    </label>
+                    
+                    <div style="border-top: 1px solid var(--border-color); margin-top: 5px; padding-top: 10px; color: var(--text-muted); font-size: 0.9em; text-transform: uppercase;">Хирургични специфики</div>
+                    
+                    <label style="display: flex; align-items: center; cursor: pointer; color: var(--text-main);">
+                        <input type="checkbox" class="neuro-check" value="Прона позиция (Внимание: Очи, тръба, свободен корем за избягване на епидурален венозен стаз)" style="width: 20px; height: 20px; margin-right: 10px; accent-color: #9c27b0;">
+                        Прона позиция (Гръбначна хирургия)
+                    </label>
+                    <label style="display: flex; align-items: center; cursor: pointer; color: var(--text-main);">
+                        <input type="checkbox" class="neuro-check" value="Mayfield фиксация (План: Дълбока аналгезия преди поставяне)" style="width: 20px; height: 20px; margin-right: 10px; accent-color: #9c27b0;">
+                        Mayfield фиксация
+                    </label>
+                    <label style="display: flex; align-items: center; cursor: pointer; color: #17a2b8; font-weight: bold;">
+                        <input type="checkbox" class="neuro-check" value="Невромониторинг (ПЛАН: Задължителна TIVA, без миорелаксанти след интубация)" style="width: 20px; height: 20px; margin-right: 10px; accent-color: #17a2b8;">
+                        Невромониторинг (MEP/SSEP)
+                    </label>
+                </div>
             </div>
         </div>
 
@@ -358,28 +379,33 @@
             </div>
         </div>
 
-        <!-- PRE-OP TESTING & CLEARANCE (SMART CHECKLIST) -->
-        <div class="card" id="testing-card" style="border-top: 3px solid #007bff;">
-            <div class="card-title" style="color: #007bff;">🧪 Изследвания и Консултации</div>
-            <div style="font-size: 0.85em; color: var(--text-muted); margin-bottom: 15px; line-height: 1.4;">Отбележете наличните или вече прегледани изследвания. Системата автоматично ще индикира нужните въз основа на отбелязаните по-горе заболявания.</div>
+        <!-- PRE-OP TESTING & CLEARANCE (Open by Default to show example) -->
+        <div class="card is-open" id="testing-card" style="border-top: 3px solid #007bff;">
+            <div class="card-title collapsible" style="color: #007bff;" onclick="toggleCard(this)">
+                <span>🧪 Изследвания и Консултации</span>
+                <span class="chevron">▼</span>
+            </div>
+            <div class="collapsible-content">
+                <div style="font-size: 0.85em; color: var(--text-muted); margin-bottom: 15px; line-height: 1.4;">Отбележете наличните или вече прегледани изследвания. Системата автоматично ще индикира нужните въз основа на отбелязаните по-горе заболявания.</div>
 
-            <label class="list-row"><div class="row-text"><strong>12-канално ЕКГ</strong><small id="ind-ecg" style="color: var(--text-muted);">По преценка</small></div>
-                <div class="switch"><input type="checkbox" id="chk-ecg" class="test-check"><span class="slider"></span></div></label>
-                
-            <label class="list-row"><div class="row-text"><strong>Ехокардиография (ЕхоКГ)</strong><small id="ind-echo" style="color: var(--text-muted);">По преценка</small></div>
-                <div class="switch"><input type="checkbox" id="chk-echo" class="test-check"><span class="slider"></span></div></label>
-                
-            <label class="list-row"><div class="row-text"><strong>ПКК и Кръвна група</strong><small id="ind-cbc" style="color: var(--text-muted);">По преценка</small></div>
-                <div class="switch"><input type="checkbox" id="chk-cbc" class="test-check"><span class="slider"></span></div></label>
+                <label class="list-row"><div class="row-text"><strong>12-канално ЕКГ</strong><small id="ind-ecg" style="color: var(--text-muted);">По преценка</small></div>
+                    <div class="switch"><input type="checkbox" id="chk-ecg" class="test-check"><span class="slider"></span></div></label>
+                    
+                <label class="list-row"><div class="row-text"><strong>Ехокардиография (ЕхоКГ)</strong><small id="ind-echo" style="color: var(--text-muted);">По преценка</small></div>
+                    <div class="switch"><input type="checkbox" id="chk-echo" class="test-check"><span class="slider"></span></div></label>
+                    
+                <label class="list-row"><div class="row-text"><strong>ПКК и Кръвна група</strong><small id="ind-cbc" style="color: var(--text-muted);">По преценка</small></div>
+                    <div class="switch"><input type="checkbox" id="chk-cbc" class="test-check"><span class="slider"></span></div></label>
 
-            <label class="list-row"><div class="row-text"><strong>Коагулация (PT/aPTT)</strong><small id="ind-coag" style="color: var(--text-muted);">По преценка</small></div>
-                <div class="switch"><input type="checkbox" id="chk-coag" class="test-check"><span class="slider"></span></div></label>
-                
-            <label class="list-row"><div class="row-text"><strong>Биохимия (Кр, Електролити, КЗ)</strong><small id="ind-chem" style="color: var(--text-muted);">По преценка</small></div>
-                <div class="switch"><input type="checkbox" id="chk-chem" class="test-check"><span class="slider"></span></div></label>
-                
-            <label class="list-row"><div class="row-text"><strong>Спирометрия / АКР</strong><small id="ind-pft" style="color: var(--text-muted);">По преценка</small></div>
-                <div class="switch"><input type="checkbox" id="chk-pft" class="test-check"><span class="slider"></span></div></label>
+                <label class="list-row"><div class="row-text"><strong>Коагулация (PT/aPTT)</strong><small id="ind-coag" style="color: var(--text-muted);">По преценка</small></div>
+                    <div class="switch"><input type="checkbox" id="chk-coag" class="test-check"><span class="slider"></span></div></label>
+                    
+                <label class="list-row"><div class="row-text"><strong>Биохимия (Кр, Електролити, КЗ)</strong><small id="ind-chem" style="color: var(--text-muted);">По преценка</small></div>
+                    <div class="switch"><input type="checkbox" id="chk-chem" class="test-check"><span class="slider"></span></div></label>
+                    
+                <label class="list-row"><div class="row-text"><strong>Спирометрия / АКР</strong><small id="ind-pft" style="color: var(--text-muted);">По преценка</small></div>
+                    <div class="switch"><input type="checkbox" id="chk-pft" class="test-check"><span class="slider"></span></div></label>
+            </div>
         </div>
 
         <!-- NPO CARD (HOSPITAL REALITY) -->
@@ -411,6 +437,12 @@
 
     <!-- JAVASCRIPT LOGIC -->
     <script>
+        // --- UI HELPER: TOGGLE COLLAPSIBLE CARDS ---
+        function toggleCard(el) {
+            const card = el.closest('.card');
+            card.classList.toggle('is-open');
+        }
+
         // --- RAPID MODE TOGGLE LOGIC ---
         let isRapidMode = false;
         function toggleRapidMode() {
@@ -441,7 +473,7 @@
             }
         }
 
-        // --- ALL OTHER JS FUNCTIONS RETAINED & UPDATED ---
+        // --- ALL OTHER JS FUNCTIONS RETAINED ---
         function checkRedFlags() {
             const toggles = document.querySelectorAll('.red-flag-toggle');
             const alertBox = document.getElementById('red-flag-alert');
@@ -548,11 +580,10 @@
         }
         calculateAC();
 
-        // --- NEW: SMART PRE-OP LAB/TEST INDICATIONS ENGINE ---
+        // --- SMART PRE-OP LAB/TEST INDICATIONS ENGINE ---
         function updateIndications() {
             let ecgInd = [], echoInd = [], cbcInd = [], coagInd = [], chemInd = [], pftInd = [];
 
-            // Read the clinical flags
             if (document.querySelector('.esaic-check[value^="Крехкост"]')?.checked) { ecgInd.push("Възраст>70"); chemInd.push("Крехкост"); }
             if (document.getElementById('sys-htn')?.checked) ecgInd.push("Хипертония");
             if (document.getElementById('sys-cad')?.checked) { ecgInd.push("ИБС"); echoInd.push("Оценка на ЛК (ИБС)"); }
@@ -591,16 +622,15 @@
             setIndText('ind-pft', pftInd);
         }
 
-        // Attach listeners to everything so the smart indications update instantly
         document.querySelectorAll('input[type="checkbox"], input[type="radio"], select').forEach(el => {
             el.addEventListener('change', () => {
                 updateSystemReminders();
                 updateIndications();
             });
         });
-        updateIndications(); // Run once on load
+        updateIndications();
         
-        // --- HELPER: GATHER CLINICAL DATA ---
+        // --- GATHER CLINICAL DATA ---
         function gatherClinicalData() {
             const ptId = document.getElementById('pt-id').value || "Неизвестен пациент";
             const airway = document.getElementById('airway-status').innerText.replace('✓ ', '').replace('⚠️ ', '');
@@ -633,7 +663,6 @@
             const acRec = document.getElementById('ac-time').innerText;
             const acPlan = acDrugSel.value !== 'none' ? `${acDrug}: ${acRec}` : null;
 
-            // Gather Lab Data
             const tests = [
                 { name: "ЕКГ", chk: document.getElementById('chk-ecg').checked, req: document.getElementById('ind-ecg').innerText.includes("Показано") },
                 { name: "ЕхоКГ", chk: document.getElementById('chk-echo').checked, req: document.getElementById('ind-echo').innerText.includes("Показано") },
@@ -650,7 +679,6 @@
                 else if (t.req) missingTests.push(t.name);
             });
 
-            // Generate Management Plans based on scores
             let rcriPlan = rcriScore >= 2 ? "Повишен риск. Изисква актуално ЕКГ. Обсъждане за следоперативно мониториране на Тропонин/ЕКГ." : "Базов мониторинг.";
             let ponvPlan = ponvScore >= 2 ? `Висок риск (${ponvScore}/4). План: TIVA или профилактика с 2+ антиеметика (напр. Дексаметазон + Ондансетрон).` : "Базов риск. Стандартна профилактика.";
             let airwayPlan = flags.includes("Труден ДП") ? "ВНИМАНИЕ: Очакван труден дихателен път. Подготовка на фиброоптика/видеоларингоскоп. DAS алгоритъм." : "Стандартна интубация/LMA.";
@@ -658,7 +686,7 @@
             return { ptId, airway, asa, rcriScore, rcriRisk, ponvScore, npoClear, npoSolid, flags, neuroFlags, examFlags, esaicFlags, acPlan, clearedTests, missingTests, rcriPlan, ponvPlan, airwayPlan };
         }
 
-        // --- HELPER: FORMAT THE MEDICAL NOTE ---
+        // --- FORMAT THE MEDICAL NOTE ---
         function buildStructuredNote(data) {
             let note = `ПРЕДОПЕРАТИВНА АНЕСТЕЗИОЛОГИЧНА ОЦЕНКА\n`;
             note += `Пациент: ${data.ptId}\n`;
@@ -724,7 +752,7 @@
             return note;
         }
 
-        // --- 1. COPY TO CLIPBOARD (EHR / ATTENDING) ---
+        // --- 1. COPY TO CLIPBOARD ---
         function generateChartNote() {
             const data = gatherClinicalData();
             const note = buildStructuredNote(data);
@@ -757,7 +785,7 @@
             }
         }
 
-        // --- 3. PRINT FORMAT FOR PATIENT BINDER / NURSES ---
+        // --- 3. PRINT FORMAT ---
         function printWardInstructions() {
             const data = gatherClinicalData();
             const printWindow = window.open('', '', 'height=800,width=800');
