@@ -96,6 +96,23 @@
             .container { grid-template-columns: 1fr 1fr; }
             .header-card, .tracker-card { grid-column: span 2; }
         }
+
+/* --- H&T CARD SPECIFIC STYLES --- */
+        .ht-card { background: #1e1e1e; border-radius: 12px; padding: 20px; border-top: 3px solid #dc3545; color: #f0f0f0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; box-sizing: border-box; }
+        .ht-list-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px dashed #333; cursor: pointer; }
+        .ht-list-row:last-child { border-bottom: none; }
+        .ht-row-text { flex: 1; padding-right: 15px; }
+        .ht-row-text strong { font-size: 0.9em; color: #f0f0f0; display: block; }
+        .ht-row-text small { display: block; font-size: 0.75em; color: #a0a0a0; margin-top: 4px; line-height: 1.3; }
+
+        /* iOS-Style Toggle Switch */
+        .ht-switch { position: relative; display: inline-block; width: 46px; height: 24px; flex-shrink: 0; }
+        .ht-switch input { opacity: 0; width: 0; height: 0; }
+        .ht-switch .ht-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #2a2a2a; border: 1px solid #333; transition: .3s; border-radius: 24px; }
+        .ht-switch .ht-slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: #a0a0a0; transition: .3s; border-radius: 50%; }
+        .ht-switch input:checked + .ht-slider { background-color: #17a2b8; border-color: #17a2b8; }
+        .ht-switch input:checked + .ht-slider:before { transform: translateX(22px); background-color: #fff; }
+		
     </style>
 </head>
 <body>
@@ -154,6 +171,72 @@
                 <div><div>Cycles</div><div class="tracker-value" id="count-cycles">0</div><div class="tracker-total">2-Min Blocks</div></div>
             </div>
         </div>
+    <div class="ht-card" style="margin-top: 20px;">
+    <div style="color: #dc3545; font-size: 1.2em; font-weight: bold; margin-bottom: 15px;">
+        <span>🔄 Обратими причини (5H и 5T)</span>
+    </div>
+    
+    <div style="display: flex; flex-wrap: wrap; gap: 20px;">
+        
+        <!-- 5 H Column -->
+        <div style="flex: 1; min-width: 250px;">
+            <div style="font-size: 0.9em; color: #a0a0a0; border-bottom: 1px solid #333; padding-bottom: 8px; margin-bottom: 10px; text-transform: uppercase; font-weight: bold;">
+                5 H (Отхвърлени)
+            </div>
+            
+            <label class="ht-list-row"><div class="ht-row-text"><strong>Хиповолемия</strong><small>Ултразвук / Течности / Кръв</small></div>
+                <div class="ht-switch"><input type="checkbox" onchange="this.checked ? logEvent('Отхвърлено: Хиповолемия') : logEvent('Върнато за обмисляне: Хиповолемия')"><span class="ht-slider"></span></div></label>
+                
+            <label class="ht-list-row"><div class="ht-row-text"><strong>Хипоксия</strong><small>Интубация / 100% O2 / Вентилация</small></div>
+                <div class="ht-switch"><input type="checkbox" onchange="this.checked ? logEvent('Отхвърлено: Хипоксия') : logEvent('Върнато за обмисляне: Хипоксия')"><span class="ht-slider"></span></div></label>
+                
+            <label class="ht-list-row"><div class="ht-row-text"><strong>H+ йони (Ацидоза)</strong><small>АКР / Бикарбонат / Вентилация</small></div>
+                <div class="ht-switch"><input type="checkbox" onchange="this.checked ? logEvent('Отхвърлено: Ацидоза') : logEvent('Върнато за обмисляне: Ацидоза')"><span class="ht-slider"></span></div></label>
+                
+            <label class="ht-list-row"><div class="ht-row-text"><strong>Хипо-/Хиперкалиемия</strong><small>Калциев глюконат / Инсулин / АКР</small></div>
+                <div class="ht-switch"><input type="checkbox" onchange="this.checked ? logEvent('Отхвърлено: Дисбаланс на Калий') : logEvent('Върнато за обмисляне: Дисбаланс на Калий')"><span class="ht-slider"></span></div></label>
+                
+            <label class="ht-list-row"><div class="ht-row-text"><strong>Хипотермия</strong><small>Затопляне на течности / Термометър</small></div>
+                <div class="ht-switch"><input type="checkbox" onchange="this.checked ? logEvent('Отхвърлено: Хипотермия') : logEvent('Върнато за обмисляне: Хипотермия')"><span class="ht-slider"></span></div></label>
+        </div>
+
+        <!-- 5 T Column -->
+        <div style="flex: 1; min-width: 250px;">
+            <div style="font-size: 0.9em; color: #a0a0a0; border-bottom: 1px solid #333; padding-bottom: 8px; margin-bottom: 10px; text-transform: uppercase; font-weight: bold;">
+                5 T (Отхвърлени)
+            </div>
+            
+            <label class="ht-list-row"><div class="ht-row-text"><strong>Тензионен пневмоторакс</strong><small>Ултразвук / Иглена декомпресия</small></div>
+                <div class="ht-switch"><input type="checkbox" onchange="this.checked ? logEvent('Отхвърлено: Тензионен пневмоторакс') : logEvent('Върнато за обмисляне: Тензионен пневмоторакс')"><span class="ht-slider"></span></div></label>
+                
+            <label class="ht-list-row"><div class="ht-row-text"><strong>Тампонада (Сърдечна)</strong><small>Ултразвук (FAST) / Перикардиоцентеза</small></div>
+                <div class="ht-switch"><input type="checkbox" onchange="this.checked ? logEvent('Отхвърлено: Сърдечна тампонада') : logEvent('Върнато за обмисляне: Сърдечна тампонада')"><span class="ht-slider"></span></div></label>
+                
+            <label class="ht-list-row"><div class="ht-row-text"><strong>Токсини</strong><small>Анамнеза / Антидоти (Налоксон, Липиди)</small></div>
+                <div class="ht-switch"><input type="checkbox" onchange="this.checked ? logEvent('Отхвърлено: Токсини') : logEvent('Върнато за обмисляне: Токсини')"><span class="ht-slider"></span></div></label>
+                
+            <label class="ht-list-row"><div class="ht-row-text"><strong>Тромбоза (Белодробна)</strong><small>УЗ на ДК / Фибринолиза / БТЕ анамнеза</small></div>
+                <div class="ht-switch"><input type="checkbox" onchange="this.checked ? logEvent('Отхвърлено: Белодробна тромбоемболия') : logEvent('Върнато за обмисляне: Белодробна тромбоемболия')"><span class="ht-slider"></span></div></label>
+                
+            <label class="ht-list-row"><div class="ht-row-text"><strong>Тромбоза (Коронарна)</strong><small>ОМИ анамнеза / ЕКГ / PCI</small></div>
+                <div class="ht-switch"><input type="checkbox" onchange="this.checked ? logEvent('Отхвърлено: Коронарна тромбоза (ОМИ)') : logEvent('Върнато за обмисляне: Коронарна тромбоза (ОМИ)')"><span class="ht-slider"></span></div></label>
+        </div>
+        
+    </div>
+</div>
+            
+       
+<!-- CPR TIMELINE LOG CARD -->
+<div class="log-card" style="background: #1e1e1e; border-radius: 12px; padding: 20px; border-top: 3px solid #6c757d; margin-top: 20px; color: #f0f0f0; font-family: -apple-system, BlinkMacSystemFont, sans-serif; box-sizing: border-box;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <span style="font-weight: bold; color: #a0a0a0; font-size: 1.2em;">📋 Хронология на събитията (Log)</span>
+        <button onclick="exportLog()" style="background: #6c757d; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold;">💾 Експорт (.txt)</button>
+    </div>
+    
+    <!-- The actual text box where the log appears -->
+    <textarea id="cpr-log" readonly style="width: 100%; height: 250px; background: #121212; color: #28a745; border: 1px solid #333; border-radius: 8px; padding: 12px; font-family: 'Courier New', Courier, monospace; font-size: 1.1em; resize: vertical; box-sizing: border-box;"></textarea>
+</div>
+		
     </div>
 
     <script>
@@ -241,7 +324,7 @@
         function toggleCode() {
             const btn = document.getElementById('btn-start-code');
             const roscBtn = document.getElementById('btn-rosc');
-            initAudio(); // Initialize audio context on first user click
+            initAudio(); 
 
             if (!isCodeActive) {
                 // START
@@ -250,15 +333,18 @@
                 roscBtn.style.display = "block";
                 document.getElementById('status-text').innerText = "Total Time Elapsed";
                 
+                logEvent('▶ НАЧАЛО НА РЕАНИМАЦИЯТА (Code Started)'); // <-- ADDED LOG
+                
                 masterStartTime = Date.now();
                 masterInterval = setInterval(updateMasterClock, 1000);
                 document.querySelectorAll('.btn:not(.btn-outline)').forEach(b => b.disabled = false);
                 requestWakeLock();
                 startCPRCycle();
             } else {
-                // STOP
-                if(confirm("End the code and reset everything?")) {
-                    location.reload(); // Cleanest way to reset all states and audio safely
+                // STOP (Fixed the reload bug!)
+                if(confirm("Край на реанимацията? Хронологията ще бъде запазена автоматично.")) {
+                    exportLog(); // <-- ADDED: Automatically download log before wiping it!
+                    location.reload(); 
                 }
             }
         }
@@ -272,6 +358,8 @@
                 roscBtn.style.backgroundColor = "#fff"; roscBtn.style.color = "#000";
                 document.getElementById('status-text').innerText = "POST-ROSC OBSERVATION TIME";
                 
+                logEvent('❤️ ВЪЗСТАНОВЕНО КРЪВООБРАЩЕНИЕ (ROSC Achieved) - Таймерите са спрени'); // <-- ADDED LOG
+
                 clearInterval(cprTimerInterval);
                 clearInterval(epiTimerInterval);
                 if (isMetronomeOn) toggleMetronome();
@@ -281,9 +369,12 @@
                 // RESUME CODE
                 roscBtn.style.backgroundColor = "transparent"; roscBtn.style.color = "var(--text-main)";
                 document.getElementById('status-text').innerText = "Total Time Elapsed";
+                
+                logEvent('▶ РЕАНИМАЦИЯТА Е ВЪЗОБНОВЕНА (CPR Resumed)'); // <-- ADDED LOG
+
                 document.querySelectorAll('.btn:not(.btn-outline)').forEach(b => b.disabled = false);
                 startCPRCycle();
-                if(counts.epi > 0) startEpiTimer(true); // Resume epi timer
+                if(counts.epi > 0) startEpiTimer(true); 
             }
         }
 
@@ -301,20 +392,26 @@
                 counts.epi++;
                 document.getElementById('count-epi').innerText = counts.epi;
                 document.getElementById('total-epi').innerText = counts.epi + " mg";
+                logEvent('Адреналин 1 mg (IV/IO)'); // <-- ADDED LOG
                 startEpiTimer();
             }
-            if(type === 'shock') document.getElementById('count-shock').innerText = ++counts.shock;
+            if(type === 'shock') {
+                document.getElementById('count-shock').innerText = ++counts.shock;
+                logEvent('⚡ Шок нанесен (Defibrillation)'); // <-- ADDED LOG
+            }
             if(type === 'amio300') {
                 counts.amio++;
                 document.getElementById('count-amio').innerText = counts.amio;
                 document.getElementById('total-amio').innerText = "300 mg";
                 document.getElementById('btn-amio300').disabled = true;
+                logEvent('Амиодарон 300 mg (IV/IO)'); // <-- ADDED LOG
             }
             if(type === 'amio150') {
                 counts.amio++;
                 document.getElementById('count-amio').innerText = counts.amio;
                 document.getElementById('total-amio').innerText = "450 mg";
                 document.getElementById('btn-amio150').disabled = true;
+                logEvent('Амиодарон 150 mg (IV/IO)'); // <-- ADDED LOG
             }
             
             const btn = document.getElementById(`btn-${type}`);
@@ -331,6 +428,8 @@
             cprEndTime = Date.now() + (CPR_DURATION * 1000);
             cprAlarmPlayed = false;
             
+            logEvent(`↻ Начало на CPR цикъл #${counts.cycles}`); // <-- ADDED LOG
+
             clearInterval(cprTimerInterval);
             document.getElementById('cpr-timer-text').classList.remove('flashing');
 
@@ -346,7 +445,6 @@
             }, 1000);
             updateCPRTimerUI(CPR_DURATION);
         }
-
         function updateCPRTimerUI(timeLeft) {
             const bar = document.getElementById('cpr-timer-bar');
             const text = document.getElementById('cpr-timer-text');
@@ -397,6 +495,59 @@
         text.innerText = `OVERDUE! (${mins}:${secs < 10 ? '0' : ''}${secs} ago)`;
         text.classList.add('flashing');
     }
+}
+
+		// --- 1. TIMESTAMP LOGGER ---
+function logEvent(actionName) {
+    const logBox = document.getElementById('cpr-log');
+    
+    // Get current time (HH:MM:SS)
+    const now = new Date();
+    const timeStr = String(now.getHours()).padStart(2, '0') + ':' + 
+                    String(now.getMinutes()).padStart(2, '0') + ':' + 
+                    String(now.getSeconds()).padStart(2, '0');
+    
+    // Create the entry format
+    const newEntry = `[${timeStr}] - ${actionName}\n`;
+    
+    // Append to the text area
+    logBox.value += newEntry;
+    
+    // Auto-scroll to the bottom so the newest event is always visible
+    logBox.scrollTop = logBox.scrollHeight;
+}
+
+// --- 2. EXPORT LOG FUNCTION ---
+function exportLog() {
+    const logBox = document.getElementById('cpr-log');
+    let logText = logBox.value;
+    
+    if (!logText.trim()) {
+        alert("Хронологията е празна. Няма какво да се експортира.");
+        return;
+    }
+
+    // Add a header to the text file
+    logText = "--- CPR RESUSCITATION LOG ---\n" + logText;
+    
+    // Get date for filename (DD-MM-YYYY)
+    const now = new Date();
+    const dateStr = String(now.getDate()).padStart(2, '0') + '-' + 
+                    String(now.getMonth() + 1).padStart(2, '0') + '-' + 
+                    now.getFullYear();
+                    
+    const fileName = `CPR_Log_${dateStr}.txt`;
+    
+    // Download logic
+    const blob = new Blob([logText], { type: 'text/plain;charset=utf-8' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = fileName;
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href);
 }
 
         
