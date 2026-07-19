@@ -753,7 +753,7 @@
             let ponvPlan = ponvScore >= 2 ? `Висок риск (${ponvScore}/4). План: TIVA или профилактика с 2+ антиеметика (напр. Дексаметазон + Ондансетрон).` : "Базов риск. Стандартна профилактика.";
             let airwayPlan = flags.includes("Труден ДП") ? "ВНИМАНИЕ: Очакван труден дихателен път. Подготовка на фиброоптика/видеоларингоскоп. DAS алгоритъм." : "Стандартна интубация/LMA.";
 
-            return { ptId, ptSex, ptAge, ptWeight, ptHeight,, airway, asa, rcriScore, rcriRisk, ponvScore, npoClear, npoSolid, flags, neuroFlags, examFlags, esaicFlags, pltFlags, acPlan, clearedTests, missingTests, rcriPlan, ponvPlan, airwayPlan };
+            return { ptId, ptSex, ptAge, ptWeight, ptHeight, airway, asa, rcriScore, rcriRisk, ponvScore, npoClear, npoSolid, flags, neuroFlags, examFlags, esaicFlags, pltFlags, acPlan, clearedTests, missingTests, rcriPlan, ponvPlan, airwayPlan };
         }
 
         // --- FORMAT THE MEDICAL NOTE ---
