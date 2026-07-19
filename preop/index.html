@@ -356,6 +356,30 @@
             </div>
         </div>
 
+<!-- ANTIPLATELET (ANTIAGREGANT) CARD (Collapsed) -->
+        <div class="card" style="border-top: 3px solid #6f42c1;">
+            <div class="card-title collapsible" style="color: #6f42c1;" onclick="toggleCard(this)">
+                <span>🩸 Антиагреганти (ESAIC)</span>
+                <span class="chevron">▼</span>
+            </div>
+            <div class="collapsible-content">
+                <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 15px;">
+                    <label style="display: flex; align-items: center; cursor: pointer; color: var(--text-main);">
+                        <input type="checkbox" class="plt-check" value="Аспирин (ASA). ПЛАН: ПРОДЪЛЖАВА СЕ периоперативно. (Изключение: спира се 7 дни преди неврохирургия, задна очна камера или процедури в затворено пространство)." style="width: 20px; height: 20px; margin-right: 10px; accent-color: #6f42c1;">
+                        Аспирин (ASA)
+                    </label>
+                    <label style="display: flex; align-items: center; cursor: pointer; color: var(--text-main);">
+                        <input type="checkbox" class="plt-check" value="P2Y12 инхибитор. ПЛАН: СПИРА СЕ преди операцията (Clopidogrel 5 дни; Ticagrelor 3-5 дни; Prasugrel 7 дни). Аспиринът се продължава!" style="width: 20px; height: 20px; margin-right: 10px; accent-color: #6f42c1;">
+                        P2Y12 инхибитор (Clopidogrel, Ticagrelor, Prasugrel)
+                    </label>
+                    <label style="display: flex; align-items: center; cursor: pointer; color: var(--warning-yellow);">
+                        <input type="checkbox" class="red-flag-toggle" data-warning="АКТИВЕН DAPT / СКОРОШЕН СТЕНТ (< 6 месеца): Елективната хирургия трябва да се отложи! Ако е спешна - задължителен консилиум с кардиолог. Аспиринът НЕ се спира." onchange="checkRedFlags()" style="width: 20px; height: 20px; margin-right: 10px; accent-color: #ffc107;">
+                        Двойна терапия (DAPT) / Скорошен PCI стент
+                    </label>
+                </div>
+            </div>
+        </div>
+        
         <!-- ANTICOAGULATION CARD -->
         <div class="card" id="ac-card">
             <div class="card-title">Антикоагулантна терапия</div>
@@ -657,6 +681,10 @@
             document.querySelectorAll('.esaic-check').forEach(t => { 
                 if (t.checked) esaicFlags.push(t.value); 
             });
+            let pltFlags = [];
+            document.querySelectorAll('.plt-check').forEach(t => { 
+                if (t.checked) pltFlags.push(t.value); 
+            });
 
             const acDrugSel = document.getElementById('ac-drug');
             const acDrug = acDrugSel.options[acDrugSel.selectedIndex].text;
@@ -683,7 +711,7 @@
             let ponvPlan = ponvScore >= 2 ? `Висок риск (${ponvScore}/4). План: TIVA или профилактика с 2+ антиеметика (напр. Дексаметазон + Ондансетрон).` : "Базов риск. Стандартна профилактика.";
             let airwayPlan = flags.includes("Труден ДП") ? "ВНИМАНИЕ: Очакван труден дихателен път. Подготовка на фиброоптика/видеоларингоскоп. DAS алгоритъм." : "Стандартна интубация/LMA.";
 
-            return { ptId, airway, asa, rcriScore, rcriRisk, ponvScore, npoClear, npoSolid, flags, neuroFlags, examFlags, esaicFlags, acPlan, clearedTests, missingTests, rcriPlan, ponvPlan, airwayPlan };
+            return { ptId, airway, asa, rcriScore, rcriRisk, ponvScore, npoClear, npoSolid, flags, neuroFlags, examFlags, esaicFlags, pltFlags, acPlan, clearedTests, missingTests, rcriPlan, ponvPlan, airwayPlan };
         }
 
         // --- FORMAT THE MEDICAL NOTE ---
@@ -726,6 +754,12 @@
             if (data.acPlan) {
                 note += `[ 🩸 АНТИКОАГУЛАНТЕН ПЛАН ]\n`;
                 note += `- ${data.acPlan}\n\n`;
+            }
+            
+            if (data.pltFlags && data.pltFlags.length > 0) {
+                note += `[ 🩸 АНТИАГРЕГАНТНА ТЕРАПИЯ ]\n`;
+                data.pltFlags.forEach(f => note += `- ${f}\n`);
+                note += `\n`;
             }
 
             note += `[ 🧪 ИЗСЛЕДВАНИЯ И КОНСУЛТАЦИИ ]\n`;
