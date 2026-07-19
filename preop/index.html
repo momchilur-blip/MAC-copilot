@@ -106,6 +106,44 @@
         <h2>Предоперативна оценка</h2>
     </nav>
 
+    <!-- PATIENT DEMOGRAPHICS CARD -->
+        <div class="card" style="border-top: 3px solid #007bff; margin-bottom: 15px;">
+            <div class="card-title" style="color: #007bff; margin-bottom: 15px;">
+                <span>👤 Данни за пациента</span>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 15px;">
+                <!-- ID/Name spans two columns on small screens -->
+                <div style="grid-column: 1 / -1;">
+                    <label style="display: block; font-size: 0.85em; color: #a0a0a0; margin-bottom: 5px;">Име / ИЗ / Стая</label>
+                    <input type="text" id="pt-id" placeholder="Напр. Иван Иванов / Стая 3" style="width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #333; background: #121212; color: #f0f0f0; box-sizing: border-box; font-size: 1em;">
+                </div>
+                
+                <div>
+                    <label style="display: block; font-size: 0.85em; color: #a0a0a0; margin-bottom: 5px;">Пол</label>
+                    <select id="pt-sex" style="width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #333; background: #121212; color: #f0f0f0; box-sizing: border-box; font-size: 1em;">
+                        <option value="Мъж">Мъж</option>
+                        <option value="Жена">Жена</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label style="display: block; font-size: 0.85em; color: #a0a0a0; margin-bottom: 5px;">Възраст (г.)</label>
+                    <input type="number" id="pt-age" placeholder="Години" style="width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #333; background: #121212; color: #f0f0f0; box-sizing: border-box; font-size: 1em;">
+                </div>
+                
+                <div>
+                    <label style="display: block; font-size: 0.85em; color: #a0a0a0; margin-bottom: 5px;">Тегло (kg)</label>
+                    <input type="number" id="pt-weight" placeholder="kg" style="width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #333; background: #121212; color: #f0f0f0; box-sizing: border-box; font-size: 1em;">
+                </div>
+                
+                <div>
+                    <label style="display: block; font-size: 0.85em; color: #a0a0a0; margin-bottom: 5px;">Ръст (cm)</label>
+                    <input type="number" id="pt-height" placeholder="cm" style="width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #333; background: #121212; color: #f0f0f0; box-sizing: border-box; font-size: 1em;">
+                </div>
+            </div>
+        </div>
+
     <!-- RAPID MODE TOGGLE BUTTON -->
     <div style="margin-bottom: 20px;">
         <button id="rapid-btn" onclick="toggleRapidMode()" style="width: 100%; background: var(--rapid-orange); color: #fff; padding: 15px; border-radius: 8px; font-weight: bold; font-size: 1.1em; cursor: pointer; border: none; box-shadow: 0 4px 10px rgba(255, 152, 0, 0.3); transition: all 0.3s;">
@@ -448,13 +486,12 @@
             <div class="list-row"><div class="row-text"><strong>Бистри течности (ВОДА)</strong><small style="color: var(--text-main);">Насърчавайте хидратацията до този час!</small></div><div class="npo-time" id="npo-clear" style="color: #17a2b8; font-size: 1.2em;">06:00 ч.</div></div>
         </div>
 
-        <!-- EXPORT CENTER -->
+       <!-- EXPORT CENTER -->
         <div class="card" style="border: 1px solid var(--alert-green);">
-            <div style="display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap;">
-                <input type="text" id="pt-id" class="select-input" style="margin-bottom: 0;" placeholder="Име / ИЗ / Стая">
-               <button onclick="generateChartNote()" style="flex: 1; padding: 15px; background: #17a2b8; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 1em; cursor: pointer;">📋 Копирай за гама / Специалист </button>
-            <button onclick="shareReport()" style="flex: 1; padding: 15px; background: #007bff; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 1em; cursor: pointer;">📤 Сподели / Файл</button>
-            <button onclick="printWardInstructions()" style="flex: 1; padding: 15px; background: #ffc107; color: black; border: none; border-radius: 8px; font-weight: bold; font-size: 1em; cursor: pointer;">🖨️ Лист за Отделението</button>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <button onclick="generateChartNote()" style="flex: 1; padding: 15px; background: #17a2b8; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 1em; cursor: pointer;">📋 Копирай за гама / Специалист </button>
+                <button onclick="shareReport()" style="flex: 1; padding: 15px; background: #007bff; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 1em; cursor: pointer;">📤 Сподели / Файл</button>
+                <button onclick="printWardInstructions()" style="flex: 1; padding: 15px; background: #ffc107; color: black; border: none; border-radius: 8px; font-weight: bold; font-size: 1em; cursor: pointer;">🖨️ Лист за Отделението</button>
             </div>
         </div>
     </div> <!-- END OF DETAILED SECTIONS -->
@@ -656,7 +693,12 @@
         
         // --- GATHER CLINICAL DATA ---
         function gatherClinicalData() {
+            // 1. Grab demographics
             const ptId = document.getElementById('pt-id').value || "Неизвестен пациент";
+            const ptSex = document.getElementById('pt-sex').value;
+            const ptAge = document.getElementById('pt-age').value || "-";
+            const ptWeight = document.getElementById('pt-weight').value || "-";
+            const ptHeight = document.getElementById('pt-height').value || "-";
             const airway = document.getElementById('airway-status').innerText.replace('✓ ', '').replace('⚠️ ', '');
             const asa = document.getElementById('asa-status').options[document.getElementById('asa-status').selectedIndex].text;
             const rcriScore = parseInt(document.getElementById('rcri-points').innerText) || 0;
@@ -711,15 +753,25 @@
             let ponvPlan = ponvScore >= 2 ? `Висок риск (${ponvScore}/4). План: TIVA или профилактика с 2+ антиеметика (напр. Дексаметазон + Ондансетрон).` : "Базов риск. Стандартна профилактика.";
             let airwayPlan = flags.includes("Труден ДП") ? "ВНИМАНИЕ: Очакван труден дихателен път. Подготовка на фиброоптика/видеоларингоскоп. DAS алгоритъм." : "Стандартна интубация/LMA.";
 
-            return { ptId, airway, asa, rcriScore, rcriRisk, ponvScore, npoClear, npoSolid, flags, neuroFlags, examFlags, esaicFlags, pltFlags, acPlan, clearedTests, missingTests, rcriPlan, ponvPlan, airwayPlan };
+            return { ptId, ptSex, ptAge, ptWeight, ptHeight,, airway, asa, rcriScore, rcriRisk, ponvScore, npoClear, npoSolid, flags, neuroFlags, examFlags, esaicFlags, pltFlags, acPlan, clearedTests, missingTests, rcriPlan, ponvPlan, airwayPlan };
         }
 
         // --- FORMAT THE MEDICAL NOTE ---
         function buildStructuredNote(data) {
             let note = `ПРЕДОПЕРАТИВНА АНЕСТЕЗИОЛОГИЧНА ОЦЕНКА\n`;
-            note += `Пациент: ${data.ptId}\n`;
-            note += `Дата: ${new Date().toLocaleDateString('bg-BG')}\n`;
-            note += `=========================================\n\n`;
+           note += `Пациент: ${data.ptId}\n`;
+           note += `Дата: ${new Date().toLocaleDateString('bg-BG')}\n`;
+            note += `Пол: ${data.ptSex} | Възраст: ${data.ptAge} г. | Тегло: ${data.ptWeight} kg | Ръст: ${data.ptHeight} cm\n`;
+            // Auto-calculate BMI if both height and weight are provided
+            if (data.ptWeight !== "-" && data.ptHeight !== "-") {
+                let weight = parseFloat(data.ptWeight);
+                let heightM = parseFloat(data.ptHeight) / 100; // Convert cm to meters
+                if (weight > 0 && heightM > 0) {
+                    let bmi = (weight / (heightM * heightM)).toFixed(1);
+                    note += `BMI: ${bmi}\n`;
+                }
+            }
+            note += `-----------------------------------------------\n\n`;
             
             note += `[ СТАТУС И РИСК ]\n`;
             note += `- Клас: ${data.asa}\n`;
