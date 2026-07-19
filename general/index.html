@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Анестезиологично Табло</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --text-main: #e0e0e0;
+            --text-muted: #888;
+            --card-bg: #1e1e1e;
+            --border-color: #333;
+            --input-bg: #2c2c2c;
+            
+            --iso-hypnotic: #ffcc00; 
+            --iso-opioid: #00bfff;   
+            --iso-relaxant: #ff3333; 
+            --iso-pressor: #cc99ff;  
+            --iso-local: #cccccc;    
+            --alert-green: #28a745;
+            --warning-yellow: #ffc107;
+            --info-blue: #17a2b8;
+
+            --log-prep: #888888;   
+            --log-pos: #17a2b8;    
+            --log-surg: #ffc107;   
+            --log-proc: #28a745;   
+            --log-hemo: #ff4d4d;   
+            --log-drug: #9c27b0;   
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color); color: var(--text-main);
+            margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center;
+            padding-bottom: 60px;
+        }
+
+        h2, h3, h4 { margin-top: 0; margin-bottom: 10px; }
+        .section-label { font-size: 0.7em; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; text-align: center; font-weight: bold;}
+
+        .container { width: 100%; max-width: 600px; display: flex; flex-direction: column; gap: 15px; }
+        .card { background: var(--card-bg); border-radius: 12px; padding: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+
+        .master-nav {
+            display: flex; justify-content: space-between; gap: 8px; width: 100%; 
+            background: var(--bg-color); padding: 5px 0 15px 0; border-bottom: 2px solid var(--border-color);
+            position: sticky; top: 0; z-index: 100; margin-bottom: 5px;
+        }
+        .nav-btn {
+            flex: 1; padding: 10px 0; border: 1px solid var(--border-color); border-radius: 8px; font-weight: bold; font-size: 0.85em;
+            background: var(--card-bg); color: var(--text-muted); cursor: pointer; transition: 0.2s; text-align: center;
+        }
+        .nav-btn.active { background: var(--text-main); color: var(--bg-color); border-color: var(--text-main); }
+
+        .sub-tabs { display: flex; gap: 8px; margin-bottom: 15px; overflow-x: auto; padding-bottom: 5px;}
+        .sub-tab-btn {
+            flex: 1; min-width: 80px; padding: 8px; border: 1px solid var(--border-color); border-radius: 6px; 
+            background: var(--input-bg); color: var(--text-muted); font-weight: bold; cursor: pointer;
+            font-size: 0.85em; text-align: center; white-space: nowrap;
+        }
+        .sub-tab-btn.active { background: var(--text-main); color: var(--bg-color); border-color: var(--text-main); }
+        
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; animation: fadeIn 0.2s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        .input-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 15px; }
+        .field { display: flex; flex-direction: column; gap: 4px; }
+        .field label { font-size: 0.8em; color: var(--text-muted); font-weight: bold; text-transform: uppercase; }
+        .field input {
+            background: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-main);
+            border-radius: 6px; padding: 12px; font-size: 1.1em; font-weight: bold; text-align: center; width: 100%;
+        }
+        
+        .gender-toggle { grid-column: 1 / -1; display: flex; gap: 8px; }
+        .gender-btn { flex: 1; padding: 12px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--input-bg); color: var(--text-muted); font-weight: bold; cursor: pointer; }
+        .gender-btn.active { background: var(--text-main); color: var(--bg-color); border-color: var(--text-main); }
+
+        .btn-calc {
+            grid-column: 1 / -1; padding: 14px; background: var(--alert-green); color: white;
+            border: none; border-radius: 8px; font-size: 1.1em; font-weight: bold; cursor: pointer;
+        }
+        .btn-calc:active { transform: scale(0.98); }
+
+        .result-section { margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 10px; }
+        .result-title { font-size: 0.85em; font-weight: bold; text-transform: uppercase; margin-bottom: 8px; }
+        .result-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px dashed var(--border-color); }
+        .result-row:last-child { border-bottom: none; }
+        .result-name { font-size: 0.95em; }
+        .result-name small { display: block; font-size: 0.8em; color: var(--text-muted); }
+        .result-val { font-size: 1.1em; font-weight: bold; color: var(--text-main); text-align: right; }
+
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 8px; font-weight: bold; font-size: 1.05em; cursor: pointer; color: white; margin-bottom: 10px; transition: 0.1s; }
+        .btn:active { transform: scale(0.98); }
+        
+        .nmb-bar-bg { background: var(--border-color); height: 16px; border-radius: 8px; overflow: hidden; width: 100%; margin: 15px 0; }
+        .nmb-bar-fill { height: 100%; width: 100%; background-color: var(--iso-relaxant); transition: width 1s linear, background-color 0.5s ease; }
+        @keyframes pulseYellowGray { 0% { background-color: var(--border-color); } 50% { background-color: var(--warning-yellow); } 100% { background-color: var(--border-color); } }
+        .nmb-pulse { animation: pulseYellowGray 2s infinite ease-in-out !important; }
+        .nmb-timer-text { font-size: 1.5em; color: var(--text-main); text-align: center; font-weight: bold; font-variant-numeric: tabular-nums; }
+        .nmb-sum-box { text-align: center; background: var(--input-bg); padding: 10px; border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--border-color); }
+        
+        .log-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .btn-log { padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--input-bg); color: var(--text-main); font-weight: bold; cursor: pointer; font-size: 0.85em; text-align: left; }
+        .btn-log:active { background: var(--border-color); }
+        .b-prep { border-left: 4px solid var(--log-prep); } .b-pos  { border-left: 4px solid var(--log-pos); }
+        .b-surg { border-left: 4px solid var(--log-surg); } .b-proc { border-left: 4px solid var(--log-proc); }
+        .b-hemo { border-left: 4px solid var(--log-hemo); } .b-drug { border-left: 4px solid var(--log-drug); }
+        .b-opioid { border-left: 4px solid var(--iso-opioid); }
+        
+        .log-textarea { width: 100%; height: 250px; background: #000; border: 1px solid var(--border-color); color: var(--alert-green); border-radius: 8px; padding: 12px; font-family: monospace; font-size: 0.95em; resize: vertical; margin-bottom: 10px;}
+        .flashing { animation: flash 1s infinite; color: var(--iso-relaxant) !important;}
+        @keyframes flash { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+
+        .slider-readout { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 15px; }
+        .rate-val { font-size: 2em; font-weight: bold; color: var(--text-main); }
+        .zone-badge { padding: 6px 12px; border-radius: 4px; font-size: 0.8em; font-weight: bold; text-transform: uppercase; background: #333; }
+        .custom-range { -webkit-appearance: none; width: 100%; height: 24px; border-radius: 6px; outline: none; margin: 15px 0; border: 1px solid var(--border-color); }
+        .custom-range::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 30px; height: 30px; border-radius: 50%; background: #fff; cursor: pointer; box-shadow: 0 0 5px rgba(0,0,0,0.8); border: 4px solid #333;}
+        
+        .sevo-slider-container { position: relative; height: 110px; margin: 30px 0; }
+        .sevo-track-bg { position: absolute; top: 30px; left: 0; width: 100%; height: 34px; border-radius: 8px; z-index: 1; border: 1px solid var(--border-color); }
+        
+        .sevo-label-top, .sevo-label-bottom { position: absolute; transform: translateX(-50%); font-weight: bold; font-size: 0.85em; white-space: nowrap; transition: left 0.1s; }
+        .sevo-label-top { top: 0; color: var(--text-main); z-index: 5;}
+        .sevo-label-bottom { top: 75px; color: var(--text-muted); z-index: 4;}
+
+        .sevo-range { -webkit-appearance: none; width: 100%; height: 34px; position: absolute; top: 30px; left: 0; background: transparent; outline: none; z-index: 4; }
+        .sevo-range::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 44px; height: 44px; border-radius: 50%; background: #fff; cursor: pointer; box-shadow: 0 0 8px rgba(0,0,0,0.9); border: 5px solid #333;}
+        
+        .ghost-range { -webkit-appearance: none; width: 100%; height: 34px; position: absolute; top: 30px; left: 0; background: transparent; outline: none; pointer-events: none; z-index: 3; opacity: 0.8;}
+        .ghost-range::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 44px; height: 44px; border-radius: 50%; background: var(--bg-color); border: 4px dashed #fff; box-shadow: 0 0 10px rgba(255,255,255,0.3);}
+        .sevo-active-layer { z-index: 2; }
+
+        .target-list { display:flex; flex-direction:column; gap:8px; margin-top: 15px;}
+        .target { background:var(--input-bg); border:1px solid var(--border-color); border-left:4px solid var(--border-color); border-radius:8px; padding:12px; display:flex; justify-content:space-between; align-items:center; }
+        .target-value { font-family: monospace; font-size:1.3rem; font-weight:bold; }
+        .target-value small { font-size:0.6em; margin-left: 2px; color: var(--text-muted);}
+
+        .switch-container { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-top: 1px solid var(--border-color); margin-top: 10px;}
+        .switch { position: relative; display: inline-block; width: 50px; height: 24px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--input-bg); border: 1px solid var(--border-color); transition: .4s; border-radius: 24px; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: var(--text-muted); transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--iso-opioid); border-color: var(--iso-opioid); }
+        input:checked + .slider:before { transform: translateX(26px); background-color: #fff; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        
+        <div class="section-label">Основни Модули</div>
+        <div class="master-nav">
+            <button class="nav-btn active" id="nav-induction" onclick="setMainTab('induction')">Увод</button>
+            <button class="nav-btn" id="nav-sevo" onclick="setMainTab('sevo')">Sevo MAC</button>
+            <button class="nav-btn" id="nav-nmb" onclick="setMainTab('nmb')">МР</button>
+            <button class="nav-btn" id="nav-fluids" onclick="setMainTab('fluids')">Течности</button>
+            <button class="nav-btn" id="nav-log" onclick="setMainTab('log')">Журнал</button>
+        </div>
+
+        <!-- INDUCTION TAB -->
+        <div id="main-induction" class="tab-panel active">
+            <div class="card" style="margin-bottom: 15px;">
+                <div class="input-grid">
+                    <div class="gender-toggle">
+                        <button class="gender-btn active" id="btn-male" onclick="setGender('male')">Мъж</button>
+                        <button class="gender-btn" id="btn-female" onclick="setGender('female')">Жена</button>
+                    </div>
+                    <div class="field"><label>Възраст</label><input type="number" id="pt-age" placeholder="напр. 45"></div>
+                    <div class="field"><label>Ръст (cm)</label><input type="number" id="pt-height" placeholder="170"></div>
+                    <div class="field" style="grid-column: span 2;"><label>Реално тегло (kg)</label><input type="number" id="pt-weight" placeholder="75"></div>
+                    <button class="btn-calc" onclick="calculate()">Изчисли</button>
+                </div>
+                <div style="display: flex; justify-content: space-around; text-align: center; font-size: 0.9em;">
+                    <div><span style="color:var(--text-muted); font-size: 0.8em; text-transform: uppercase;">Идеално тегло</span><br><strong id="out-ibw">-- kg</strong></div>
+                    <div><span style="color:var(--text-muted); font-size: 0.8em; text-transform: uppercase;">Адаптирано</span><br><strong id="out-abw">-- kg</strong></div>
+                </div>
+            </div>
+
+            <div class="section-label">Лекарствен профил</div>
+            <div class="sub-tabs">
+                <button class="sub-tab-btn active" id="sub-nav-dosing" onclick="setSubTab('induction', 'dosing')">Дозиране</button>
+                <button class="sub-tab-btn" id="sub-nav-remi" onclick="setSubTab('induction', 'remi')">Ремифентанил</button>
+            </div>
+
+            <div class="card tab-panel active induction-sub" id="sub-dosing">
+                <div id="induction-results" style="text-align: center; color: var(--text-muted); padding: 20px 0;">
+                    Въведете параметри за изчисление.
+                </div>
+            </div>
+
+            <div class="card tab-panel induction-sub" id="sub-remi">
+                <div id="remi-content" style="display: none;">
+                    <div style="font-size: 0.85em; color: var(--text-muted); margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+                        Приема 2.5 mg в 50 mL = <strong style="color:var(--iso-opioid);">50 mcg/mL</strong><br>Изчисленията са базирани строго на <strong>Идеално тегло (IBW)</strong>.
+                    </div>
+                    <div class="slider-readout">
+                        <div class="rate-val"><span id="remi-ml-h">0.0</span><span style="font-size:0.4em; color:var(--text-muted); margin-left:4px;">mL/h</span></div>
+                        <div class="zone-badge" id="remi-badge">Нагласи слайдера</div>
+                    </div>
+                    <input type="range" class="custom-range" id="remi-slider" min="0" max="30" step="0.5" value="0" oninput="updateRemi()">
+                    <div style="text-align: center; font-size: 0.9em; color: var(--text-muted);">
+                        Текуща доза: <strong id="remi-mcg-kg-min" style="color:var(--iso-opioid); font-size:1.2em;">0.00</strong> mcg/kg/min
+                    </div>
+                    <button class="btn" style="background: var(--input-bg); color: var(--text-main); border: 1px solid var(--border-color); margin-top: 15px; font-size: 0.9em;" onclick="logRemiChange()">📝 Изпрати в Журнала</button>
+                </div>
+                <div id="remi-placeholder" style="text-align: center; color: var(--text-muted); padding: 20px 0;">Изчислете параметрите първо.</div>
+            </div>
+        </div>
+
+        <!-- SEVO MAC TAB -->
+        <div id="main-sevo" class="tab-panel">
+            <div class="card" style="margin-bottom: 15px;">
+                <div class="slider-readout">
+                    <div class="rate-val"><span id="fgf-disp">1.5</span><span style="font-size:0.4em; color:var(--text-muted); margin-left:4px;">L/min</span></div>
+                    <div class="zone-badge" style="background:var(--info-blue);">Поток пресен газ (FGF)</div>
+                </div>
+                <input type="range" class="custom-range" id="fgf-slider" min="0.5" max="10" step="0.5" value="1.5" oninput="updateFGF()">
+                <div style="text-align: center; font-size: 0.85em; color: var(--text-muted);">
+                    Очаквано закъснение ($\tau$): <strong id="tau-disp" style="color:var(--text-main);">6.8</strong> мин
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="switch-container" style="border-top: none; margin-top: 0; padding-top: 0;">
+                    <div>
+                        <strong style="color: var(--iso-opioid); font-size: 0.9em;">Едновременно приложени опиоиди</strong><br>
+                        <span style="font-size: 0.75em; color: var(--text-muted);">напр., Фентанил ~1-2mcg/kg (2ng/mL)</span>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="opioid-toggle" onchange="calculateSevo()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <button class="btn" style="background: var(--text-main); color: var(--bg-color); margin-top: 15px;" onclick="calculateSevo()">Изчисли MAC цели</button>
+            </div>
+
+            <div id="sevo-results" style="display: none;">
+                <div class="card" style="margin-bottom: 15px; border-left: 4px solid var(--iso-hypnotic);">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-size: 0.8em; color: var(--text-muted); text-transform: uppercase;">Базов 1.0 MAC</div>
+                            <div style="font-size: 0.7em; color: var(--iso-hypnotic);" id="band-sub">—</div>
+                        </div>
+                        <div style="font-size: 1.8em; font-family: monospace; font-weight: bold; color: var(--text-main);" id="baseline-value">—</div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-bottom: 15px;">
+                    <div class="slider-readout">
+                        <div class="rate-val"><span id="sevo-vol-disp">0.0</span><span style="font-size:0.4em; color:var(--text-muted); margin-left:4px;">vol%</span></div>
+                        <div class="zone-badge" id="sevo-badge">Нагласи слайдера</div>
+                    </div>
+                    
+                    <div class="sevo-slider-container">
+                        <div class="sevo-label-top" id="label-et">EtSevo</div>
+                        <div class="sevo-label-bottom" id="label-brain">Мозък</div>
+                        
+                        <div class="sevo-track-bg" id="sevo-track-bg"></div>
+                        <input type="range" class="ghost-range" id="sevo-ghost-slider" min="0" max="3" step="0.1" value="0">
+                        <input type="range" class="sevo-range sevo-active-layer" id="sevo-slider" min="0" max="3" step="0.1" value="0" oninput="updateSevoSlider()">
+                    </div>
+
+                    <div style="text-align: center; font-size: 0.9em; color: var(--text-muted);">
+                        Изчислен fMAC: <strong id="sevo-mac-disp" style="color:var(--text-main); font-size:1.2em;">0.00</strong>
+                    </div>
+                    
+                    <button class="btn" style="background: var(--input-bg); color: var(--text-main); border: 1px solid var(--border-color); margin-top: 15px; font-size: 0.9em;" onclick="logSevoChange()">📝 Изпрати EtSevo в Журнала</button>
+                </div>
+                
+                <div class="target-list" id="target-list" style="margin-bottom: 15px;"></div>
+            </div>
+        </div>
+
+        <!-- NMB TAB -->
+        <div id="main-nmb" class="tab-panel">
+            <div class="card">
+                <h3 style="text-align: center; color: var(--iso-relaxant);">Миорелаксация (НМБ)</h3>
+                
+                <div class="nmb-sum-box">
+                    <span style="color: var(--text-muted); font-size: 0.85em; text-transform: uppercase;">Общо въведени</span><br>
+                    <strong style="font-size: 1.5em; color: var(--text-main);" id="nmb-total-mg">0</strong> mg 
+                    <span style="color: var(--text-muted);"> / <span id="nmb-total-ml">0.0</span> mL</span>
+                </div>
+
+                <button class="btn" style="background: var(--iso-relaxant); color: #fff;" onclick="startNMB('intubation')">💉 Доза за интубация (<span id="btn-intub-ml">?</span> mL)</button>
+                
+                <!-- ADAPTIVE TOP-UP BUTTON -->
+                <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+                    <button class="btn" style="flex: 1; margin-bottom: 0; background: var(--border-color); border: 1px solid var(--iso-relaxant); color: var(--text-main);" onclick="startNMB('topup')">+ 1 mL Поддържаща (10 mg)</button>
+                    <div style="display: flex; align-items: center; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 0 10px;">
+                        <input type="number" id="nmb-custom-mins" value="15" style="width: 45px; background: transparent; border: none; color: var(--text-main); font-size: 1.1em; font-weight: bold; text-align: right; outline: none;">
+                        <span style="color: var(--text-muted); font-size: 0.85em; margin-left: 5px;">мин</span>
+                    </div>
+                </div>
+                
+                <!-- DUAL CLOCK DISPLAY -->
+                <div class="nmb-bar-bg"><div class="nmb-bar-fill" id="nmb-bar"></div></div>
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                    <div style="text-align: left;">
+                        <div style="font-size: 0.7em; color: var(--text-muted); text-transform: uppercase; font-weight: bold;">Оставащо време</div>
+                        <div class="nmb-timer-text" id="nmb-clock" style="text-align: left;">00:00</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 0.7em; color: var(--text-muted); text-transform: uppercase; font-weight: bold;">Време от дозата</div>
+                        <div class="nmb-timer-text" id="nmb-elapsed" style="text-align: right; color: var(--info-blue);">00:00</div>
+                    </div>
+                </div>
+                
+                <div style="text-align: center; font-size: 0.9em; color: var(--text-muted); margin-bottom: 20px;" id="nmb-instruction">Очаква се първоначална доза...</div>
+
+                <button class="btn" style="background: transparent; border: 2px solid var(--alert-green); color: var(--alert-green);" onclick="stopNMB()">⏹ Събуждане / Декураризация</button>
+            </div>
+        </div>
+
+        <!-- FLUIDS TAB -->
+        <div id="main-fluids" class="tab-panel">
+            <div class="card">
+                <h3 style="text-align: center; color: var(--alert-green);">Баланс на течности и кръв</h3>
+                
+                <div class="input-grid" style="grid-template-columns: 1fr 1fr;">
+                    <div class="field"><label>Начален Хгб (g/L)</label><input type="number" id="hgb-start" placeholder="напр. 120"></div>
+                    <div class="field"><label>Целеви Хгб (g/L)</label><input type="number" id="hgb-target" placeholder="напр. 70"></div>
+                    <button class="btn" style="background: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-main); grid-column: span 2;" onclick="calcABL()">Изчисли ДКЗ</button>
+                </div>
+                <div id="abl-result" style="text-align:center; margin:10px 0; color:var(--log-hemo); font-weight:bold;">Допустима кръвозагуба: -- mL</div>
+
+                <!-- Maintenance and NPO Calculator -->
+                <div class="card" style="margin-top: 15px;">
+                    <h3 style="text-align: center; color: var(--info-blue);">Поддържащи течности и Дефицит</h3>
+                    
+                    <div class="input-grid" style="grid-template-columns: 1fr 1fr;">
+                        <div class="field"><label>Часове гладуване</label><input type="number" id="npo-hours" placeholder="напр. 8"></div>
+                        <button class="btn" style="background: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-main); height: 100%; margin-bottom: 0;" onclick="calcMaintenance()">Изчисли план</button>
+                    </div>
+
+                    <div id="maint-result" style="display:none; margin-top: 15px;">
+                        <div class="result-row"><div class="result-name">Поддържаща скорост</div><div class="result-val"><span id="maint-rate" style="color: var(--info-blue);">0</span> mL/h</div></div>
+                        <div class="result-row"><div class="result-name">Общ дефицит (глад)</div><div class="result-val"><span id="maint-deficit" style="color: var(--warning-yellow);">0</span> mL</div></div>
+                        
+                        <div class="section-label" style="margin-top: 15px;">План за възстановяване (Подд. + Дефицит)</div>
+                        <div class="result-row"><div class="result-name" style="color:var(--alert-green);">1-ви час <small>Поддържаща + 50% Дефицит</small></div><div class="result-val"><span id="plan-hr1">0</span> mL</div></div>
+                        <div class="result-row"><div class="result-name" style="color:var(--warning-yellow);">2-ри час <small>Поддържаща + 25% Дефицит</small></div><div class="result-val"><span id="plan-hr2">0</span> mL</div></div>
+                        <div class="result-row"><div class="result-name" style="color:var(--warning-yellow);">3-ти час <small>Поддържаща + 25% Дефицит</small></div><div class="result-val"><span id="plan-hr3">0</span> mL</div></div>
+                        
+                        <button class="btn" style="background: var(--input-bg); color: var(--text-main); border: 1px solid var(--border-color); margin-top: 15px; margin-bottom: 0; font-size: 0.9em;" onclick="logFluidPlan()">📝 Изпрати плана в Журнала</button>
+                    </div>
+                </div>
+
+                <div class="nmb-sum-box" style="margin-top:20px;">
+                    <span style="color: var(--text-muted); font-size: 0.85em; text-transform: uppercase;">Нетен баланс</span><br>
+                    <strong style="font-size: 1.8em; color: var(--text-main);" id="net-balance">0</strong> mL
+                </div>
+
+                <div class="log-grid">
+                    <button class="btn-log b-proc" onclick="updateFluids(500, false, false)">+ 500 mL Кристалоиди</button>
+                    <button class="btn-log b-drug" onclick="updateFluids(100, false, false)">+ 100 mL Банка (Аб/ТХК)</button>
+                    <button class="btn-log b-hemo" onclick="updateFluids(250, true, false)">+ 250 mL Кръв</button>
+                    <button class="btn-log b-prep" onclick="updateFluids(100, false, true)">- 100 mL Урина/Загуби</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- LOG TAB -->
+        <div id="main-log" class="tab-panel">
+            
+            <div class="card" style="margin-bottom: 15px;">
+                <h3 style="color: var(--iso-opioid); margin-top: 0;">Общо: <span id="fentanyl-total">0</span>mcg Фент / <span id="propofol-total">0</span>mg Проп</h3>
+                <div class="log-grid">
+                    <button class="btn-log b-opioid" onclick="addFentanyl(50)">+ 50mcg Фент</button>
+                    <button class="btn-log b-opioid" onclick="addFentanyl(100)">+ 100mcg Фент</button>
+                    <button class="btn-log b-drug" onclick="addPropofol(30)">+ 30mg Проп</button>
+                    <button class="btn-log b-drug" onclick="addPropofol(50)">+ 50mg Проп</button>
+
+                    <!-- Analgesia & Safety Block -->
+                    <button class="btn-log b-drug" onclick="addLog('Аналгин 1g е приложен.')">Аналгин 1g</button>
+                    <button class="btn-log b-drug" onclick="addLog('Парацетамол 1g е приложен.')">Парацетамол 1g</button>
+                    <button class="btn-log b-drug" onclick="addLog('Кетопрофен 100mg е приложен.')">Кетопрофен 100mg</button>
+                    <button class="btn-log b-drug" onclick="addLog('Дексаметазон 4mg е приложен.')">Дексаметазон 4mg</button>
+                    <button class="btn-log b-drug" onclick="addLog('Метоклопрамид 10mg е приложен.')">Метоклопрамид</button>
+                    <button class="btn-log b-drug" onclick="checkAnalgesia()">*Проверка Аналгезия*</button>
+                    <button class="btn-log b-hemo" onclick="addLog('Уведомен е старши лекар (Шеф-екип).')" style="border-left-color: #ff3333; color: #ff3333; grid-column: span 2; text-align: center;">Уведомен Старши Лекар</button>
+                </div>
+            </div>
+            
+            <button class="btn" style="background: var(--info-blue);" onclick="generateSummary()">📊 Обобщение на лекарствата</button>
+
+            <div class="section-label">Събития според хирургията</div>
+            <div class="sub-tabs">
+                <button class="sub-tab-btn active" id="log-nav-std" onclick="setSubTab('log', 'std')">Стандартни</button>
+                <button class="sub-tab-btn" id="log-nav-neuro" onclick="setSubTab('log', 'neuro')">Невро</button>
+                <button class="sub-tab-btn" id="log-nav-lap" onclick="setSubTab('log', 'lap')">Лап</button>
+                <button class="sub-tab-btn" id="log-nav-vasc" onclick="setSubTab('log', 'vasc')">Съд/Торак</button>
+                <button class="sub-tab-btn" id="log-nav-hemo" onclick="setSubTab('log', 'hemo')">Хемо</button>
+            </div>
+
+            <div class="card">
+                <!-- Standard Sub -->
+                <div id="log-std" class="tab-panel log-sub active">
+                    <div class="log-grid">
+                        <button class="btn-log b-prep" onclick="addLog('Пациентът е в зала. Поставени монитори.')">Пациент в зала</button>
+                        <button class="btn-log b-prep" onclick="addLog('Започната преоксигенация.')">Преоксигенация</button>
+                        <button class="btn-log" style="border-left-color: #9b59b6; color: #9b59b6;" onclick="addLog('Извършен WHO Safe Surgery Time-Out (Хелзинкска декларация).')">WHO Чеклист</button>
+                        
+                        <button class="btn-log b-proc" onclick="addLog('Начало на увода.')">Увод</button>
+                        <button class="btn-log b-proc" onclick="addLog('Дихателните пътища са осигурени, потвърдено с ETCO2.')">Интубиран</button>
+                        <button class="btn-log" style="border-left-color: #e67e22; color: #e67e22;" onclick="addLog('Приложено е пасивно затопляне (одеяла, затоплени разтвори).')">Пасивно затопляне</button>
+                        
+                        <button class="btn-log b-surg" onclick="addLog('Начало на операцията (инцизия).')">Начало операция</button>
+                        <button class="btn-log b-surg" onclick="addLog('Край на операцията.')">Край операция</button>
+                        
+                        <button class="btn-log" style="border-left-color: #9b59b6; color: #9b59b6;" onclick="addLog('Клинична проверка за възстановяване от НМБ (задържане на глава, адекватен ДО).')">Клинична проверка НМБ</button>
+                        <button class="btn-log b-proc" onclick="addLog('Екстубация. Пациентът диша спонтанно.')">Екстубиран</button>
+                        <button class="btn-log b-pos" onclick="addLog('Пациентът е транспортиран към зала за събуждане/отделение.')">Към Отделение</button>
+                    </div>
+                </div>
+
+                <!-- Neuro Sub -->
+                <div id="log-neuro" class="tab-panel log-sub">
+                    <div class="log-grid">
+                        <button class="btn-log b-prep" onclick="addLog('Поставена Мейфийлд фиксация от хирурзите.')">Мейфийлд фиксация</button>
+                        <button class="btn-log b-pos" onclick="addLog('Позиция по корем. Очите и точките на натиск са проверени и свободни.')">По корем + Очите свободни</button>
+                        <button class="btn-log b-drug" onclick="addLog('Приложен Манитол/Хипертоничен разтвор.')">Осмотерапия</button>
+                        <button class="btn-log b-surg" onclick="addLog('Започнати трепанационни отвори.')">Трепанационни отвори</button>
+                        <button class="btn-log b-surg" onclick="addLog('Дурата е отворена.')">Дурата отворена</button>
+                        <button class="btn-log b-surg" onclick="addLog('Ултразвуков аспиратор (CUSA) в употреба.')">CUSA в употреба</button>
+                        <button class="btn-log b-surg" onclick="addLog('Дурата е затворена.')">Дурата затворена</button>
+                        <button class="btn-log b-hemo" onclick="addLog('Отчетена хипотония (САН < 65).')">САН < 65</button>
+                    </div>
+                </div>
+
+                <!-- Lap Sub -->
+                <div id="log-lap" class="tab-panel log-sub">
+                    <div class="log-grid">
+                        <button class="btn-log b-surg" onclick="addLog('Начало на пневмоперитонеум (инсуфлация).')">Инсуфлация</button>
+                        <button class="btn-log b-pos" onclick="addLog('Позиция Тренделенбург.')">Тренделенбург</button>
+                        <button class="btn-log b-pos" onclick="addLog('Позиция Анти-Тренделенбург.')">Анти-Тренделенбург</button>
+                        <button class="btn-log b-surg" onclick="addLog('Десуфлация.')">Десуфлация</button>
+                        <button class="btn-log b-surg" onclick="addLog('Започнато затваряне на фасция.')">Затваряне фасция</button>
+                        <button class="btn-log b-hemo" onclick="addLog('Отчетена брадикардия.')">Брадикардия</button>
+                        <button class="btn-log b-drug" onclick="addLog('Приложен Ефедрин.')">Ефедрин</button>
+                    </div>
+                </div>
+
+                <!-- Vasc Sub -->
+                <div id="log-vasc" class="tab-panel log-sub">
+                    <div class="log-grid">
+                        <button class="btn-log b-drug" onclick="promptHeparin()">Даден Хепарин</button>
+                        <button class="btn-log b-surg" onclick="addLog('Поставена артериална клампа.')">Клампиране</button>
+                        <button class="btn-log b-surg" onclick="addLog('Артериалната клампа е свалена.')">Деклампиране</button>
+                        <button class="btn-log b-surg" onclick="addLog('Започната еднобелодробна вентилация.')">Еднобелодробна вент.</button>
+                        <button class="btn-log b-surg" onclick="addLog('Извършена рекрутмънт маневра.')">Рекрутмънт</button>
+                        <button class="btn-log b-hemo" onclick="addLog('Започната хемотрансфузия.')">Начало кръвопреливане</button>
+                        <button class="btn-log b-proc" onclick="addLog('Поставена и фиксирана артериална линия.')">Артериална линия</button>
+                        <button class="btn-log b-proc" onclick="addLog('Поставен централен венозен катетър (ЦВК).')">ЦВК поставена</button>
+                        <button class="btn-log b-drug" onclick="addLog('Приложен Фуроземид.')">Фуроземид</button>
+                    </div>
+                </div>
+
+                <!-- Hemodynamics Sub -->
+                <div id="log-hemo" class="tab-panel log-sub">
+                    <div class="log-grid">
+                        <button class="btn-log b-hemo" onclick="addLog('Отчетена хипотония (САН < 65).')">САН < 65</button>
+                        <button class="btn-log b-hemo" onclick="addLog('Отчетена хипотония (Спад > 20% спрямо базовата стойност).')">Спад > 20% База</button>
+                        <button class="btn-log b-hemo" onclick="addLog('Отчетена хипертензия.')">Хипертензия</button>
+                        <button class="btn-log b-hemo" onclick="addLog('Отчетена тахикардия (СЧ > 110).')">Тахи > 110</button>
+                        <button class="btn-log b-hemo" onclick="addLog('Отчетена брадикардия (СЧ < 60).')">Бради < 60</button>
+                        <button class="btn-log b-hemo" onclick="addLog('Тежка брадикардия (СЧ < 40).')">Бради < 40</button>
+                        <button class="btn-log b-drug" onclick="addLog('Приложен Ефедрин.')">Ефедрин</button>
+                        <button class="btn-log b-drug" onclick="addLog('Приложен Норадреналин.')">Норадреналин</button>
+                        <button class="btn-log b-drug" onclick="addLog('Приложен Атропин.')">Атропин</button>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 8px; margin: 15px 0;">
+                    <input type="text" id="custom-text" placeholder="Друго събитие (напр. Взет КАС)" style="flex:1; background:var(--input-bg); border:1px solid var(--border-color); color:var(--text-main); padding:10px; border-radius:6px;">
+                    <button class="btn" style="width: auto; margin:0; background:var(--text-main); color:var(--bg-color);" onclick="addCustomLog()">Добави</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 style="display: flex; justify-content: space-between; color: var(--text-muted); font-size: 0.9em; text-transform: uppercase;">
+                    Анестезиологичен Журнал
+                </h3>
+                <textarea id="log-output" class="log-textarea" placeholder="Очаква се първото събитие..."></textarea>
+                <div style="display:flex; gap:10px; margin-top:10px;">
+                    <button class="btn" style="background: var(--text-main); color: var(--bg-color); margin:0;" onclick="copyLog()">📋 Копирай</button>
+                    <button class="btn" style="background: var(--info-blue); margin:0;" onclick="downloadRecord()">💾 Запази .TXT</button>
+                </div>
+                
+                <button class="btn" style="background: var(--iso-relaxant); color: #fff; margin-top: 20px;" onclick="endCase()">🛑 Край на анестезията</button>
+                <button class="btn" style="background: #444;" onclick="hardReset()">🔄 Нулиране на таблото</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Emergency Manuals Link -->
+    <div style="text-align: center; margin-top: 20px;">
+        <a href="https://emergencymanual.stanford.edu/" target="_blank" style="color: var(--alert-red); text-decoration: none; font-weight: bold; border: 1px solid var(--alert-red); padding: 5px 10px; border-radius: 5px;">🚨 Наръчник при Спешни Състояния (Stanford)</a>
+    </div>
+
+    <script>
+        // --- GLOBAL STATE & PERSISTENCE ---
+        let gender = 'male';
+        let ibw = 0, abw = 0, ptWeight = 0;
+        
+        let nmbTotalMg = 0, nmbCalculatedIntubationMg = 0; 
+        let nmbInterval = null, nmbEndTime = 0, nmbStartTime = 0, nmbDuration = 0, nmbWarningStart = 0, nmbNotified = false;
+
+        let currentSevoBaseline = 0;
+        let sevoZones = [];
+        let ghostVal = 0;
+        let ghostInterval = null;
+
+        let propofolTotal = 0;
+        let fentanylTotal = 0;
+        let netBalance = 0;
+
+        window.onload = () => {
+            document.getElementById('log-output').value = localStorage.getItem('anesthesia_log') || "";
+            fentanylTotal = parseInt(localStorage.getItem('fentanyl_total')) || 0;
+            document.getElementById('fentanyl-total').innerText = fentanylTotal;
+            netBalance = parseInt(localStorage.getItem('net_fluid')) || 0;
+            document.getElementById('net-balance').innerText = netBalance;
+            nmbTotalMg = parseInt(localStorage.getItem('nmb_total')) || 0;
+            updateNMBSumUI();
+            propofolTotal = parseInt(localStorage.getItem('propofol_total')) || 0;
+            if(document.getElementById('propofol-total')) document.getElementById('propofol-total').innerText = propofolTotal;
+
+
+            const savedFGF = localStorage.getItem('fgf_val');
+            if (savedFGF) {
+                document.getElementById('fgf-slider').value = savedFGF;
+                updateFGF();
+            } else {
+                updateFGF();
+            }
+            
+            ghostInterval = setInterval(animateGhostSlider, 1000);
+        };
+
+        function saveState() {
+            localStorage.setItem('anesthesia_log', document.getElementById('log-output').value);
+            localStorage.setItem('fentanyl_total', fentanylTotal);
+            localStorage.setItem('net_fluid', netBalance);
+            localStorage.setItem('nmb_total', nmbTotalMg);
+            localStorage.setItem('propofol_total', propofolTotal);
+        }
+
+        // --- NAVIGATION LOGIC ---
+        function setMainTab(tabId) {
+            document.querySelectorAll('.master-nav .nav-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.container > .tab-panel').forEach(panel => panel.classList.remove('active'));
+            document.getElementById(`nav-${tabId}`).classList.add('active');
+            document.getElementById(`main-${tabId}`).classList.add('active');
+        }
+
+        function setSubTab(parent, subId) {
+            if (parent === 'induction') {
+                document.querySelectorAll('#sub-nav-dosing, #sub-nav-remi').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.induction-sub').forEach(p => p.classList.remove('active'));
+                document.getElementById(`sub-nav-${subId}`).classList.add('active');
+                document.getElementById(`sub-${subId}`).classList.add('active');
+            } else if (parent === 'log') {
+                document.querySelectorAll('#log-nav-std, #log-nav-neuro, #log-nav-lap, #log-nav-vasc, #log-nav-hemo').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.log-sub').forEach(p => p.classList.remove('active'));
+                document.getElementById(`log-nav-${subId}`).classList.add('active');
+                document.getElementById(`log-${subId}`).classList.add('active');
+            }
+        }
+
+        // --- INDUCTION CALCULATION ---
+        function setGender(g) {
+            gender = g;
+            document.getElementById('btn-male').classList.toggle('active', g === 'male');
+            document.getElementById('btn-female').classList.toggle('active', g === 'female');
+        }
+
+        function calculate() {
+            const height = parseFloat(document.getElementById('pt-height').value);
+            ptWeight = parseFloat(document.getElementById('pt-weight').value);
+            const age = parseFloat(document.getElementById('pt-age').value);
+
+            if (!height || !ptWeight || height <= 0 || ptWeight <= 0) { alert('Моля, въведете валидни стойности за ръст и тегло.'); return; }
+
+            ibw = gender === 'male' ? 50 + 0.91 * (height - 152.4) : 45.5 + 0.91 * (height - 152.4);
+            if (ibw < 0) ibw = 0;
+            abw = ibw + 0.4 * (ptWeight - ibw);
+            const dosingWeight = (ptWeight > 1.2 * ibw) ? abw : ptWeight;
+
+            document.getElementById('out-ibw').innerText = Math.round(ibw) + ' kg';
+            document.getElementById('out-abw').innerText = Math.round(abw) + ' kg';
+            nmbCalculatedIntubationMg = Math.round(ptWeight * 0.5);
+            document.getElementById('btn-intub-ml').innerText = (nmbCalculatedIntubationMg / 10).toFixed(1);
+
+            const fentMinMg = Math.round(ptWeight * 1);
+            const fentMaxMg = Math.round(ptWeight * 2);
+            const fentMinMl = (fentMinMg / 50).toFixed(1);
+            const fentMaxMl = (fentMaxMg / 50).toFixed(1);
+
+            const propDosePerKg = (age && age >= 65) ? 1.2 : 2.0; 
+            const propMg = Math.round(dosingWeight * propDosePerKg);
+            const propMl = (propMg / 10).toFixed(1);
+            const propLabel = (age && age >= 65) ? `1.0 - 1.5 mg/kg (${propMg} mg)` : `2.0 mg/kg (${propMg} mg)`;
+
+            const ketMinMg = Math.round(ptWeight * 1.0);
+            const ketMaxMg = Math.round(ptWeight * 1.5);
+            const ketMinMl = (ketMinMg / 50).toFixed(1);
+            const ketMaxMl = (ketMaxMg / 50).toFixed(1);
+
+            const html = `
+                <div class="result-section" style="border-top:none; padding-top:0;">
+                    <div class="result-title">Дихателни пътища и Вентилация</div>
+                    <div class="result-row"><div class="result-name">Размер на ЕТТ<small>${gender === 'male' ? '22-24 cm на устните' : '20-22 cm на устните'}</small></div><div class="result-val">${gender === 'male' ? '8.0' : '7.0 - 7.5'}</div></div>
+                    <div class="result-row"><div class="result-name">Дихателен обем (ДО)<small>6 - 8 mL/kg IBW</small></div><div class="result-val">${Math.round(ibw * 6 / 10)*10} - ${Math.round(ibw * 8 / 10)*10} mL</div></div>
+                </div>
+                <div class="result-section">
+                    <div class="result-title" style="color: var(--iso-hypnotic);">Дози за увод</div>
+                    <div class="result-row">
+                        <div class="result-name" style="color: var(--iso-opioid); font-weight:bold;">Фентанил <span style="font-size:0.8em; font-weight:normal; color:var(--text-main);">(50 mcg/mL)</span><small style="color: var(--text-muted); font-weight:normal;">1-2 mcg/kg (${fentMinMg}-${fentMaxMg} mcg)</small></div>
+                        <div class="result-val">${fentMinMl} - ${fentMaxMl} mL</div>
+                    </div>
+                    <div class="result-row">
+                        <div class="result-name" style="color: var(--iso-hypnotic); font-weight:bold;">Пропофол <span style="font-size:0.8em; font-weight:normal; color:var(--text-main);">(10 mg/mL)</span><small style="color: var(--text-muted); font-weight:normal;">${propLabel}</small></div>
+                        <div class="result-val">${propMl} mL</div>
+                    </div>
+                    <div class="result-row">
+                        <div class="result-name" style="color: var(--iso-hypnotic); font-weight:bold;">Кетамин <span style="font-size:0.8em; font-weight:normal; color:var(--text-main);">(50 mg/mL)</span><small style="color: var(--text-muted); font-weight:normal;">1-1.5 mg/kg (${ketMinMg}-${ketMaxMg} mg)</small></div>
+                        <div class="result-val">${ketMinMl} - ${ketMaxMl} mL</div>
+                    </div>
+                </div>
+                <div class="result-section">
+                    <div class="result-title" style="color: var(--iso-relaxant);">Миорелаксанти (10 mg/mL)</div>
+                    <div class="result-row"><div class="result-name" style="color: var(--iso-relaxant); font-weight:bold;">Атракуриум<small style="color: var(--text-muted); font-weight:normal;">0.5 mg/kg TBW</small></div><div class="result-val">${(ptWeight * 0.5 / 10).toFixed(1)} mL</div></div>
+                    <div class="result-row"><div class="result-name" style="color: var(--iso-relaxant); font-weight:bold;">Рокурониум<small style="color: var(--text-muted); font-weight:normal;">0.6 mg/kg IBW</small></div><div class="result-val">${(ibw * 0.6 / 10).toFixed(1)} mL</div></div>
+                </div>
+            `;
+            document.getElementById('induction-results').innerHTML = html;
+
+            document.getElementById('remi-placeholder').style.display = 'none';
+            document.getElementById('remi-content').style.display = 'block';
+            document.getElementById('remi-slider').max = Math.ceil(((0.30 * ibw * 60) / 50) / 5) * 5;
+            document.getElementById('remi-slider').value = ((0.15 * ibw * 60) / 50).toFixed(1);
+            updateRemi();
+        }
+
+        // --- REMI SLIDER ---
+        function updateRemi() {
+            if (ibw === 0) return;
+            const slider = document.getElementById('remi-slider');
+            const rate = parseFloat(slider.value);
+            document.getElementById('remi-ml-h').innerText = rate.toFixed(1);
+            
+            const dose = (rate * 50) / (ibw * 60);
+            document.getElementById('remi-mcg-kg-min').innerText = dose.toFixed(2);
+            
+            const zones = [
+                { limit: 0.05, label: 'Суб-Аналгезия', color: '#444' },
+                { limit: 0.10, label: 'Аналгезия', color: '#17a2b8' },
+                { limit: 0.15, label: 'Леко Поддържане', color: 'var(--alert-green)' },
+                { limit: 0.20, label: 'Стандартно Подд.', color: 'var(--iso-hypnotic)' },
+                { limit: 0.25, label: 'Дълбоко Подд.', color: 'var(--iso-relaxant)' },
+                { limit: Infinity, label: 'Силен Стимул', color: '#b52a1f' }
+            ];
+
+            let activeZone = zones[zones.length - 1];
+            for(let z of zones) { if(dose <= z.limit + 0.001) { activeZone = z; break; } }
+            
+            const badge = document.getElementById('remi-badge');
+            badge.innerText = activeZone.label;
+            badge.style.backgroundColor = activeZone.color;
+            badge.style.color = (activeZone.color === 'var(--iso-hypnotic)') ? '#000' : '#fff';
+            
+            const maxRate = parseFloat(slider.max);
+            let gradStops = [];
+            let lastPct = 0;
+            
+            for(let i=0; i<zones.length; i++) {
+                if (zones[i].limit === Infinity) { gradStops.push(`${zones[i].color} ${lastPct}% 100%`); break; }
+                const bndRate = (zones[i].limit * ibw * 60) / 50;
+                let pct = (bndRate / maxRate) * 100;
+                if(pct > 100) pct = 100;
+                
+                gradStops.push(`${zones[i].color} ${lastPct}% calc(${pct}% - 2px)`);
+                gradStops.push(`#000 calc(${pct}% - 2px) calc(${pct}% + 2px)`);
+                lastPct = pct;
+                if(pct === 100) break;
+            }
+            slider.style.background = `linear-gradient(to right, ${gradStops.join(', ')})`;
+        }
+
+        function logRemiChange() {
+            const rate = document.getElementById('remi-ml-h').innerText;
+            const dose = document.getElementById('remi-mcg-kg-min').innerText;
+            addLog(`Скоростта на Ремифентанил е променена на ${rate} mL/h (${dose} mcg/kg/min).`);
+            alert("Изпратено в Журнала!");
+        }
+
+        // --- SEVO MAC CALCULATOR ---
+        function updateFGF() {
+            const fgf = parseFloat(document.getElementById('fgf-slider').value);
+            document.getElementById('fgf-disp').innerText = fgf.toFixed(1);
+            const tauCircuit = 5.0 / fgf;
+            const tauTotal = 3.5 + tauCircuit;
+            document.getElementById('tau-disp').innerText = tauTotal.toFixed(1);
+            localStorage.setItem('fgf_val', fgf);
+        }
+
+        function calculateSevo() {
+            const ageInput = document.getElementById('pt-age').value;
+            if(!ageInput) { alert("Моля, първо въведете възрастта на пациента в раздел Увод."); return; }
+            const age = parseFloat(ageInput);
+
+            let mac = 2.0 * Math.pow(10, -0.00269 * (age - 40));
+            let band = `Възрастен (Mapleson възраст ${age})`;
+
+            currentSevoBaseline = mac;
+            document.getElementById('baseline-value').innerText = mac.toFixed(1) + ' vol%';
+            document.getElementById('band-sub').innerText = band;
+
+            let oAwake = 1.0, oUnc = 1.0, oImm = 1.0, oBar = 1.0;
+            if (document.getElementById('opioid-toggle').checked) {
+                oAwake = 0.85; 
+                oUnc = 0.85;   
+                oImm = 0.50;   
+                oBar = 0.25;   
+            }
+
+            let t = [
+                { id: 'awake', name: 'MAC-Awake',   val: mac * 0.33 * oAwake, color: '#17a2b8', desc: 'Екстубационен праг' },
+                { id: 'unc',   name: 'Unconscious', val: mac * 0.70 * oUnc,   color: 'var(--alert-green)', desc: 'Предотвратява осъзнаване' },
+                { id: 'mac1',  name: 'MAC 1',       val: mac * 1.00 * oImm,   color: 'var(--iso-hypnotic)', desc: '50% Имобилизация' },
+                { id: 'sd2',   name: '+2 SD',       val: mac * 1.20 * oImm,   color: 'var(--iso-relaxant)', desc: '95% Имобилизация' },
+                { id: 'sd3',   name: '+3 SD',       val: mac * 1.30 * oImm,   color: '#b52a1f', desc: '99.7% Имобилизация' },
+                { id: 'bar',   name: 'MAC-BAR',     val: mac * 1.45 * oBar,   color: 'var(--iso-pressor)', desc: 'Блокира адренергичния отговор' }
+            ];
+            
+            t.sort((a,b) => a.val - b.val);
+            sevoZones = t;
+
+            let listHtml = '';
+            for(let z of t) {
+                listHtml += `
+                    <div class="target" style="border-left-color: ${z.color};">
+                        <div><div style="font-weight:bold; color: var(--text-main);">${z.name}</div><div style="font-size:0.7em; color:var(--text-muted);">${z.desc}</div></div>
+                        <div class="target-value" style="color:${z.color};">${z.val.toFixed(2)}<small>vol%</small></div>
+                    </div>`;
+            }
+            document.getElementById('target-list').innerHTML = listHtml;
+            document.getElementById('sevo-results').style.display = 'block';
+
+            const slider = document.getElementById('sevo-slider');
+            const ghost = document.getElementById('sevo-ghost-slider');
+            const newMax = (t[t.length-1].val * 1.15).toFixed(1);
+            slider.max = newMax; 
+            ghost.max = newMax;
+            
+            let defaultVal = (mac * 1.00 * oImm).toFixed(1);
+            slider.value = defaultVal; 
+            ghostVal = parseFloat(defaultVal);
+            ghost.value = ghostVal;
+            
+            updateSevoSlider();
+        }
+
+        function updateSevoSlider() {
+            if (!sevoZones || sevoZones.length === 0) return;
+            const slider = document.getElementById('sevo-slider');
+            const vol = parseFloat(slider.value);
+            const maxVol = parseFloat(slider.max);
+            
+            document.getElementById('sevo-vol-disp').innerText = vol.toFixed(1);
+            document.getElementById('sevo-mac-disp').innerText = (vol / currentSevoBaseline).toFixed(2);
+
+            let active = sevoZones[sevoZones.length - 1];
+            for (let i = 0; i < sevoZones.length; i++) {
+                if (vol <= sevoZones[i].val + 0.05) { active = sevoZones[i]; break; }
+            }
+
+            const badge = document.getElementById('sevo-badge');
+            badge.innerText = active.name;
+            badge.style.backgroundColor = active.color;
+            badge.style.color = (active.color === 'var(--iso-hypnotic)') ? '#000' : '#fff';
+
+            let gradStops = [];
+            let lastPct = 0;
+
+            for(let i=0; i<sevoZones.length; i++) {
+                let pct = (sevoZones[i].val / maxVol) * 100;
+                if(pct > 100) pct = 100;
+                
+                gradStops.push(`${sevoZones[i].color} ${lastPct}% calc(${pct}% - 2px)`);
+                gradStops.push(`#000 calc(${pct}% - 2px) calc(${pct}% + 2px)`);
+                lastPct = pct;
+                if(pct === 100) break;
+            }
+            if(lastPct < 100) gradStops.push(`#444 ${lastPct}% 100%`);
+            
+            const bgString = `linear-gradient(to right, ${gradStops.join(', ')})`;
+            document.getElementById('sevo-track-bg').style.background = bgString;
+
+            const etLabel = document.getElementById('label-et');
+            let pctActive = (vol / maxVol) * 100;
+            etLabel.style.left = `calc(${pctActive}% + ${22 - (pctActive * 0.44)}px)`;
+        }
+
+        function animateGhostSlider() {
+            if(!sevoZones || sevoZones.length === 0) return;
+            const active = parseFloat(document.getElementById('sevo-slider').value);
+            const ghost = document.getElementById('sevo-ghost-slider');
+            const maxVol = parseFloat(ghost.max);
+            
+            const fgf = parseFloat(document.getElementById('fgf-slider').value) || 1.5;
+            const tauTotal = 3.5 + (5.0 / fgf); 
+            const k = 1 - Math.exp(-1 / (60 * tauTotal)); 
+            
+            if(Math.abs(active - ghostVal) > 0.005) {
+                ghostVal += (active - ghostVal) * k;
+                ghost.value = ghostVal;
+                
+                const brainLabel = document.getElementById('label-brain');
+                let pctGhost = (ghostVal / maxVol) * 100;
+                brainLabel.style.left = `calc(${pctGhost}% + ${22 - (pctGhost * 0.44)}px)`;
+            }
+        }
+
+        function logSevoChange() {
+            const vol = document.getElementById('sevo-vol-disp').innerText;
+            const fmac = document.getElementById('sevo-mac-disp').innerText;
+            addLog(`EtSevo цел променена на ${vol} vol% (fMAC: ${fmac}).`);
+            alert("Изпратено в Журнала!");
+        }
+
+        // --- NMB TRACKER ---
+        function updateNMBSumUI() {
+            document.getElementById('nmb-total-mg').innerText = nmbTotalMg;
+            document.getElementById('nmb-total-ml').innerText = (nmbTotalMg / 10).toFixed(1);
+            saveState();
+        }
+
+        function startNMB(type) {
+            if (ptWeight === 0) { alert("Моля, първо изчислете параметрите на пациента в раздел Увод."); return; }
+            if ("Notification" in window && Notification.permission !== "granted") Notification.requestPermission(); 
+            clearInterval(nmbInterval);
+            nmbNotified = false;
+            
+            if (type === 'intubation') {
+                if (nmbTotalMg === 0) nmbTotalMg += nmbCalculatedIntubationMg; 
+                nmbDuration = 35 * 60; nmbWarningStart = 33 * 60;
+                addLog(`Приложена е доза НМБ за интубация.`);
+            } else {
+                nmbTotalMg += 10; 
+                let customMins = parseFloat(document.getElementById('nmb-custom-mins').value) || 15;
+                nmbDuration = customMins * 60; 
+                nmbWarningStart = (customMins - 2) * 60;
+                addLog(`Приложена е поддържаща доза НМБ (10 mg). (Целеви интервал: ${customMins} мин).`);
+            }
+            updateNMBSumUI();
+            
+            nmbStartTime = Date.now();
+            nmbEndTime = nmbStartTime + (nmbDuration * 1000);
+            
+            nmbInterval = setInterval(() => {
+                let timeLeft = Math.ceil((nmbEndTime - Date.now()) / 1000);
+                let elapsedSecs = Math.floor((Date.now() - nmbStartTime) / 1000);
+                if(timeLeft <= 0) timeLeft = 0;
+                updateNMBTimerUI(timeLeft, elapsedSecs);
+            }, 1000);
+            updateNMBTimerUI(nmbDuration, 0);
+        }
+
+        function stopNMB() {
+            clearInterval(nmbInterval);
+            const bar = document.getElementById('nmb-bar');
+            bar.style.width = '0%';
+            bar.classList.remove('nmb-pulse');
+            document.getElementById('nmb-clock').innerText = "--:--";
+            if(document.getElementById('nmb-elapsed')) document.getElementById('nmb-elapsed').innerText = "--:--";
+            document.getElementById('nmb-clock').classList.remove('flashing');
+            document.getElementById('nmb-instruction').innerText = "Фаза на събуждане / Декураризация.";
+            addLog("Следенето на НМБ е спряно (Събуждане/Декураризация).");
+        }
+
+        function updateNMBTimerUI(timeLeft, elapsedSecs = 0) {
+            const bar = document.getElementById('nmb-bar');
+            const text = document.getElementById('nmb-clock');
+            const elapsedText = document.getElementById('nmb-elapsed');
+            const inst = document.getElementById('nmb-instruction');
+            let elapsed = nmbDuration - timeLeft; 
+            
+            bar.style.width = ((timeLeft / nmbDuration) * 100) + '%';
+            
+            let mins = Math.floor(timeLeft / 60); let secs = timeLeft % 60;
+            text.innerText = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+            
+            if (elapsedText) {
+                let eMins = Math.floor(elapsedSecs / 60); let eSecs = elapsedSecs % 60;
+                elapsedText.innerText = `${eMins}:${eSecs < 10 ? '0' : ''}${eSecs}`;
+            }
+            
+            if (elapsed < nmbWarningStart) {
+                bar.style.backgroundColor = 'var(--alert-green)'; 
+                bar.classList.remove('nmb-pulse');
+                text.classList.remove('flashing'); 
+                inst.innerText = "Пациентът е релаксиран. Стабилен.";
+            } else if (elapsed >= nmbWarningStart && timeLeft > 0) {
+                bar.style.backgroundColor = 'var(--warning-yellow)'; 
+                bar.classList.add('nmb-pulse'); 
+                text.classList.remove('flashing'); 
+                inst.innerText = "Внимавай за спад в ДО или курареви процепи.";
+            } else {
+                bar.style.backgroundColor = 'var(--iso-relaxant)'; 
+                bar.classList.remove('nmb-pulse');
+                text.classList.add('flashing'); 
+                inst.innerText = "ВРЕМЕ ЗА ДОЗА. (Пациентът може да се раздвижи)";
+                if (!nmbNotified && "Notification" in window && Notification.permission === "granted") {
+                    new Notification("НМБ Доза", { body: "Пациентът може да започне да се движи." });
+                    nmbNotified = true;
+                }
+            }
+        }
+
+        // --- FLUID BALANCE TRACKER ---
+        function calcABL() {
+            const start = parseFloat(document.getElementById('hgb-start').value);
+            const target = parseFloat(document.getElementById('hgb-target').value);
+            if(isNaN(start) || isNaN(target) || ptWeight === 0) { alert("Въведете тегло (Увод), начален Хгб и целеви Хгб."); return; }
+            
+            const ebv = (gender === 'male' ? 75 : 65) * ptWeight;
+            const abl = (ebv * (start - target)) / start;
+            document.getElementById('abl-result').innerText = `Допустима кръвозагуба: ${Math.round(abl)} mL`;
+        }
+
+        function updateFluids(amount, isBlood, isOutput) {
+            netBalance += (isOutput ? -amount : amount);
+            document.getElementById('net-balance').innerText = netBalance;
+            saveState();
+            addLog(`${isOutput ? 'Изход' : 'Вход'}: ${amount} mL ${isBlood ? '(Кръв)' : (isOutput ? '(Урина/Загуби)' : '(Кристалоиди/Банка)')}`);
+        }
+
+        function calcMaintenance() {
+            if (ptWeight === 0) { alert("Моля, първо изчислете теглото в раздел Увод."); return; }
+            const npoInput = document.getElementById('npo-hours').value;
+            const npoHours = parseFloat(npoInput) || 0;
+
+            let maint = 0;
+            if (ptWeight <= 10) {
+                maint = ptWeight * 4;
+            } else if (ptWeight <= 20) {
+                maint = 40 + ((ptWeight - 10) * 2);
+            } else {
+                maint = 60 + ((ptWeight - 20) * 1);
+            }
+
+            const deficit = maint * npoHours;
+
+            document.getElementById('maint-rate').innerText = Math.round(maint);
+            document.getElementById('maint-deficit').innerText = Math.round(deficit);
+
+            const hr1 = maint + (deficit * 0.5);
+            const hr2 = maint + (deficit * 0.25);
+            const hr3 = maint + (deficit * 0.25);
+
+            document.getElementById('plan-hr1').innerText = Math.round(hr1);
+            document.getElementById('plan-hr2').innerText = Math.round(hr2);
+            document.getElementById('plan-hr3').innerText = Math.round(hr3);
+
+            document.getElementById('maint-result').style.display = 'block';
+        }
+
+        function logFluidPlan() {
+            const maint = document.getElementById('maint-rate').innerText;
+            const hr1 = document.getElementById('plan-hr1').innerText;
+            const hr2 = document.getElementById('plan-hr2').innerText;
+            const hr3 = document.getElementById('plan-hr3').innerText;
+            
+            addLog(`План за течности: Поддържаща ${maint} mL/h. Цели по часове -> 1-ви час: ${hr1}mL | 2-ри час: ${hr2}mL | 3-ти час: ${hr3}mL.`);
+            alert("Планът за течности е изпратен в Журнала!");
+        }
+
+        // --- EVENT LOGGER & RESET ---
+        function getTime() { const now = new Date(); return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`; }
+        
+        function addLog(text) { 
+            const ta = document.getElementById('log-output'); 
+            ta.value += `[${getTime()}] ${text}\n`; 
+            ta.scrollTop = ta.scrollHeight; 
+            saveState();
+        }
+        
+        function addFentanyl(dose) {
+            fentanylTotal += dose;
+            document.getElementById('fentanyl-total').innerText = fentanylTotal;
+            saveState();
+            addLog(`Фентанил ${dose}mcg приложен.`);
+        }
+
+        function addCustomLog() { const input = document.getElementById('custom-text'); if (input.value.trim() !== "") { addLog(input.value.trim()); input.value = ""; } }
+        document.getElementById('custom-text').addEventListener('keypress', e => { if (e.key === 'Enter') addCustomLog(); });
+        function promptHeparin() { let units = prompt("Въведете доза хепарин (Единици):", "5000"); if (units) addLog(`Хепарин ${units} единици приложен.`); }
+        function copyLog() { const ta = document.getElementById('log-output'); if(ta.value.trim() === "") return; ta.select(); document.execCommand('copy'); window.getSelection().removeAllRanges(); alert("Журналът е копиран!"); }
+        
+        function downloadRecord() {
+            const text = document.getElementById('log-output').value;
+            if(!text) return;
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(new Blob([text], {type: 'text/plain'}));
+            a.download = `Anesthesia_Record_${getTime().replace(':','')}.txt`;
+            a.click();
+        }
+
+        function addPropofol(dose) {
+            propofolTotal += dose;
+            document.getElementById('propofol-total').innerText = propofolTotal;
+            saveState();
+            addLog(`Пропофол ${dose}mg приложен (Общо: ${propofolTotal}mg).`);
+        }
+
+        function checkAnalgesia() {
+            const logLines = document.getElementById('log-output').value.split('\n');
+            let analginTime = null;
+            let paraTime = null;
+            let ketoTime = null;
+
+            for (let i = logLines.length - 1; i >= 0; i--) {
+                const line = logLines[i];
+                const match = line.match(/\[(.*?)\]/);
+                const time = match ? match[1] : "Неизвестно време";
+
+                if (!analginTime && line.includes('Аналгин')) analginTime = time;
+                if (!paraTime && line.includes('Парацетамол')) paraTime = time;
+                if (!ketoTime && line.includes('Кетопрофен')) ketoTime = time;
+            }
+
+            addLog(`--- ПРОВЕРКА АНАЛГЕЗИЯ ---`);
+            
+            if (analginTime) { addLog(`✅ Аналгин приложен в [${analginTime}]`); } else { addLog(`❌ Аналгин НЕ Е приложен!`); }
+            if (paraTime) { addLog(`✅ Парацетамол приложен в [${paraTime}]`); } else { addLog(`❌ Парацетамол НЕ Е приложен!`); }
+            if (ketoTime) { addLog(`✅ Кетопрофен приложен в [${ketoTime}]`); } else { addLog(`❌ Кетопрофен НЕ Е приложен!`); }
+            
+            if (!analginTime || !paraTime || !ketoTime) {
+                alert("⚠️ ВНИМАНИЕ: Мултимодалната аналгезия е непълна! Проверете журнала за липсващи медикаменти.");
+            } else {
+                alert("✅ Всички 3 медикамента за мултимодална аналгезия са приложени.");
+            }
+        }
+
+        function generateSummary() {
+            addLog(`--- ОБОБЩЕНИЕ ---`);
+            addLog(`Фентанил: ${fentanylTotal} mcg`);
+            addLog(`Пропофол: ${propofolTotal} mg`);
+            addLog(`НМБ: ${nmbTotalMg} mg`);
+            addLog(`Течности (Нетен баланс): ${netBalance} mL`);
+            alert("Обобщението е добавено в Журнала.");
+        }
+
+        function endCase() {
+            generateSummary();
+            alert("Обобщението за случая е записано. Уверете се, че сте запазили .TXT файла преди нулиране.");
+        }
+
+        function hardReset() {
+            if(confirm("Сигурни ли сте? Това ще изтрие ВСИЧКИ данни за този пациент.")) {
+                localStorage.clear();
+                location.reload();
+            }
+        }
+    </script>
+</body>
+</html>
