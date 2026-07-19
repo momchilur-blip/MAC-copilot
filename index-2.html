@@ -308,6 +308,28 @@
                     <button class="btn" style="background: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-main); grid-column: span 2;" onclick="calcABL()">Calculate ABL</button>
                 </div>
                 <div id="abl-result" style="text-align:center; margin:10px 0; color:var(--log-hemo); font-weight:bold;">ABL: -- mL</div>
+                <!-- NEW: Maintenance and NPO Calculator -->
+                <div class="card" style="margin-top: 15px;">
+                    <h3 style="text-align: center; color: var(--info-blue);">Maintenance & NPO Deficit</h3>
+                    
+                    <div class="input-grid" style="grid-template-columns: 1fr 1fr;">
+                        <div class="field"><label>NPO Hours</label><input type="number" id="npo-hours" placeholder="e.g. 8"></div>
+                        <button class="btn" style="background: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-main); height: 100%; margin-bottom: 0;" onclick="calcMaintenance()">Calculate Plan</button>
+                    </div>
+
+                    <div id="maint-result" style="display:none; margin-top: 15px;">
+                        <div class="result-row"><div class="result-name">Maintenance Rate</div><div class="result-val"><span id="maint-rate" style="color: var(--info-blue);">0</span> mL/h</div></div>
+                        <div class="result-row"><div class="result-name">Total NPO Deficit</div><div class="result-val"><span id="maint-deficit" style="color: var(--warning-yellow);">0</span> mL</div></div>
+                        
+                        <div class="section-label" style="margin-top: 15px;">Replenishment Plan (Maint + Deficit)</div>
+                        <div class="result-row"><div class="result-name" style="color:var(--alert-green);">1st Hour <small>Maint + 50% Deficit</small></div><div class="result-val"><span id="plan-hr1">0</span> mL</div></div>
+                        <div class="result-row"><div class="result-name" style="color:var(--warning-yellow);">2nd Hour <small>Maint + 25% Deficit</small></div><div class="result-val"><span id="plan-hr2">0</span> mL</div></div>
+                        <div class="result-row"><div class="result-name" style="color:var(--warning-yellow);">3rd Hour <small>Maint + 25% Deficit</small></div><div class="result-val"><span id="plan-hr3">0</span> mL</div></div>
+                        
+                        <button class="btn" style="background: var(--input-bg); color: var(--text-main); border: 1px solid var(--border-color); margin-top: 15px; margin-bottom: 0; font-size: 0.9em;" onclick="logFluidPlan()">📝 Send Plan to Log</button>
+                    </div>
+                </div>
+                <!-- END NEW -->
 
                 <div class="nmb-sum-box" style="margin-top:20px;">
                     <span style="color: var(--text-muted); font-size: 0.85em; text-transform: uppercase;">Net Fluid Balance</span><br>
@@ -853,6 +875,50 @@
             saveState();
             addLog(`${isOutput ? 'Output' : 'Input'}: ${amount} mL ${isBlood ? '(Blood)' : (isOutput ? '(Urine/Loss)' : '(Crystalloid/Drip)')}`);
         }
+                function calcMaintenance() {
+            if (ptWeight === 0) { alert("Please calculate Patient Weight in the Induction tab first."); return; }
+            const npoInput = document.getElementById('npo-hours').value;
+            const npoHours = parseFloat(npoInput) || 0;
+
+            // Holliday-Segar 4-2-1 Rule Calculation
+            let maint = 0;
+            if (ptWeight <= 10) {
+                maint = ptWeight * 4;
+            } else if (ptWeight <= 20) {
+                maint = 40 + ((ptWeight - 10) * 2);
+            } else {
+                maint = 60 + ((ptWeight - 20) * 1);
+            }
+
+            const deficit = maint * npoHours;
+
+            // Update UI text
+            document.getElementById('maint-rate').innerText = Math.round(maint);
+            document.getElementById('maint-deficit').innerText = Math.round(deficit);
+
+            // Replenishment Plan: 50% in 1st hr, 25% in 2nd hr, 25% in 3rd hr
+            const hr1 = maint + (deficit * 0.5);
+            const hr2 = maint + (deficit * 0.25);
+            const hr3 = maint + (deficit * 0.25);
+
+            document.getElementById('plan-hr1').innerText = Math.round(hr1);
+            document.getElementById('plan-hr2').innerText = Math.round(hr2);
+            document.getElementById('plan-hr3').innerText = Math.round(hr3);
+
+            // Show the result block
+            document.getElementById('maint-result').style.display = 'block';
+        }
+
+        function logFluidPlan() {
+            const maint = document.getElementById('maint-rate').innerText;
+            const hr1 = document.getElementById('plan-hr1').innerText;
+            const hr2 = document.getElementById('plan-hr2').innerText;
+            const hr3 = document.getElementById('plan-hr3').innerText;
+            
+            addLog(`Fluid Goal Plan: Maint ${maint} mL/h. Total Hourly Targets -> 1st hr: ${hr1}mL | 2nd hr: ${hr2}mL | 3rd hr: ${hr3}mL.`);
+            alert("Fluid Plan sent to Event Log!");
+        }
+
 
         // --- EVENT LOGGER & RESET ---
         function getTime() { const now = new Date(); return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`; }
