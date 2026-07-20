@@ -288,10 +288,29 @@
                 </div>
 
                 <button class="btn" style="background: var(--iso-relaxant); color: #fff;" onclick="startNMB('intubation')">💉 Intubating Dose (<span id="btn-intub-ml">?</span> mL)</button>
-                <button class="btn" style="background: var(--border-color); border: 1px solid var(--iso-relaxant); color: var(--text-main);" onclick="startNMB('topup')">+ 1 mL Top-Up (10 mg)</button>
+                                <!-- ADAPTIVE TOP-UP BUTTON -->
+                <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+                    <button class="btn" style="flex: 1; margin-bottom: 0; background: var(--border-color); border: 1px solid var(--iso-relaxant); color: var(--text-main);" onclick="startNMB('topup')">+ 1 mL Top-Up (10 mg)</button>
+                    <div style="display: flex; align-items: center; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 0 10px;">
+                        <input type="number" id="nmb-custom-mins" value="15" style="width: 45px; background: transparent; border: none; color: var(--text-main); font-size: 1.1em; font-weight: bold; text-align: right; outline: none;">
+                        <span style="color: var(--text-muted); font-size: 0.85em; margin-left: 5px;">min</span>
+                    </div>
+                </div>
                 
+                <!-- DUAL CLOCK DISPLAY -->
                 <div class="nmb-bar-bg"><div class="nmb-bar-fill" id="nmb-bar"></div></div>
-                <div class="nmb-timer-text" id="nmb-clock">00:00</div>
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                    <div style="text-align: left;">
+                        <div style="font-size: 0.7em; color: var(--text-muted); text-transform: uppercase; font-weight: bold;">Predicted Time Left</div>
+                        <div class="nmb-timer-text" id="nmb-clock" style="text-align: left;">00:00</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 0.7em; color: var(--text-muted); text-transform: uppercase; font-weight: bold;">Time Since Dose</div>
+                        <div class="nmb-timer-text" id="nmb-elapsed" style="text-align: right; color: var(--info-blue);">00:00</div>
+                    </div>
+                </div>
+                
                 <div style="text-align: center; font-size: 0.9em; color: var(--text-muted); margin-bottom: 20px;" id="nmb-instruction">Awaiting initial dose...</div>
 
                 <button class="btn" style="background: transparent; border: 2px solid var(--alert-green); color: var(--alert-green);" onclick="stopNMB()">⏹ Emergence / Reversal</button>
@@ -453,7 +472,8 @@
         let ibw = 0, abw = 0, ptWeight = 0;
         
         let nmbTotalMg = 0, nmbCalculatedIntubationMg = 0; 
-        let nmbInterval = null, nmbEndTime = 0, nmbDuration = 0, nmbWarningStart = 0, nmbNotified = false;
+                let nmbInterval = null, nmbEndTime = 0, nmbStartTime = 0, nmbDuration = 0, nmbWarningStart = 0, nmbNotified = false;
+
 
         let currentSevoBaseline = 0;
         let sevoZones = [];
@@ -789,7 +809,7 @@
             saveState();
         }
 
-        function startNMB(type) {
+                function startNMB(type) {
             if (ptWeight === 0) { alert("Please calculate Patient Parameters in the Induction tab first."); return; }
             if ("Notification" in window && Notification.permission !== "granted") Notification.requestPermission(); 
             clearInterval(nmbInterval);
@@ -800,18 +820,25 @@
                 nmbDuration = 35 * 60; nmbWarningStart = 33 * 60;
                 addLog(`Intubation NMB dose administered.`);
             } else {
-                nmbTotalMg += 10; nmbDuration = 15 * 60; nmbWarningStart = 13 * 60;
-                addLog(`NMB Top-Up (10 mg) administered.`);
+                nmbTotalMg += 10; 
+                // Read the custom input box, default to 15 if empty
+                let customMins = parseFloat(document.getElementById('nmb-custom-mins').value) || 15;
+                nmbDuration = customMins * 60; 
+                nmbWarningStart = (customMins - 2) * 60;
+                addLog(`NMB Top-Up (10 mg) administered (Target Interval: ${customMins} min).`);
             }
             updateNMBSumUI();
             
-            nmbEndTime = Date.now() + (nmbDuration * 1000);
+            nmbStartTime = Date.now();
+            nmbEndTime = nmbStartTime + (nmbDuration * 1000);
+            
             nmbInterval = setInterval(() => {
                 let timeLeft = Math.ceil((nmbEndTime - Date.now()) / 1000);
+                let elapsedSecs = Math.floor((Date.now() - nmbStartTime) / 1000);
                 if(timeLeft <= 0) timeLeft = 0;
-                updateNMBTimerUI(timeLeft);
+                updateNMBTimerUI(timeLeft, elapsedSecs);
             }, 1000);
-            updateNMBTimerUI(nmbDuration);
+            updateNMBTimerUI(nmbDuration, 0);
         }
 
         function stopNMB() {
@@ -820,21 +847,32 @@
             bar.style.width = '0%';
             bar.classList.remove('nmb-pulse');
             document.getElementById('nmb-clock').innerText = "--:--";
+            if(document.getElementById('nmb-elapsed')) document.getElementById('nmb-elapsed').innerText = "--:--";
             document.getElementById('nmb-clock').classList.remove('flashing');
             document.getElementById('nmb-instruction').innerText = "Reversal / Emergence phase active.";
             addLog("NMB dosing stopped (Emergence/Reversal).");
         }
 
-        function updateNMBTimerUI(timeLeft) {
+        function updateNMBTimerUI(timeLeft, elapsedSecs = 0) {
             const bar = document.getElementById('nmb-bar');
             const text = document.getElementById('nmb-clock');
+            const elapsedText = document.getElementById('nmb-elapsed');
             const inst = document.getElementById('nmb-instruction');
-            let elapsed = nmbDuration - timeLeft;
+            let elapsed = nmbDuration - timeLeft; 
+            
             bar.style.width = ((timeLeft / nmbDuration) * 100) + '%';
             
+            // Format Countdown
             let mins = Math.floor(timeLeft / 60); let secs = timeLeft % 60;
             text.innerText = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
             
+            // Format "Time Since Dose" Stopwatch
+            if (elapsedText) {
+                let eMins = Math.floor(elapsedSecs / 60); let eSecs = elapsedSecs % 60;
+                elapsedText.innerText = `${eMins}:${eSecs < 10 ? '0' : ''}${eSecs}`;
+            }
+            
+            // Alert color logic remains exactly the same
             if (elapsed < nmbWarningStart) {
                 bar.style.backgroundColor = 'var(--alert-green)'; 
                 bar.classList.remove('nmb-pulse');
@@ -856,6 +894,7 @@
                 }
             }
         }
+
 
         // --- FLUID BALANCE TRACKER ---
         function calcABL() {
