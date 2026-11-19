@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Одит на предаванията при неврохирургия — Анестезиология и ОИЛ</title>
+<style>
+  :root {
+    --bg-page: #ECEFF3;
+    --bg-light: #FFFFFF;
+    --bg-dark: #18212F;
+    --ink: #18212F;
+    --ink-muted: #6B7383;
+    --mid-grey: #C3C8D0;
+    --light-grey: #E4E7EC;
+    --focus-blue: #1F6FB2;
+    --accent-amber: #D99A00;
+    --good-green: #2E8540;
+    --bad-red: #C0392B;
+    --light-red: #F8E4E1;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html, body {
+    width: 100%;
+    height: 100%;
+    background: var(--bg-page);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--ink);
+    overflow: hidden;
+    user-select: none;
+  }
+
+  .viewport {
+    position: fixed;
+    inset: 0 0 44px 0;
+    overflow: hidden;
+  }
+
+  .stage {
+    width: 1920px;
+    height: 1080px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    background: var(--bg-light);
+    transform-origin: 0 0;
+    box-shadow: 0 20px 60px rgba(24, 33, 47, 0.14);
+    overflow: hidden;
+  }
+
+  .scene {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+    background: var(--bg-light);
+  }
+
+  .scene.on {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .scene.dark {
+    background: var(--bg-dark);
+    color: #FFFFFF;
+  }
+
+  [data-r] {
+    transition: opacity 0.55s ease, transform 0.55s ease;
+  }
+
+  [data-r]:not(.on) {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  svg [data-r]:not(.on) {
+    transform: none;
+  }
+
+  path.draw {
+    stroke-dasharray: var(--len, 1200);
+    stroke-dashoffset: var(--len, 1200);
+    transition: stroke-dashoffset 1.6s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  [data-r].on path.draw {
+    stroke-dashoffset: 0;
+  }
+
+  /* Header layout for content scenes */
+  .header {
+    position: absolute;
+    top: 64px;
+    left: 96px;
+    right: 96px;
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: 18px;
+  }
+
+  .kicker {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--focus-blue);
+    margin-bottom: 8px;
+  }
+
+  .claim-title {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 44px;
+    font-weight: 700;
+    line-height: 1.15;
+    color: var(--ink);
+    margin-bottom: 8px;
+  }
+
+  .subtitle {
+    font-size: 21px;
+    line-height: 1.35;
+    color: var(--ink-muted);
+  }
+
+  /* Chart area & narration column */
+  .chart-area {
+    position: absolute;
+    left: 96px;
+    top: 318px;
+    width: 1180px;
+    height: 560px;
+  }
+
+  .narration {
+    position: absolute;
+    left: 1316px;
+    top: 318px;
+    width: 508px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .narration p {
+    font-size: 22px;
+    line-height: 1.45;
+    color: var(--ink);
+    transition: opacity 0.4s ease, color 0.4s ease;
+  }
+
+  .narration p.dim {
+    opacity: 0.32;
+  }
+
+  /* Dark scenes: Title, Dividers, Decision */
+  .dark-inner {
+    position: absolute;
+    inset: 0;
+    padding: 96px 120px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .dark-kicker {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent-amber);
+    margin-bottom: 24px;
+  }
+
+  .dark-title {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 62px;
+    font-weight: 700;
+    line-height: 1.16;
+    color: #FFFFFF;
+    max-width: 1480px;
+    margin-bottom: 28px;
+  }
+
+  .dark-sub {
+    font-size: 26px;
+    line-height: 1.45;
+    color: #C3C8D0;
+    max-width: 1320px;
+  }
+
+  .decision-box {
+    margin-top: 44px;
+    padding: 32px 36px;
+    border-left: 6px solid var(--accent-amber);
+    background: rgba(255, 255, 255, 0.05);
+    max-width: 1420px;
+  }
+
+  .decision-primary {
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1.35;
+    color: #FFFFFF;
+    margin-bottom: 14px;
+  }
+
+  .decision-alt {
+    font-size: 24px;
+    line-height: 1.4;
+    color: #E4E7EC;
+  }
+
+  /* Scene 2: Summary tiles */
+  .tiles-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 28px;
+    margin-top: 12px;
+  }
+
+  .tile {
+    border: 1.5px solid var(--light-grey);
+    border-top: 6px solid var(--mid-grey);
+    padding: 34px 28px;
+    background: #FAFBFD;
+  }
+
+  .tile.bad {
+    border-top-color: var(--bad-red);
+  }
+
+  .tile.focus {
+    border-top-color: var(--focus-blue);
+  }
+
+  .tile.neutral {
+    border-top-color: var(--ink);
+  }
+
+  .tile-num {
+    font-size: 64px;
+    font-weight: 800;
+    line-height: 1.05;
+    margin-bottom: 14px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .tile.bad .tile-num { color: var(--bad-red); }
+  .tile.focus .tile-num { color: var(--focus-blue); }
+  .tile.neutral .tile-num { color: var(--ink); }
+
+  .tile-ctx {
+    font-size: 20px;
+    line-height: 1.4;
+    color: var(--ink-muted);
+  }
+
+  .so-what-banner {
+    margin-top: 42px;
+    padding: 24px 32px;
+    background: #F4F7FA;
+    border-left: 5px solid var(--focus-blue);
+    font-size: 25px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  /* Scene 4: Big Victory Number */
+  .big-victory-wrap {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    gap: 64px;
+  }
+
+  .big-num-box {
+    width: 480px;
+    padding: 48px;
+    border: 2px solid var(--light-grey);
+    border-top: 8px solid var(--good-green);
+    background: #FAFDFB;
+  }
+
+  .big-num {
+    font-size: 112px;
+    font-weight: 800;
+    color: var(--good-green);
+    line-height: 1;
+    margin-bottom: 18px;
+  }
+
+  .big-num-label {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--ink);
+    line-height: 1.35;
+  }
+
+  .ctx-stack {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .ctx-card {
+    padding: 22px 28px;
+    background: #F7F9FC;
+    border-left: 4px solid var(--mid-grey);
+  }
+
+  .ctx-card-val {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 4px;
+  }
+
+  .ctx-card-desc {
+    font-size: 20px;
+    color: var(--ink-muted);
+  }
+
+  /* Bar state transitions for Scene 6 and Scene 7 */
+  .bar-rect {
+    transition: fill 0.45s ease, opacity 0.45s ease;
+  }
+
+  .bar-label {
+    transition: fill 0.45s ease, font-weight 0.45s ease;
+  }
+
+  .scene.recolored-focus .bar-rect.focus-item {
+    fill: var(--focus-blue);
+  }
+
+  .scene.recolored-focus .bar-label.focus-item {
+    fill: var(--focus-blue);
+    font-weight: 700;
+  }
+
+  .scene.recolored-target .bar-rect.hit-target {
+    fill: var(--good-green);
+  }
+
+  .scene.recolored-target .bar-rect.miss-target {
+    fill: var(--bad-red);
+  }
+
+  /* Bottom bar: progress & counter */
+  .hud {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 44px;
+    padding: 0 96px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 15px;
+    color: var(--ink-muted);
+    background: rgba(255, 255, 255, 0.92);
+    border-top: 1px solid var(--light-grey);
+    z-index: 20;
+  }
+
+  .scene.dark ~ .hud {
+    background: rgba(24, 33, 47, 0.94);
+    color: #C3C8D0;
+    border-top-color: rgba(255, 255, 255, 0.12);
+  }
+
+  .progress-track {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 4px;
+    background: rgba(107, 115, 131, 0.2);
+    z-index: 25;
+  }
+
+  .progress-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--focus-blue);
+    transition: width 0.25s ease;
+  }
+
+  .hud-controls {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+  }
+
+  .hud-btn {
+    background: none;
+    border: 1px solid currentColor;
+    color: inherit;
+    padding: 3px 10px;
+    font-size: 13px;
+    border-radius: 3px;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+<div class="viewport">
+  <div class="stage" id="stage">
+
+    <!-- SCENE 1: TITLE (2 beats: 0..1) -->
+    <section class="scene dark" data-len="2">
+      <div class="dark-inner">
+        <div class="dark-kicker" data-r="0">Анестезиология и ОИЛ · Упражнение с данни от одит</div>
+        <h1 class="dark-title" data-r="0">Половината от предаванията пропускат плана и очакваните изследвания</h1>
+        <p class="dark-sub" data-r="1">10 примерни неврохирургични случая (1–8 декември 2026 г.) в общ екип за анестезия и ОИЛ без когнитивна помощ — натиснете интервал или кликнете за преглед на ключовите числа.</p>
+      </div>
+    </section>
+
+    <!-- SCENE 2: SUMMARY IN NUMBERS (5 beats: 0..4) -->
+    <section class="scene" data-len="5">
+      <div class="header">
+        <div class="kicker" data-r="0">Обобщение в числа</div>
+        <h2 class="claim-title" data-r="0">Рутинни детайли при предаване отпадат дори в извадка от 10 случая</h2>
+        <p class="subtitle" data-r="0">Ключови показатели от примерния одит на предаванията при неврохирургични пациенти, 1–8 декември 2026 г.</p>
+      </div>
+      <div class="chart-area">
+        <div class="tiles-grid">
+          <div class="tile bad" data-r="1">
+            <div class="tile-num" data-target="5" data-suffix="/10">5/10</div>
+            <div class="tile-ctx">пропускат следоперативния план и очакваните изследвания (Item 8)</div>
+          </div>
+          <div class="tile bad" data-r="2">
+            <div class="tile-num" data-target="4" data-suffix="/10">4/10</div>
+            <div class="tile-ctx">пропускат баланса на течностите (Item 6 е покрит в 6/10 случая)</div>
+          </div>
+          <div class="tile focus" data-r="3">
+            <div class="tile-num" data-target="5.8" data-decimals="1" data-suffix="/8">5.8/8</div>
+            <div class="tile-ctx">средно покрити елемента на случай (медиана 6; само 1/10 е 8/8)</div>
+          </div>
+          <div class="tile neutral" data-r="4">
+            <div class="tile-num" data-target="0">0</div>
+            <div class="tile-ctx">въведени когнитивни помощни средства за предаване в отделението</div>
+          </div>
+        </div>
+        <div class="so-what-banner" data-r="4">
+          Извод: Първо да видим какво вече се спазва надеждно, преди да разгледаме най-големите пропуски.
+        </div>
+      </div>
+      <div class="narration">
+        <p data-r="0">Виждате четирите опорни числа от десетте примерни случая преди да навлезем в отделните елементи.</p>
+        <p data-r="1">Планът и очакваните изследвания отпадат в пет от десет предавания — най-честият пропуск в таблицата.</p>
+        <p data-r="2">Балансът на течностите липсва в четири от десет случая, което е критично при неврохирургични пациенти.</p>
+        <p data-r="3">Средното ниво е 5.8 от 8 елемента, а само едно предаване достига пълно покритие от 8/8.</p>
+        <p data-r="4">При нула когнитивни помощни средства следващата част показва кои базови стъпки вече са стабилни.</p>
+      </div>
+    </section>
+
+    <!-- SCENE 3: PART 1 DIVIDER (1 beat: 0..0) -->
+    <section class="scene dark" data-len="1">
+      <div class="dark-inner">
+        <div class="dark-kicker" data-r="0">Част 1 · Какво работи добре</div>
+        <h2 class="dark-title" data-r="0">Идентификацията на пациента и операцията присъства във всяко предаване</h2>
+        <p class="dark-sub" data-r="0">Първо проверяваме здравата основа в примерните данни, преди да оценим къде възниква риск.</p>
+      </div>
+    </section>
+
+    <!-- SCENE 4: VICTORY / SINGLE BIG NUMBER (4 beats: 0..3) -->
+    <section class="scene" data-len="4">
+      <div class="header">
+        <div class="kicker" data-r="0">Част 1 · Какво работи добре</div>
+        <h2 class="claim-title" data-r="0">Базовите данни за пациент и операция са отразени в 10 от 10 случая</h2>
+        <p class="subtitle" data-r="0">Покритие на Item 1 (Пациент и операция) спрямо останалите елементи в 10 примерни предавания.</p>
+      </div>
+      <div class="chart-area">
+        <div class="big-victory-wrap">
+          <div class="big-num-box" data-r="1">
+            <div class="big-num" data-target="10" data-suffix="/10">10/10</div>
+            <div class="big-num-label">предавания включват пациента и вида операция (Item 1)</div>
+          </div>
+          <div class="ctx-stack" data-r="2">
+            <div class="ctx-card">
+              <div class="ctx-card-val">8/10 случая</div>
+              <div class="ctx-card-desc">дихателен път и вентилация (Item 3); пътища, катетри и дренове (Item 4)</div>
+            </div>
+            <div class="ctx-card">
+              <div class="ctx-card-val">7/10 случая</div>
+              <div class="ctx-card-desc">алергии (Item 2), дадени лекарства (Item 5) и интраоперативни събития (Item 7)</div>
+            </div>
+            <div class="ctx-card">
+              <div class="ctx-card-val">1/10 случая</div>
+              <div class="ctx-card-desc">пълно покритие на всички 8 елемента едновременно</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="narration">
+        <p data-r="0">Това е единственият елемент в одита без нито един пропуск в примерната извадка.</p>
+        <p data-r="1">Десет от десет предавания започват с ясна рамка кой е пациентът и каква е операцията.</p>
+        <p data-r="2">Дихателните пътища, линиите, алергиите, лекарствата и събитията се споменават в 7 до 8 случая, но рядко се събират всички заедно.</p>
+        <p data-r="3">Следващата част разглежда къде точно се концентрират пропуските за екипа по анестезия и ОИЛ.</p>
+      </div>
+    </section>
+
+    <!-- SCENE 5: PART 2 DIVIDER (1 beat: 0..0) -->
+    <section class="scene dark" data-len="1">
+      <div class="dark-inner">
+        <div class="dark-kicker" data-r="0">Част 2 · Къде има риск</div>
+        <h2 class="dark-title" data-r="0">Най-често отпадат следоперативният план и балансът на течностите</h2>
+        <p class="dark-sub" data-r="0">Когато един и същ екип покрива анестезия и ОИЛ без чеклист, пропуснатите детайли лесно остават недовършени.</p>
+      </div>
+    </section>
+
+    <!-- SCENE 6: THIS STANDS OUT / SORTED HORIZONTAL BARS (6 beats: 0..5) -->
+    <section class="scene" id="scene-bars" data-len="6" data-add="2:recolored-focus">
+      <div class="header">
+        <div class="kicker" data-r="0">Част 2 · Къде има риск</div>
+        <h2 class="claim-title" data-r="0">Планът и балансът на течностите са най-често пропусканите елементи</h2>
+        <p class="subtitle" data-r="0">Брой предавания (от 10 случая, 1–8 декември 2026 г.) с отразен елемент. Причината не е записана в таблицата.</p>
+      </div>
+      <div class="chart-area">
+        <svg id="svg-items" width="1180" height="560" viewBox="0 0 1180 560"></svg>
+      </div>
+      <div class="narration">
+        <p data-r="0">Подредените хоризонтални ленти показват колко от десетте случая покриват всеки от осемте елемента.</p>
+        <p data-r="1">Пунктираната референтна линия показва средното от 7.8 случая за шестте по-често покривани елемента.</p>
+        <p data-r="2">В синьо са откроени най-ниските две стойности: план и изследвания (5/10) и баланс на течностите (6/10).</p>
+        <p data-r="3">Половината от предаванията изпускат плана и очакваните изследвания, а 4 от 10 изпускат течностите.</p>
+        <p data-r="4">Данните не съдържат записана причина или смяна; липсва когнитивна помощ, а екипът съвместява анестезия и ОИЛ.</p>
+        <p data-r="5">След като видяхме кои елементи падат, следващият слайд показва как изглежда общият резултат по отделни случаи.</p>
+      </div>
+    </section>
+
+    <!-- SCENE 7: AGAINST TARGET / CASE BARS VS 8/8 TARGET (6 beats: 0..5) -->
+    <section class="scene" id="scene-target" data-len="6" data-add="2:recolored-target">
+      <div class="header">
+        <div class="kicker" data-r="0">Част 2 · Къде има риск</div>
+        <h2 class="claim-title" data-r="0">Девет от десет предавания остават под пълния обхват от 8/8 елемента</h2>
+        <p class="subtitle" data-r="0">Брой покрити елементи (от 8) за всеки от 10-те примерни случая спрямо пълния списък от 8 елемента.</p>
+      </div>
+      <div class="chart-area">
+        <svg id="svg-cases" width="1180" height="560" viewBox="0 0 1180 560"></svg>
+      </div>
+      <div class="narration">
+        <p data-r="0">Всяка колона показва общия брой покрити елементи от 0 до 8 за отделните случаи от №1 до №10.</p>
+        <p data-r="1">Прекъснатата линия на ниво 8/8 маркира пълно покритие на всички елементи при предаване.</p>
+        <p data-r="2">Само случай №3 достига 8/8 (зелено), докато девет случая остават между 4 и 7 елемента (червено).</p>
+        <p data-r="3">Средният резултат е 5.8 от 8 (медиана 6), като стойностите варат от 4 до 8.</p>
+        <p data-r="4">Това не доказва конкретна причина, но показва че пълният обхват е изключение без структурирана проверка.</p>
+        <p data-r="5">В третата част преминаваме към практичен тест с вашия ментор в реалната работа.</p>
+      </div>
+    </section>
+
+    <!-- SCENE 8: PART 3 DIVIDER (1 beat: 0..0) -->
+    <section class="scene dark" data-len="1">
+      <div class="dark-inner">
+        <div class="dark-kicker" data-r="0">Част 3 · Какво правим нататък</div>
+        <h2 class="dark-title" data-r="0">Един кратък тест с ментора може да провери дали чеклистата помага</h2>
+        <p class="dark-sub" data-r="0">Малък, контролиран експеримент без промяна в натоварването, за да проверим пропуските в реални предавания.</p>
+      </div>
+    </section>
+
+    <!-- SCENE 9: THE DECISION (2 beats: 0..1) -->
+    <section class="scene dark" data-len="2">
+      <div class="dark-inner">
+        <div class="dark-kicker" data-r="0">Решение и следваща стъпка</div>
+        <h2 class="dark-title" data-r="0">Тествайте кратка чеклиста в 10 предавания до 4 декември 2026 г.</h2>
+        <p class="dark-sub" data-r="0">Половината от примерните предавания пропускат плана и изследванията (5/10), а 4/10 пропускат баланса на течностите при нула когнитивни помощни средства и средно 5.8/8.</p>
+        <div class="decision-box" data-r="1">
+          <div class="decision-primary">Основно действие: Обсъдете с ментора кратка чеклиста от 8 точки и я тествайте в 10 случая до 4 декември 2026 г. (0 лв. финансов разход).</div>
+          <div class="decision-alt">Алтернатива: Записвайте смяната и причината за пропуск при следващия одит, за да отделите пропуските по време на дежурство от съзнателното изпускане.</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="progress-track">
+      <div class="progress-fill" id="progress-fill"></div>
+    </div>
+    <div class="hud">
+      <div id="hud-info">Сцена 1 · Стъпка 1</div>
+      <div class="hud-controls">
+        <span id="hud-counter">1 / 25</span>
+        <button class="hud-btn" id="btn-prev" type="button">Назад</button>
+        <button class="hud-btn" id="btn-next" type="button">Напред</button>
+        <button class="hud-btn" id="btn-fs" type="button">Цял екран (F)</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const SVG_NS = "http://www.w3.org/2000/svg";
+
+  function el(tag, attrs = {}, parent = null) {
+    const node = document.createElementNS(SVG_NS, tag);
+    for (const [k, v] of Object.entries(attrs)) {
+      node.setAttribute(k, v);
+    }
+    if (parent) parent.appendChild(node);
+    return node;
+  }
+
+  function linearScale(domainMin, domainMax, rangeMin, rangeMax) {
+    return function (val) {
+      if (domainMax === domainMin) return rangeMin;
+      const t = (val - domainMin) / (domainMax - domainMin);
+      return rangeMin + t * (rangeMax - rangeMin);
+    };
+  }
+
+  function addText(parent, x, y, text, attrs = {}) {
+    const t = el("text", Object.assign({ x, y }, attrs), parent);
+    t.textContent = text;
+    return t;
+  }
+
+  const matrix = [
+    [1, 1, 1, 1, 1, 0, 1, 0], // Case 1
+    [1, 0, 1, 1, 1, 0, 0, 1], // Case 2
+    [1, 1, 1, 1, 1, 1, 1, 1], // Case 3
+    [1, 1, 0, 1, 0, 0, 1, 0], // Case 4
+    [1, 1, 1, 0, 1, 1, 0, 1], // Case 5
+    [1, 0, 1, 1, 0, 1, 1, 0], // Case 6
+    [1, 1, 1, 1, 1, 0, 1, 1], // Case 7
+    [1, 1, 0, 1, 0, 1, 0, 0], // Case 8
+    [1, 1, 1, 1, 1, 1, 1, 0], // Case 9
+    [1, 0, 1, 0, 1, 1, 1, 1], // Case 10
+  ];
+
+  const itemNames = [
+    "Item 1 · Пациент и операция",
+    "Item 2 · Алергии",
+    "Item 3 · Дих. път и вентилация",
+    "Item 4 · Пътища, катетри, дренове",
+    "Item 5 · Дадени лекарства",
+    "Item 6 · Баланс на течности",
+    "Item 7 · Интраоп. събития",
+    "Item 8 · План и изследвания"
+  ];
+
+  const itemStats = itemNames.map((label, idx) => {
+    const count = matrix.reduce((acc, row) => acc + row[idx], 0);
+    const isFocus = idx === 7 || idx === 5;
+    return { idx, label, count, isFocus };
+  });
+
+  itemStats.sort((a, b) => b.count - a.count || a.idx - b.idx);
+
+  const svgItems = document.getElementById("svg-items");
+  const leftMargin = 330;
+  const rightMargin = 140;
+  const topMargin = 36;
+  const bottomMargin = 48;
+  const plotWidth = 1180 - leftMargin - rightMargin;
+  const plotHeight = 560 - topMargin - bottomMargin;
+  const xScaleItems = linearScale(0, 10, leftMargin, leftMargin + plotWidth);
+  const rowStep = plotHeight / itemStats.length;
+  const barH = rowStep * 0.62;
+
+  const gItemsFrame = el("g", { "data-r": "0" }, svgItems);
+  el("line", {
+    x1: leftMargin, y1: topMargin - 10,
+    x2: leftMargin, y2: topMargin + plotHeight,
+    stroke: "#C3C8D0", "stroke-width": 1.5
+  }, gItemsFrame);
+
+  const gItemsBars = el("g", { "data-r": "0" }, svgItems);
+  itemStats.forEach((d, i) => {
+    const yCenter = topMargin + i * rowStep + rowStep / 2;
+    const yBar = yCenter - barH / 2;
+    const wBar = Math.max(2, xScaleItems(d.count) - leftMargin);
+
+    addText(gItemsFrame, leftMargin - 14, yCenter + 6, d.label, {
+      "text-anchor": "end",
+      "font-size": "19",
+      "fill": "#18212F"
+    });
+
+    el("rect", {
+      x: leftMargin,
+      y: yBar,
+      width: wBar,
+      height: barH,
+      rx: 3,
+      fill: "#C3C8D0",
+      class: d.isFocus ? "bar-rect focus-item" : "bar-rect"
+    }, gItemsBars);
+
+    addText(gItemsBars, leftMargin + wBar + 12, yCenter + 6, `${d.count}/10`, {
+      "text-anchor": "start",
+      "font-size": "19",
+      "fill": "#6B7383",
+      class: d.isFocus ? "bar-label focus-item" : "bar-label"
+    });
+  });
+
+  const otherAvg = (10 + 8 + 8 + 7 + 7 + 7) / 6;
+  const xAvg = xScaleItems(otherAvg);
+  const gItemsRef = el("g", { "data-r": "1" }, svgItems);
+  el("line", {
+    x1: xAvg, y1: topMargin - 14,
+    x2: xAvg, y2: topMargin + plotHeight,
+    stroke: "#6B7383",
+    "stroke-width": 2,
+    "stroke-dasharray": "6,6"
+  }, gItemsRef);
+  addText(gItemsRef, xAvg + 8, topMargin + 6, `Средно за останалите 6: ${otherAvg.toFixed(1)}/10`, {
+    "text-anchor": "start",
+    "font-size": "15",
+    "font-weight": "600",
+    "fill": "#6B7383"
+  });
+
+  const gItemsMoment = el("g", { "data-r": "3" }, svgItems);
+  const yItem6 = topMargin + 6 * rowStep + rowStep / 2;
+  const yItem8 = topMargin + 7 * rowStep + rowStep / 2;
+  el("circle", { cx: xScaleItems(6), cy: yItem6, r: 6, fill: "none", stroke: "#D99A00", "stroke-width": 3 }, gItemsMoment);
+  el("circle", { cx: xScaleItems(5), cy: yItem8, r: 6, fill: "none", stroke: "#D99A00", "stroke-width": 3 }, gItemsMoment);
+  addText(gItemsMoment, xScaleItems(6) + 65, yItem6 + 5, "Пропуснато в 4/10 случая", {
+    "font-size": "17", "font-weight": "700", "fill": "#1F6FB2"
+  });
+  addText(gItemsMoment, xScaleItems(5) + 65, yItem8 + 5, "Пропуснато в 5/10 случая", {
+    "font-size": "17", "font-weight": "700", "fill": "#1F6FB2"
+  });
+
+  const gItemsCause = el("g", { "data-r": "4" }, svgItems);
+  el("rect", {
+    x: 760, y: 245, width: 380, height: 84, rx: 6,
+    fill: "#F7F9FC", stroke: "#E4E7EC", "stroke-width": 1.5
+  }, gItemsCause);
+  addText(gItemsCause, 778, 276, "Без когнитивна помощ при предаване", {
+    "font-size": "17", "font-weight": "700", "fill": "#18212F"
+  });
+  addText(gItemsCause, 778, 305, "Причината и смяната не са записани в данните", {
+    "font-size": "16", "fill": "#6B7383"
+  });
+
+  const caseTotals = matrix.map((row, idx) => ({
+    caseNum: idx + 1,
+    total: row.reduce((a, b) => a + b, 0)
+  }));
+
+  const svgCases = document.getElementById("svg-cases");
+  const cLeft = 90;
+  const cRight = 70;
+  const cTop = 44;
+  const cBottom = 64;
+  const cPlotW = 1180 - cLeft - cRight;
+  const cPlotH = 560 - cTop - cBottom;
+  const yScaleCases = linearScale(0, 8, cTop + cPlotH, cTop);
+  const colStep = cPlotW / caseTotals.length;
+  const colW = colStep * 0.56;
+
+  const gCasesFrame = el("g", { "data-r": "0" }, svgCases);
+  el("line", {
+    x1: cLeft, y1: yScaleCases(0),
+    x2: cLeft + cPlotW, y2: yScaleCases(0),
+    stroke: "#C3C8D0", "stroke-width": 1.5
+  }, gCasesFrame);
+
+  [0, 2, 4, 6, 8].forEach(tick => {
+    const yTick = yScaleCases(tick);
+    addText(gCasesFrame, cLeft - 14, yTick + 6, `${tick}`, {
+      "text-anchor": "end",
+      "font-size": "18",
+      "fill": "#6B7383"
+    });
+  });
+
+  const gCasesBars = el("g", { "data-r": "0" }, svgCases);
+  caseTotals.forEach((c, i) => {
+    const xCenter = cLeft + i * colStep + colStep / 2;
+    const xBar = xCenter - colW / 2;
+    const yBar = yScaleCases(c.total);
+    const hBar = Math.max(2, yScaleCases(0) - yBar);
+    const hit = c.total === 8;
+
+    el("rect", {
+      x: xBar,
+      y: yBar,
+      width: colW,
+      height: hBar,
+      rx: 3,
+      fill: "#C3C8D0",
+      class: hit ? "bar-rect hit-target" : "bar-rect miss-target"
+    }, gCasesBars);
+
+    addText(gCasesBars, xCenter, yBar - 10, `${c.total}/8`, {
+      "text-anchor": "middle",
+      "font-size": "18",
+      "font-weight": "700",
+      "fill": "#18212F"
+    });
+
+    addText(gCasesBars, xCenter, yScaleCases(0) + 28, `№${c.caseNum}`, {
+      "text-anchor": "middle",
+      "font-size": "18",
+      "fill": "#18212F"
+    });
+  });
+
+  const gCasesTarget = el("g", { "data-r": "1" }, svgCases);
+  const yTarget8 = yScaleCases(8);
+  el("line", {
+    x1: cLeft, y1: yTarget8,
+    x2: cLeft + cPlotW, y2: yTarget8,
+    stroke: "#18212F",
+    "stroke-width": 2,
+    "stroke-dasharray": "7,6"
+  }, gCasesTarget);
+  addText(gCasesTarget, cLeft + cPlotW - 6, yTarget8 - 10, "Цел: пълно покритие 8/8", {
+    "text-anchor": "end",
+    "font-size": "16",
+    "font-weight": "700",
+    "fill": "#18212F"
+  });
+
+  const meanVal = caseTotals.reduce((a, b) => a + b.total, 0) / caseTotals.length;
+  const yMean = yScaleCases(meanVal);
+  const gCasesMean = el("g", { "data-r": "3" }, svgCases);
+  el("line", {
+    x1: cLeft, y1: yMean,
+    x2: cLeft + cPlotW, y2: yMean,
+    stroke: "#1F6FB2",
+    "stroke-width": 2.5
+  }, gCasesMean);
+  addText(gCasesMean, cLeft + 12, yMean - 10, `Средно: ${meanVal.toFixed(1)}/8 (медиана 6)`, {
+    "text-anchor": "start",
+    "font-size": "16",
+    "font-weight": "700",
+    "fill": "#1F6FB2"
+  });
+
+  const gCasesCtx = el("g", { "data-r": "4" }, svgCases);
+  el("rect", {
+    x: 680, y: 120, width: 410, height: 76, rx: 6,
+    fill: "#F7F9FC", stroke: "#E4E7EC", "stroke-width": 1.5
+  }, gCasesCtx);
+  addText(gCasesCtx, 698, 150, "Общ екип за анестезия и ОИЛ · Без чеклист", {
+    "font-size": "17", "font-weight": "700", "fill": "#18212F"
+  });
+  addText(gCasesCtx, 698, 178, "Само 1/10 случая покрива всички 8 елемента", {
+    "font-size": "16", "fill": "#6B7383"
+  });
+
+  function animateNumbersInScene(sceneEl) {
+    sceneEl.querySelectorAll("[data-target]").forEach(node => {
+      const target = parseFloat(node.dataset.target);
+      const decimals = parseInt(node.dataset.decimals || "0", 10);
+      const suffix = node.dataset.suffix || "";
+      if (target === 0) {
+        node.textContent = "0" + suffix;
+        return;
+      }
+      const startVal = target * 0.86;
+      const duration = 650;
+      const t0 = performance.now();
+      function step(now) {
+        const p = Math.min(1, (now - t0) / duration);
+        const eased = 1 - Math.pow(1 - p, 3);
+        const cur = startVal + (target - startVal) * eased;
+        node.textContent = cur.toFixed(decimals) + suffix;
+        if (p < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    });
+  }
+
+  const stage = document.getElementById("stage");
+  function resizeStage() {
+    const availW = window.innerWidth;
+    const availH = Math.max(200, window.innerHeight - 44);
+    const scale = Math.min(availW / 1920, availH / 1080);
+    const scaledW = 1920 * scale;
+    const scaledH = 1080 * scale;
+    const offsetX = Math.max(0, (availW - scaledW) / 2);
+    const offsetY = Math.max(0, (availH - scaledH) / 2);
+    stage.style.left = `${offsetX}px`;
+    stage.style.top = `${offsetY}px`;
+    stage.style.transform = `scale(${scale})`;
+  }
+  window.addEventListener("resize", resizeStage);
+  resizeStage();
+
+  const scenes = [...document.querySelectorAll(".scene")];
+  let total = 0;
+  scenes.forEach(s => {
+    const len = +s.dataset.len || 1;
+    s.dataset.from = total;
+    s.dataset.to = total + len - 1;
+    total += len;
+  });
+
+  function readHashBeat() {
+    const m = window.location.hash.match(/beat=(\d+)/);
+    if (!m) return 0;
+    return Math.max(0, Math.min(total - 1, parseInt(m[1], 10)));
+  }
+
+  let b = readHashBeat();
+  let prevActiveScene = null;
+
+  function render() {
+    if (b < 0) b = 0;
+    if (b >= total) b = total - 1;
+    window.location.hash = "beat=" + b;
+
+    let activeSceneIdx = 0;
+    let activeRelBeat = 0;
+
+    scenes.forEach((s, idx) => {
+      const f = +s.dataset.from;
+      const to = +s.dataset.to;
+      const on = b >= f && b <= to;
+      const rel = b - f;
+      if (on) {
+        activeSceneIdx = idx;
+        activeRelBeat = rel;
+      }
+
+      s.classList.toggle("on", on);
+
+      s.querySelectorAll("[data-r]").forEach(elNode => {
+        const r = +elNode.dataset.r;
+        const show = on && rel >= r;
+        elNode.classList.toggle("on", show);
+      });
+
+      const narrPs = [...s.querySelectorAll(".narration p[data-r]")];
+      const maxShownR = narrPs
+        .filter(p => on && rel >= +p.dataset.r)
+        .reduce((mx, p) => Math.max(mx, +p.dataset.r), -1);
+      narrPs.forEach(p => {
+        const r = +p.dataset.r;
+        p.classList.toggle("dim", on && maxShownR > r);
+      });
+
+      s.querySelectorAll("[data-dim]").forEach(elNode => {
+        elNode.classList.toggle("dim", on && rel >= +elNode.dataset.dim);
+      });
+
+      if (s.dataset.add) {
+        s.dataset.add.split(";").forEach(pair => {
+          const [rStr, cls] = pair.split(":");
+          const r = +rStr;
+          s.classList.toggle(cls, on && rel >= r);
+        });
+      }
+
+      if (on && prevActiveScene !== s) {
+        animateNumbersInScene(s);
+        prevActiveScene = s;
+      }
+    });
+
+    const pct = total > 1 ? (b / (total - 1)) * 100 : 100;
+    document.getElementById("progress-fill").style.width = pct + "%";
+    document.getElementById("hud-info").textContent = `Сцена ${activeSceneIdx + 1} · Стъпка ${activeRelBeat + 1}`;
+    document.getElementById("hud-counter").textContent = `${b + 1} / ${total}`;
+  }
+
+  function nextBeat() { b = Math.min(total - 1, b + 1); render(); }
+  function prevBeat() { b = Math.max(0, b - 1); render(); }
+
+  document.addEventListener("keydown", e => {
+    if (["Space", "ArrowRight", "Enter", "PageDown"].includes(e.code)) {
+      e.preventDefault();
+      nextBeat();
+    } else if (["ArrowLeft", "Backspace", "PageUp"].includes(e.code)) {
+      e.preventDefault();
+      prevBeat();
+    } else if (e.code === "Home") {
+      e.preventDefault();
+      b = 0;
+      render();
+    } else if (e.code === "End") {
+      e.preventDefault();
+      b = total - 1;
+      render();
+    } else if (e.code === "KeyF") {
+      e.preventDefault();
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen?.().catch(() => {});
+      } else {
+        document.exitFullscreen?.().catch(() => {});
+      }
+    }
+  });
+
+  document.getElementById("btn-next").addEventListener("click", e => { e.stopPropagation(); nextBeat(); });
+  document.getElementById("btn-prev").addEventListener("click", e => { e.stopPropagation(); prevBeat(); });
+  document.getElementById("btn-fs").addEventListener("click", e => {
+    e.stopPropagation();
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen?.().catch(() => {});
+    } else {
+      document.exitFullscreen?.().catch(() => {});
+    }
+  });
+
+  stage.addEventListener("click", e => {
+    if (e.target.closest(".hud-controls")) return;
+    nextBeat();
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
