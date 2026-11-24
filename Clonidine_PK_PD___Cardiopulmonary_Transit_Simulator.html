@@ -1,0 +1,2748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IV Clonidine PK/PD & Cardiopulmonary Transit Simulator</title>
+  <style>
+    :root {
+      --bg-app: #f1f5f9;
+      --bg-card: #ffffff;
+      --bg-subtle: #f8fafc;
+      --border-color: #cbd5e1;
+      --border-light: #e2e8f0;
+      --text-main: #0f172a;
+      --text-muted: #475569;
+      --text-light: #64748b;
+      --primary: #0284c7;
+      --primary-hover: #0369a1;
+      --primary-soft: #e0f2fe;
+      --cp-color: #2563eb;
+      --ce-color: #dc2626;
+      --green-bg: #dcfce7;
+      --green-border: #86efac;
+      --green-text: #166534;
+      --amber-bg: #fef3c7;
+      --amber-border: #fcd34d;
+      --amber-text: #92400e;
+      --red-bg: #fee2e2;
+      --red-border: #fca5a5;
+      --red-text: #991b1b;
+      --shadow-sm: 0 1px 2px 0 rgba(15, 23, 42, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.08), 0 2px 4px -2px rgba(15, 23, 42, 0.05);
+      --radius: 10px;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      --chart-grid: #e2e8f0;
+      --chart-axis-text: #64748b;
+      --chart-title-text: #475569;
+      --chart-border: #cbd5e1;
+      --chart-win-fill: rgba(34, 197, 94, 0.14);
+      --chart-win-stroke: rgba(22, 163, 74, 0.55);
+      --chart-win-text: #15803d;
+      --chart-warn-stroke: #d97706;
+      --chart-warn-text: #b45309;
+    }
+
+    html.dark {
+      --bg-app: #0b1120;
+      --bg-card: #131c31;
+      --bg-subtle: #1a253c;
+      --border-color: #334155;
+      --border-light: #1e293b;
+      --text-main: #f1f5f9;
+      --text-muted: #cbd5e1;
+      --text-light: #94a3b8;
+      --primary: #38bdf8;
+      --primary-hover: #0ea5e9;
+      --primary-soft: rgba(56, 189, 248, 0.16);
+      --cp-color: #60a5fa;
+      --ce-color: #f87171;
+      --green-bg: rgba(22, 101, 52, 0.35);
+      --green-border: #15803d;
+      --green-text: #86efac;
+      --amber-bg: rgba(146, 64, 14, 0.38);
+      --amber-border: #b45309;
+      --amber-text: #fcd34d;
+      --red-bg: rgba(153, 27, 27, 0.4);
+      --red-border: #b91c1c;
+      --red-text: #fca5a5;
+      --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.35);
+      --shadow-md: 0 6px 12px -2px rgba(0, 0, 0, 0.45);
+      --chart-grid: #1e293b;
+      --chart-axis-text: #94a3b8;
+      --chart-title-text: #cbd5e1;
+      --chart-border: #334155;
+      --chart-win-fill: rgba(34, 197, 94, 0.16);
+      --chart-win-stroke: rgba(74, 222, 128, 0.55);
+      --chart-win-text: #86efac;
+      --chart-warn-stroke: #f59e0b;
+      --chart-warn-text: #fbbf24;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg-app);
+      color: var(--text-main);
+      line-height: 1.45;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Header */
+    header {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      color: #ffffff;
+      padding: 1rem 1.5rem;
+      border-bottom: 3px solid var(--primary);
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .header-title h1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .header-title p {
+      font-size: 0.82rem;
+      color: #cbd5e1;
+      margin-top: 0.15rem;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      flex-wrap: wrap;
+    }
+
+    .theme-toggle {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      color: #f8fafc;
+      padding: 0.45rem 0.75rem;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: background 0.15s ease;
+    }
+
+    .theme-toggle:hover {
+      background: rgba(255, 255, 255, 0.18);
+    }
+
+    .syringe-badge {
+      background: rgba(2, 132, 199, 0.2);
+      border: 1px solid #38bdf8;
+      color: #e0f2fe;
+      padding: 0.45rem 0.85rem;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .syringe-badge strong {
+      color: #ffffff;
+      font-family: var(--font-mono);
+    }
+
+    /* Main Layout */
+    .container {
+      max-width: 1480px;
+      margin: 0 auto;
+      padding: 1.25rem;
+      display: grid;
+      grid-template-columns: 400px 1fr;
+      gap: 1.25rem;
+      align-items: start;
+    }
+
+    @media (max-width: 1080px) {
+      .container {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Cards & Panels */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      padding: 1.15rem;
+    }
+
+    .controls-column {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .outputs-column {
+      display: flex;
+      flex-direction: column;
+      gap: 1.15rem;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-light);
+      padding-bottom: 0.6rem;
+      margin-bottom: 0.9rem;
+    }
+
+    .panel-title {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--text-main);
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+
+    .panel-badge {
+      background: var(--primary-soft);
+      color: var(--primary-hover);
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 0.15rem 0.45rem;
+      border-radius: 4px;
+    }
+
+    /* Form Controls */
+    .control-group {
+      margin-bottom: 0.9rem;
+    }
+
+    .control-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .control-label-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.3rem;
+      font-size: 0.83rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .value-display {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      color: var(--text-main);
+      font-size: 0.85rem;
+    }
+
+    .slider-input-row {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+    }
+
+    input[type="range"] {
+      flex: 1;
+      accent-color: var(--primary);
+      cursor: pointer;
+      height: 6px;
+      border-radius: 3px;
+    }
+
+    input[type="number"] {
+      width: 72px;
+      padding: 0.3rem 0.45rem;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      font-family: var(--font-mono);
+      font-size: 0.83rem;
+      font-weight: 600;
+      text-align: right;
+      color: var(--text-main);
+      background: var(--bg-subtle);
+    }
+
+    input[type="number"]:focus {
+      outline: none;
+      border-color: var(--primary);
+      background: var(--bg-card);
+      box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+    }
+
+    /* Buttons & Presets */
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      margin-top: 0.45rem;
+    }
+
+    .btn {
+      padding: 0.4rem 0.7rem;
+      font-size: 0.78rem;
+      font-weight: 600;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-subtle);
+      color: var(--text-main);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .btn:hover {
+      filter: brightness(1.08);
+    }
+
+    .btn-primary {
+      background: #0284c7;
+      border-color: #0284c7;
+      color: #ffffff;
+      width: 100%;
+      margin-top: 0.45rem;
+      padding: 0.5rem 0.75rem;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .btn-primary:hover {
+      background: #0369a1;
+    }
+
+    .btn-preset {
+      flex: 1;
+      text-align: center;
+    }
+
+    .btn-preset.active {
+      background: var(--primary-soft);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .helper-note {
+      font-size: 0.73rem;
+      color: var(--text-light);
+      margin-top: 0.35rem;
+      line-height: 1.35;
+    }
+
+    /* Sub-grid for chamber volumes */
+    .chamber-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.55rem;
+      margin-top: 0.35rem;
+    }
+
+    .chamber-item {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-light);
+      padding: 0.45rem 0.6rem;
+      border-radius: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .chamber-item label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .chamber-item input {
+      width: 62px;
+      padding: 0.2rem 0.35rem;
+      font-size: 0.8rem;
+    }
+
+    /* Collapsible Panel C */
+    details summary {
+      list-style: none;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    details summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .chevron {
+      transition: transform 0.2s ease;
+      font-size: 0.75rem;
+      color: var(--text-light);
+    }
+
+    details[open] .chevron {
+      transform: rotate(180deg);
+    }
+
+    .sub-collapsible {
+      margin-top: 0.75rem;
+      padding-top: 0.65rem;
+      border-top: 1px solid var(--border-light);
+    }
+
+    .sub-collapsible summary {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .sub-collapsible summary:hover {
+      color: var(--primary);
+    }
+
+    .pk-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.65rem;
+      margin-top: 0.5rem;
+    }
+
+    /* Top Trackers Grid */
+    .trackers-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 1fr;
+      gap: 1.15rem;
+    }
+
+    @media (max-width: 820px) {
+      .trackers-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Syringe Visual */
+    .syringe-visual-wrap {
+      margin: 0.75rem 0;
+    }
+
+    .syringe-body {
+      position: relative;
+      height: 36px;
+      background: var(--bg-subtle);
+      border: 2px solid var(--text-light);
+      border-radius: 6px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+    }
+
+    .syringe-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #38bdf8 0%, #0284c7 100%);
+      transition: width 0.25s ease, background 0.25s ease;
+    }
+
+    .syringe-fill.overflow {
+      background: linear-gradient(90deg, #f87171 0%, #dc2626 100%);
+    }
+
+    .syringe-ticks {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      justify-content: space-between;
+      padding: 0 4px;
+      pointer-events: none;
+    }
+
+    .syringe-tick {
+      width: 1px;
+      height: 10px;
+      background: var(--text-light);
+      opacity: 0.55;
+      align-self: flex-end;
+    }
+
+    .syringe-tick.major {
+      height: 18px;
+      background: var(--text-muted);
+      opacity: 0.85;
+    }
+
+    .syringe-scale-labels {
+      display: flex;
+      justify-content: space-between;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--text-light);
+      margin-top: 0.2rem;
+    }
+
+    /* Weight Dose Meter */
+    .weight-meter-bar {
+      position: relative;
+      height: 14px;
+      border-radius: 7px;
+      background: linear-gradient(90deg, #22c55e 0%, #22c55e 50%, #f59e0b 50%, #f59e0b 75%, #ef4444 75%, #ef4444 100%);
+      margin: 0.85rem 0 0.35rem 0;
+    }
+
+    .weight-marker {
+      position: absolute;
+      top: -5px;
+      width: 4px;
+      height: 24px;
+      background: var(--text-main);
+      border: 1px solid var(--bg-card);
+      border-radius: 2px;
+      transform: translateX(-50%);
+      transition: left 0.25s ease;
+    }
+
+    .weight-ticks {
+      display: flex;
+      justify-content: space-between;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    /* Alert Banners */
+    .alert-box {
+      margin-top: 0.75rem;
+      padding: 0.6rem 0.8rem;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      border: 1px solid transparent;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+    }
+
+    .alert-green {
+      background: var(--green-bg);
+      border-color: var(--green-border);
+      color: var(--green-text);
+    }
+
+    .alert-amber {
+      background: var(--amber-bg);
+      border-color: var(--amber-border);
+      color: var(--amber-text);
+    }
+
+    .alert-red {
+      background: var(--red-bg);
+      border-color: var(--red-border);
+      color: var(--red-text);
+    }
+
+    /* Front-End Transit Banner */
+    .transit-metrics {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.65rem;
+      margin-top: 0.5rem;
+    }
+
+    .metric-tile {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-light);
+      border-radius: 8px;
+      padding: 0.65rem;
+    }
+
+    .metric-tile .m-label {
+      font-size: 0.72rem;
+      color: var(--text-light);
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .metric-tile .m-val {
+      font-family: var(--font-mono);
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-top: 0.15rem;
+    }
+
+    .metric-tile .m-sub {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-top: 0.1rem;
+    }
+
+    /* Chart Container */
+    .chart-header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .chart-legend {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 1rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .legend-swatch {
+      width: 14px;
+      height: 4px;
+      border-radius: 2px;
+    }
+
+    .legend-box {
+      width: 14px;
+      height: 12px;
+      border-radius: 3px;
+      background: rgba(34, 197, 94, 0.18);
+      border: 1px solid rgba(22, 163, 74, 0.45);
+    }
+
+    .chart-wrapper {
+      position: relative;
+      width: 100%;
+      height: 360px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-light);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    canvas#pkChart {
+      width: 100%;
+      height: 100%;
+      display: block;
+      cursor: crosshair;
+    }
+
+    .chart-tooltip {
+      position: absolute;
+      pointer-events: none;
+      background: rgba(15, 23, 42, 0.94);
+      color: #f8fafc;
+      padding: 0.55rem 0.75rem;
+      border-radius: 8px;
+      font-size: 0.78rem;
+      box-shadow: var(--shadow-md);
+      display: none;
+      z-index: 10;
+      min-width: 175px;
+      border: 1px solid rgba(148, 163, 184, 0.3);
+    }
+
+    .tooltip-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-top: 0.2rem;
+      font-family: var(--font-mono);
+    }
+
+    /* Summary Cards Bottom Grid */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.85rem;
+    }
+
+    @media (max-width: 900px) {
+      .summary-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 500px) {
+      .summary-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .summary-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius);
+      padding: 0.85rem 1rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .summary-card h3 {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      color: var(--text-light);
+      margin-bottom: 0.35rem;
+    }
+
+    .summary-big {
+      font-family: var(--font-mono);
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .summary-detail {
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+      line-height: 1.35;
+    }
+
+    .micro-constants-bar {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-light);
+      border-radius: 8px;
+      padding: 0.65rem 0.9rem;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 0.75rem;
+      font-size: 0.78rem;
+    }
+
+    .mc-item {
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+    }
+
+    .mc-item strong {
+      color: var(--text-main);
+    }
+
+    .status-toast {
+      font-size: 0.76rem;
+      color: var(--primary);
+      font-weight: 600;
+      margin-top: 0.35rem;
+      min-height: 1.1rem;
+    }
+
+    /* Live Intraoperative Redose Timer Card */
+    .timer-grid {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    @media (max-width: 720px) {
+      .timer-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .timer-clock-box {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 0.6rem 0.9rem;
+      text-align: center;
+      min-width: 145px;
+    }
+
+    .timer-clock-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--text-light);
+      letter-spacing: 0.03em;
+    }
+
+    .timer-clock-val {
+      font-family: var(--font-mono);
+      font-size: 1.55rem;
+      font-weight: 800;
+      color: var(--text-main);
+      line-height: 1.2;
+      margin-top: 0.1rem;
+    }
+
+    .timer-status-banner {
+      padding: 0.65rem 0.85rem;
+      border-radius: 8px;
+      border: 1px solid var(--border-light);
+      background: var(--bg-subtle);
+    }
+
+    .timer-status-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+
+    .timer-status-desc {
+      font-size: 0.77rem;
+      margin-top: 0.2rem;
+      line-height: 1.38;
+    }
+
+    .timer-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      min-width: 165px;
+    }
+
+    .timer-speed-row {
+      display: flex;
+      gap: 0.35rem;
+    }
+
+    .timer-speed-row .btn {
+      flex: 1;
+      padding: 0.28rem 0.4rem;
+      font-size: 0.72rem;
+    }
+
+    /* CA-1 Clinical Presets & Dose Log Strip */
+    .scenario-presets {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.4rem;
+      margin-bottom: 0.85rem;
+    }
+
+    .scenario-btn {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-color);
+      border-radius: 7px;
+      padding: 0.42rem 0.35rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .scenario-btn:hover {
+      border-color: var(--primary);
+      background: var(--primary-soft);
+    }
+
+    .scenario-btn .s-title {
+      display: block;
+      font-size: 0.73rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .scenario-btn .s-sub {
+      display: block;
+      font-size: 0.66rem;
+      color: var(--text-light);
+      margin-top: 0.1rem;
+    }
+
+    .extubation-bar {
+      margin-top: 0.75rem;
+      padding-top: 0.65rem;
+      border-top: 1px solid var(--border-light);
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.65rem;
+      font-size: 0.78rem;
+    }
+
+    .extubation-input-group {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .dose-log-strip {
+      margin-top: 0.65rem;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .dose-pill {
+      background: var(--primary-soft);
+      border: 1px solid var(--primary);
+      color: var(--text-main);
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 0.2rem 0.5rem;
+      border-radius: 999px;
+    }
+
+    .bridge-tip {
+      margin-top: 0.4rem;
+      padding-top: 0.35rem;
+      border-top: 1px dashed rgba(185, 28, 28, 0.35);
+      font-size: 0.74rem;
+      font-weight: 600;
+    }
+  </style>
+  <script>
+    // Apply dark theme immediately if system prefers dark mode
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      document.documentElement.classList.add('dark');
+    }
+  </script>
+</head>
+<body>
+
+  <header>
+    <div class="header-title">
+      <h1>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+        </svg>
+        IV Clonidine OR Titration Simulator
+      </h1>
+      <p>Intraoperative effect-site titration &amp; first-pass transit helper</p>
+    </div>
+    <div class="header-actions">
+      <div class="syringe-badge">
+        <span>Standard Syringe Dilution:</span>
+        <strong>150 mcg / 10 mL (15 mcg/mL)</strong>
+      </div>
+      <button type="button" class="theme-toggle" id="themeToggleBtn" aria-label="Toggle color theme">
+        <span id="themeIcon">&#9728;</span>
+        <span id="themeLabel">Light Mode</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- LEFT COLUMN: INPUT PANELS -->
+    <div class="controls-column">
+
+      <!-- PANEL A: PATIENT & SYRINGE DOSING SCHEDULE -->
+      <section class="card">
+        <div class="panel-header">
+          <span class="panel-title">Panel A: Patient &amp; Syringe Dosing</span>
+          <span class="panel-badge">15 mcg/mL</span>
+        </div>
+
+        <!-- Clinical Scenario Quick-Presets -->
+        <div style="font-size: 0.73rem; font-weight: 700; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 0.35rem;">
+          Quick Bedside Presets (Weight-Scaled)
+        </div>
+        <div class="scenario-presets">
+          <button type="button" class="scenario-btn" id="presetFrailBtn">
+            <span class="s-title">Frail / Elderly</span>
+            <span class="s-sub">~0.4 mcg/kg &bull; 25m</span>
+          </button>
+          <button type="button" class="scenario-btn" id="presetStandardBtn">
+            <span class="s-title">Standard Adult</span>
+            <span class="s-sub">~0.5 mcg/kg &bull; 20m</span>
+          </button>
+          <button type="button" class="scenario-btn" id="presetHighToneBtn">
+            <span class="s-title">High Symp. Tone</span>
+            <span class="s-sub">~0.85 mcg/kg &bull; 20m</span>
+          </button>
+        </div>
+
+        <!-- Patient Weight -->
+        <div class="control-group">
+          <div class="control-label-row">
+            <label for="weightSlider">Patient Weight (kg)</label>
+            <span class="value-display" id="weightReadout">70 kg</span>
+          </div>
+          <div class="slider-input-row">
+            <input type="range" id="weightSlider" min="40" max="150" step="1" value="70">
+            <input type="number" id="weightNum" min="40" max="150" step="1" value="70">
+          </div>
+        </div>
+
+        <!-- Bolus Size -->
+        <div class="control-group">
+          <div class="control-label-row">
+            <label for="bolusSlider">Bolus Size (15 mcg / 1.0 mL steps)</label>
+            <span class="value-display" id="bolusReadout">30 mcg (2.0 mL)</span>
+          </div>
+          <div class="slider-input-row">
+            <input type="range" id="bolusSlider" min="15" max="75" step="15" value="30">
+            <input type="number" id="bolusNum" min="15" max="75" step="15" value="30">
+          </div>
+        </div>
+
+        <!-- Number of Boluses -->
+        <div class="control-group">
+          <div class="control-label-row">
+            <label for="countSlider">Number of Boluses</label>
+            <span class="value-display" id="countReadout">3 boluses</span>
+          </div>
+          <div class="slider-input-row">
+            <input type="range" id="countSlider" min="1" max="6" step="1" value="3">
+            <input type="number" id="countNum" min="1" max="6" step="1" value="3">
+          </div>
+        </div>
+
+        <!-- Dosing Interval -->
+        <div class="control-group">
+          <div class="control-label-row">
+            <label for="intervalSlider">Dosing Interval (minutes)</label>
+            <span class="value-display" id="intervalReadout">20 min</span>
+          </div>
+          <div class="slider-input-row">
+            <input type="range" id="intervalSlider" min="5" max="60" step="1" value="20">
+            <input type="number" id="intervalNum" min="5" max="60" step="1" value="20">
+          </div>
+          <button type="button" class="btn btn-primary" id="autoIntervalBtn">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+            </svg>
+            Auto-Calculate Safe Stacking Interval
+          </button>
+          <p class="helper-note">
+            Finds the shortest wait time between your chosen number of boluses so cumulative effect-site peaks (C<sub>e</sub>) stack inside the 0.2–1.5 ng/mL window without overshooting &gt;1.5 ng/mL.
+          </p>
+          <div class="status-toast" id="autoIntervalStatus"></div>
+        </div>
+
+        <!-- Elimination Half-Life -->
+        <div class="control-group">
+          <div class="control-label-row">
+            <label for="tHalfBetaSlider">Elimination Half-Life t<sub>1/2&beta;</sub> (hours)</label>
+            <span class="value-display" id="tHalfBetaReadout">12.0 h</span>
+          </div>
+          <div class="slider-input-row">
+            <input type="range" id="tHalfBetaSlider" min="6" max="40" step="0.5" value="12">
+            <input type="number" id="tHalfBetaNum" min="6" max="40" step="0.5" value="12">
+          </div>
+          <div class="btn-row">
+            <button type="button" class="btn btn-preset active" id="renalNormalBtn">Normal Renal: 12h</button>
+            <button type="button" class="btn btn-preset" id="renalImpairedBtn">Severe Renal Impairment: 30h</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- PANEL B: FRONT-END HEMODYNAMICS & INJECTION SPEED -->
+      <section class="card">
+        <div class="panel-header">
+          <span class="panel-title">Panel B: Front-End Transit (0–60 s)</span>
+          <span class="panel-badge">First-Pass</span>
+        </div>
+
+        <!-- Bolus Push Duration (Primary Everyday Control) -->
+        <div class="control-group">
+          <div class="control-label-row">
+            <label for="pushSlider">Bolus Push Duration (seconds)</label>
+            <span class="value-display" id="pushReadout">30 s</span>
+          </div>
+          <div class="slider-input-row">
+            <input type="range" id="pushSlider" min="2" max="60" step="1" value="30">
+            <input type="number" id="pushNum" min="2" max="60" step="1" value="30">
+          </div>
+          <div class="btn-row">
+            <button type="button" class="btn btn-preset" id="pushRapidBtn">Rapid Push (2 s)</button>
+            <button type="button" class="btn btn-preset active" id="pushSlowBtn">Slow Titrated Push (30 s)</button>
+          </div>
+        </div>
+
+        <!-- Collapsible Cardiopulmonary Assumptions (Hidden Normally) -->
+        <details class="sub-collapsible">
+          <summary>
+            <span>Cardiopulmonary CO &amp; Chamber Volumes (Default: 5.0 L/min, 1,000 mL)</span>
+            <span class="chevron">&#9660;</span>
+          </summary>
+
+          <div style="margin-top: 0.75rem;">
+            <!-- Cardiac Output -->
+            <div class="control-group">
+              <div class="control-label-row">
+                <label for="coSlider">Cardiac Output (CO)</label>
+                <span class="value-display" id="coReadout">5.0 L/min (83.3 mL/s)</span>
+              </div>
+              <div class="slider-input-row">
+                <input type="range" id="coSlider" min="2.0" max="8.0" step="0.1" value="5.0">
+                <input type="number" id="coNum" min="2.0" max="8.0" step="0.1" value="5.0">
+              </div>
+            </div>
+
+            <!-- Cardiopulmonary Compartment Volumes -->
+            <div class="control-group">
+              <div class="control-label-row">
+                <span>Cardiopulmonary Transit Volumes (mL)</span>
+                <span class="value-display" id="vTransitTotalReadout">Total: 1,000 mL</span>
+              </div>
+              <div class="chamber-grid">
+                <div class="chamber-item">
+                  <label for="vVenous">Periph. Venous</label>
+                  <input type="number" id="vVenous" min="10" max="500" step="10" value="50">
+                </div>
+                <div class="chamber-item">
+                  <label for="vRightHeart">Right Heart</label>
+                  <input type="number" id="vRightHeart" min="50" max="1000" step="10" value="250">
+                </div>
+                <div class="chamber-item">
+                  <label for="vPulmonary">Pulm. Vascular</label>
+                  <input type="number" id="vPulmonary" min="100" max="1500" step="10" value="450">
+                </div>
+                <div class="chamber-item">
+                  <label for="vLeftHeart">Left Heart</label>
+                  <input type="number" id="vLeftHeart" min="50" max="1000" step="10" value="250">
+                </div>
+              </div>
+            </div>
+          </div>
+        </details>
+      </section>
+
+      <!-- PANEL C: ADVANCED PK/PD CONSTANTS (COLLAPSIBLE) -->
+      <section class="card">
+        <details>
+          <summary class="panel-header" style="margin-bottom: 0; border-bottom: none; padding-bottom: 0;">
+            <span class="panel-title">Panel C: Advanced PK/PD Constants</span>
+            <span class="chevron">&#9660;</span>
+          </summary>
+          <div class="pk-grid" style="margin-top: 0.85rem; padding-top: 0.75rem; border-top: 1px solid var(--border-light);">
+            <div class="control-group">
+              <label class="control-label-row" for="v1PerKg" style="font-size: 0.76rem;">Central Vol V<sub>1</sub> (L/kg)</label>
+              <input type="number" id="v1PerKg" min="0.10" max="1.50" step="0.01" value="0.35" style="width: 100%;">
+            </div>
+            <div class="control-group">
+              <label class="control-label-row" for="vssPerKg" style="font-size: 0.76rem;">Steady-State V<sub>ss</sub> (L/kg)</label>
+              <input type="number" id="vssPerKg" min="0.50" max="6.00" step="0.05" value="2.10" style="width: 100%;">
+            </div>
+            <div class="control-group">
+              <label class="control-label-row" for="tHalfAlpha" style="font-size: 0.76rem;">Dist. Half-Life t<sub>1/2&alpha;</sub> (min)</label>
+              <input type="number" id="tHalfAlpha" min="2" max="60" step="1" value="15" style="width: 100%;">
+            </div>
+            <div class="control-group">
+              <label class="control-label-row" for="tHalfKe0" style="font-size: 0.76rem;">Effect Equil. t<sub>1/2,ke0</sub> (min)</label>
+              <input type="number" id="tHalfKe0" min="2" max="60" step="1" value="15" style="width: 100%;">
+            </div>
+          </div>
+          <div style="margin-top: 0.65rem; text-align: right;">
+            <button type="button" class="btn" id="resetPkBtn" style="font-size: 0.72rem;">Reset Standard PK Defaults</button>
+          </div>
+        </details>
+      </section>
+
+    </div>
+
+    <!-- RIGHT COLUMN: VISUAL OUTPUTS & READOUTS -->
+    <div class="outputs-column">
+
+      <!-- LIVE INTRAOPERATIVE REDOSE TIMER & CLINICAL CHECK -->
+      <section class="card" id="redoseTimerCard">
+        <div class="panel-header">
+          <span class="panel-title">Intraoperative Redose Timer &amp; Clinical Check</span>
+          <span class="panel-badge" id="timerDosesGivenBadge">Doses Logged: 0 / 3</span>
+        </div>
+
+        <div class="timer-grid">
+          <!-- Elapsed Clock -->
+          <div class="timer-clock-box">
+            <div class="timer-clock-label">Since Last Bolus</div>
+            <div class="timer-clock-val" id="timerElapsedDisplay">00:00</div>
+            <div style="font-size: 0.7rem; color: var(--text-light); margin-top: 0.15rem;" id="timerTotalElapsed">Total Case: 00:00</div>
+          </div>
+
+          <!-- Dynamic Redose Readiness Check -->
+          <div class="timer-status-banner alert-green" id="timerStatusBanner" style="margin-top: 0;">
+            <div class="timer-status-title" id="timerStatusTitle">Ready for Initial Bolus (30 mcg / 2.0 mL)</div>
+            <div class="timer-status-desc" id="timerStatusDesc">Log your first bolus when starting a slow push; wait ~15–20 min for peak effect-site (C<sub>e</sub>) equilibration before judging BP response.</div>
+          </div>
+
+          <!-- Action & Speed Buttons -->
+          <div class="timer-controls">
+            <button type="button" class="btn btn-primary" id="giveBolusNowBtn" style="margin-top: 0;">
+              + Administer Bolus Now
+            </button>
+            <div class="timer-speed-row">
+              <button type="button" class="btn active" id="speed1xBtn" title="Real-time clock">1x Live</button>
+              <button type="button" class="btn" id="speed60xBtn" title="1 real second = 1 simulated minute">60x Sim</button>
+              <button type="button" class="btn" id="undoBolusBtn" title="Remove last logged bolus" disabled>Undo</button>
+              <button type="button" class="btn" id="resetTimerBtn">Reset</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Extubation Guardrail & Variable Dose Log -->
+        <div class="extubation-bar">
+          <div class="extubation-input-group">
+            <label for="extubationMinInput">Est. Extubation at Case Min:</label>
+            <input type="number" id="extubationMinInput" min="15" max="360" step="5" value="90" style="width: 68px;">
+            <span id="extubationCountdownBadge" style="font-family: var(--font-mono); font-size: 0.74rem; color: var(--primary); font-weight: 700;">(90m left)</span>
+          </div>
+          <div id="extubationAlertText" style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted);">
+            Predicted C<sub>e</sub> at extubation: <strong style="font-family: var(--font-mono);">0.00 ng/mL</strong>
+          </div>
+        </div>
+
+        <div class="dose-log-strip" id="doseLogStrip" style="display: none;"></div>
+      </section>
+
+      <!-- TOP TRACKERS: SYRINGE/WEIGHT CAP & FRONT-END TRANSIT -->
+      <div class="trackers-grid">
+        <!-- 10 mL Syringe & Weight-Cap Tracker -->
+        <section class="card">
+          <div class="panel-header">
+            <span class="panel-title">10 mL Syringe &amp; Weight-Cap Tracker</span>
+            <span class="value-display" id="cumulativeSummaryBadge">90 mcg &bull; 6.0 mL &bull; 1.29 mcg/kg</span>
+          </div>
+
+          <!-- Syringe Volume Bar -->
+          <div style="display: flex; justify-content: space-between; font-size: 0.78rem; font-weight: 600; color: var(--text-muted);">
+            <span>Prepared 10 mL Syringe Usage (150 mcg max)</span>
+            <span id="syringeVolText" style="font-family: var(--font-mono);">6.0 / 10.0 mL (60%)</span>
+          </div>
+          <div class="syringe-visual-wrap">
+            <div class="syringe-body">
+              <div class="syringe-fill" id="syringeFillBar" style="width: 60%;"></div>
+              <div class="syringe-ticks">
+                <div class="syringe-tick major"></div>
+                <div class="syringe-tick"></div>
+                <div class="syringe-tick major"></div>
+                <div class="syringe-tick"></div>
+                <div class="syringe-tick major"></div>
+                <div class="syringe-tick"></div>
+                <div class="syringe-tick major"></div>
+                <div class="syringe-tick"></div>
+                <div class="syringe-tick major"></div>
+                <div class="syringe-tick"></div>
+                <div class="syringe-tick major"></div>
+              </div>
+            </div>
+            <div class="syringe-scale-labels">
+              <span>0 mL</span>
+              <span>2 mL</span>
+              <span>4 mL</span>
+              <span>6 mL</span>
+              <span>8 mL</span>
+              <span>10 mL (150 mcg)</span>
+            </div>
+          </div>
+
+          <!-- Weight-Normalized Meter -->
+          <div style="display: flex; justify-content: space-between; font-size: 0.78rem; font-weight: 600; color: var(--text-muted); margin-top: 0.65rem;">
+            <span>Cumulative Weight-Normalized Dose</span>
+            <span id="weightDoseText" style="font-family: var(--font-mono); font-weight: 700;">1.29 mcg/kg</span>
+          </div>
+          <div class="weight-meter-bar">
+            <div class="weight-marker" id="weightDoseMarker" style="left: 32%;"></div>
+          </div>
+          <div class="weight-ticks">
+            <span>0</span>
+            <span>1.0</span>
+            <span style="color: var(--green-text); font-weight: 700;">2.0 (Caution)</span>
+            <span style="color: var(--red-text); font-weight: 700;">3.0 (Cap)</span>
+            <span>4.0+ mcg/kg</span>
+          </div>
+
+          <!-- Dynamic Safety Alerts -->
+          <div class="alert-box alert-green" id="weightSafetyAlert">
+            Within standard intraoperative antihypertensive titration range.
+          </div>
+          <div class="alert-box alert-red" id="syringeVolumeAlert" style="display: none; margin-top: 0.45rem;">
+            Syringe Limit Exceeded (&gt; 10.0 mL / 150 mcg): Prepare a second 10 mL syringe to complete this regimen.
+          </div>
+        </section>
+
+        <!-- Front-End Cardiopulmonary Transit Summary Banner -->
+        <section class="card">
+          <div class="panel-header">
+            <span class="panel-title">Front-End Cardiopulmonary Transit</span>
+            <span class="panel-badge" id="tDispBadge">T_disp: 32.0 s</span>
+          </div>
+
+          <div class="transit-metrics">
+            <div class="metric-tile">
+              <div class="m-label">Arm-to-Aorta</div>
+              <div class="m-val" id="transitTimeVal">12.0 s</div>
+              <div class="m-sub" id="transitVolSub">Transit delay</div>
+            </div>
+            <div class="metric-tile">
+              <div class="m-label">First-Pass Spike</div>
+              <div class="m-val" id="artPeakVal">11.3 ng/mL</div>
+              <div class="m-sub">Aortic C<sub>art,peak</sub></div>
+            </div>
+            <div class="metric-tile">
+              <div class="m-label">Single Bolus</div>
+              <div class="m-val" id="singleBolusVal">30 mcg</div>
+              <div class="m-sub" id="singleBolusVolSub">2.0 mL over 30 s</div>
+            </div>
+          </div>
+
+          <div class="alert-box alert-green" id="firstPassAlert" style="margin-top: 0.85rem;">
+            <div>
+              <div style="font-weight: 700;" id="firstPassTitle">Smooth Vascular Profile (C<sub>art,peak</sub> &le; 15 ng/mL)</div>
+              <div style="font-weight: 400; font-size: 0.76rem; margin-top: 0.15rem;" id="firstPassDesc">
+                Slow titrated dilution across the pulmonary capillary bed avoids acute peripheral &alpha;<sub>1</sub>/&alpha;<sub>2B</sub> pressor spikes prior to central sympatholysis.
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- INTERACTIVE TIME-CONCENTRATION CHART (0 TO 360 MINUTES) -->
+      <section class="card">
+        <div class="chart-header">
+          <div>
+            <div class="panel-title" style="margin-bottom: 0.15rem;" id="chartMainTitle">Two-Compartment Plasma &amp; Effect-Site Simulation (0–360 Minutes)</div>
+            <div style="font-size: 0.76rem; color: var(--text-light);" id="chartSubTitle">Hover or tap along the curve to inspect C<sub>p</sub> and C<sub>e</sub></div>
+          </div>
+          <div class="chart-legend">
+            <div class="legend-item">
+              <span class="legend-swatch" style="background: var(--cp-color);"></span>
+              <span>Plasma C<sub>p</sub>(t)</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-swatch" style="background: var(--ce-color);"></span>
+              <span>Effect-Site C<sub>e</sub>(t)</span>
+            </div>
+            <div class="legend-item" id="ghostLegendItem" style="display: none;">
+              <span class="legend-swatch" style="border-top: 2px dashed var(--ce-color); background: transparent; height: 0;"></span>
+              <span>If Redosed Now C<sub>e</sub></span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-box"></span>
+              <span>Therapeutic Window (0.2–1.5 ng/mL)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="chart-wrapper" id="chartWrapper">
+          <canvas id="pkChart"></canvas>
+          <div class="chart-tooltip" id="chartTooltip"></div>
+        </div>
+      </section>
+
+      <!-- LIVE PK/PD SUMMARY CARDS -->
+      <div class="summary-grid">
+        <div class="summary-card">
+          <h3>Mixed Peak Plasma C<sub>p</sub></h3>
+          <div class="summary-big" style="color: var(--cp-color);" id="peakCpVal">0.00 ng/mL</div>
+          <div class="summary-detail" id="peakCpTime">Occurs immediately post-bolus</div>
+        </div>
+        <div class="summary-card">
+          <h3>Peak Effect-Site C<sub>e</sub></h3>
+          <div class="summary-big" style="color: var(--ce-color);" id="peakCeVal">0.00 ng/mL</div>
+          <div class="summary-detail" id="peakCeStatus">Within 0.2–1.5 ng/mL target</div>
+        </div>
+        <div class="summary-card">
+          <h3>Time to Peak Effect (T<sub>peak</sub>)</h3>
+          <div class="summary-big" id="tPeakVal">0.0 min</div>
+          <div class="summary-detail" id="tPeakDetail">From t = 0 min (first bolus)</div>
+        </div>
+        <div class="summary-card">
+          <h3>Therapeutic Window Duration</h3>
+          <div class="summary-big" style="color: var(--green-text);" id="windowDurVal">0 min</div>
+          <div class="summary-detail" id="windowDurDetail">C<sub>e</sub> inside 0.2–1.5 ng/mL (0–360m)</div>
+        </div>
+      </div>
+
+      <!-- CALCULATED COMPARTMENT VOLUMES & MICRO-CONSTANTS -->
+      <details class="card" style="padding: 0.85rem 1.15rem;">
+        <summary style="display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.03em;">
+          <span>Compartment Volumes &amp; PK Micro-Constants</span>
+          <span class="chevron">&#9660;</span>
+        </summary>
+        <div class="micro-constants-bar" id="microConstantsBar" style="margin-top: 0.65rem;">
+          <span class="mc-item">V<sub>1</sub>: <strong id="mcV1">24.5 L</strong></span>
+          <span class="mc-item">V<sub>ss</sub>: <strong id="mcVss">147.0 L</strong></span>
+          <span class="mc-item">&alpha;: <strong id="mcAlpha">2.773 h<sup>-1</sup></strong></span>
+          <span class="mc-item">&beta;: <strong id="mcBeta">0.058 h<sup>-1</sup></strong></span>
+          <span class="mc-item">k<sub>e0</sub>: <strong id="mcKe0">2.773 h<sup>-1</sup></strong></span>
+          <span class="mc-item">k<sub>10</sub>: <strong id="mcK10">0.347 h<sup>-1</sup></strong></span>
+          <span class="mc-item">k<sub>12</sub>: <strong id="mcK12">2.022 h<sup>-1</sup></strong></span>
+          <span class="mc-item">k<sub>21</sub>: <strong id="mcK21">0.462 h<sup>-1</sup></strong></span>
+        </div>
+      </details>
+
+    </div>
+  </main>
+
+  <script>
+    (function () {
+      'use strict';
+
+      // Application State
+      const state = {
+        weightKg: 70,
+        bolusMcg: 30,
+        numBoluses: 3,
+        intervalMin: 20,
+        tHalfBetaHr: 12.0,
+        coLMin: 5.0,
+        pushSec: 30,
+        vVenous: 50,
+        vRightHeart: 250,
+        vPulmonary: 450,
+        vLeftHeart: 250,
+        v1PerKg: 0.35,
+        vssPerKg: 2.10,
+        tHalfAlphaMin: 15,
+        tHalfKe0Min: 15
+      };
+
+      // Simulation Data Cache for Charting & Hover
+      let simCache = {
+        timesMin: [],
+        cpArr: [],
+        ceArr: [],
+        ghostCeArr: [],
+        plannedCeArr: [],
+        bolusTimesMin: [],
+        isLiveMode: false,
+        nowMin: 0,
+        maxY: 2.0
+      };
+
+      let hoverIndex = null;
+      let lastChartDrawMs = 0;
+
+      // Live Intraoperative Timer State
+      const timerState = {
+        running: false,
+        speedMultiplier: 1, // 1 = real-time, 60 = 1 min per sec
+        lastTickMs: null,
+        totalCaseSec: 0,
+        extubationMin: 90,
+        bolusEvents: [] // array of { sec: number, mcg: number }
+      };
+
+      // DOM Element References
+      const els = {
+        presetFrailBtn: document.getElementById('presetFrailBtn'),
+        presetStandardBtn: document.getElementById('presetStandardBtn'),
+        presetHighToneBtn: document.getElementById('presetHighToneBtn'),
+
+        weightSlider: document.getElementById('weightSlider'),
+        weightNum: document.getElementById('weightNum'),
+        weightReadout: document.getElementById('weightReadout'),
+
+        bolusSlider: document.getElementById('bolusSlider'),
+        bolusNum: document.getElementById('bolusNum'),
+        bolusReadout: document.getElementById('bolusReadout'),
+
+        countSlider: document.getElementById('countSlider'),
+        countNum: document.getElementById('countNum'),
+        countReadout: document.getElementById('countReadout'),
+
+        intervalSlider: document.getElementById('intervalSlider'),
+        intervalNum: document.getElementById('intervalNum'),
+        intervalReadout: document.getElementById('intervalReadout'),
+        autoIntervalBtn: document.getElementById('autoIntervalBtn'),
+        autoIntervalStatus: document.getElementById('autoIntervalStatus'),
+
+        tHalfBetaSlider: document.getElementById('tHalfBetaSlider'),
+        tHalfBetaNum: document.getElementById('tHalfBetaNum'),
+        tHalfBetaReadout: document.getElementById('tHalfBetaReadout'),
+        renalNormalBtn: document.getElementById('renalNormalBtn'),
+        renalImpairedBtn: document.getElementById('renalImpairedBtn'),
+
+        coSlider: document.getElementById('coSlider'),
+        coNum: document.getElementById('coNum'),
+        coReadout: document.getElementById('coReadout'),
+
+        pushSlider: document.getElementById('pushSlider'),
+        pushNum: document.getElementById('pushNum'),
+        pushReadout: document.getElementById('pushReadout'),
+        pushRapidBtn: document.getElementById('pushRapidBtn'),
+        pushSlowBtn: document.getElementById('pushSlowBtn'),
+
+        vVenous: document.getElementById('vVenous'),
+        vRightHeart: document.getElementById('vRightHeart'),
+        vPulmonary: document.getElementById('vPulmonary'),
+        vLeftHeart: document.getElementById('vLeftHeart'),
+        vTransitTotalReadout: document.getElementById('vTransitTotalReadout'),
+
+        v1PerKg: document.getElementById('v1PerKg'),
+        vssPerKg: document.getElementById('vssPerKg'),
+        tHalfAlpha: document.getElementById('tHalfAlpha'),
+        tHalfKe0: document.getElementById('tHalfKe0'),
+        resetPkBtn: document.getElementById('resetPkBtn'),
+
+        // Readouts
+        cumulativeSummaryBadge: document.getElementById('cumulativeSummaryBadge'),
+        syringeVolText: document.getElementById('syringeVolText'),
+        syringeFillBar: document.getElementById('syringeFillBar'),
+        weightDoseText: document.getElementById('weightDoseText'),
+        weightDoseMarker: document.getElementById('weightDoseMarker'),
+        weightSafetyAlert: document.getElementById('weightSafetyAlert'),
+        syringeVolumeAlert: document.getElementById('syringeVolumeAlert'),
+
+        tDispBadge: document.getElementById('tDispBadge'),
+        transitTimeVal: document.getElementById('transitTimeVal'),
+        transitVolSub: document.getElementById('transitVolSub'),
+        artPeakVal: document.getElementById('artPeakVal'),
+        singleBolusVal: document.getElementById('singleBolusVal'),
+        singleBolusVolSub: document.getElementById('singleBolusVolSub'),
+        firstPassAlert: document.getElementById('firstPassAlert'),
+        firstPassTitle: document.getElementById('firstPassTitle'),
+        firstPassDesc: document.getElementById('firstPassDesc'),
+
+        peakCpVal: document.getElementById('peakCpVal'),
+        peakCpTime: document.getElementById('peakCpTime'),
+        peakCeVal: document.getElementById('peakCeVal'),
+        peakCeStatus: document.getElementById('peakCeStatus'),
+        tPeakVal: document.getElementById('tPeakVal'),
+        tPeakDetail: document.getElementById('tPeakDetail'),
+        windowDurVal: document.getElementById('windowDurVal'),
+        windowDurDetail: document.getElementById('windowDurDetail'),
+
+        mcV1: document.getElementById('mcV1'),
+        mcVss: document.getElementById('mcVss'),
+        mcAlpha: document.getElementById('mcAlpha'),
+        mcBeta: document.getElementById('mcBeta'),
+        mcKe0: document.getElementById('mcKe0'),
+        mcK10: document.getElementById('mcK10'),
+        mcK12: document.getElementById('mcK12'),
+        mcK21: document.getElementById('mcK21'),
+
+        chartWrapper: document.getElementById('chartWrapper'),
+        canvas: document.getElementById('pkChart'),
+        tooltip: document.getElementById('chartTooltip'),
+        chartMainTitle: document.getElementById('chartMainTitle'),
+        chartSubTitle: document.getElementById('chartSubTitle'),
+        ghostLegendItem: document.getElementById('ghostLegendItem'),
+        themeToggleBtn: document.getElementById('themeToggleBtn'),
+        themeIcon: document.getElementById('themeIcon'),
+        themeLabel: document.getElementById('themeLabel'),
+
+        // Timer elements
+        timerDosesGivenBadge: document.getElementById('timerDosesGivenBadge'),
+        timerElapsedDisplay: document.getElementById('timerElapsedDisplay'),
+        timerTotalElapsed: document.getElementById('timerTotalElapsed'),
+        timerStatusBanner: document.getElementById('timerStatusBanner'),
+        timerStatusTitle: document.getElementById('timerStatusTitle'),
+        timerStatusDesc: document.getElementById('timerStatusDesc'),
+        giveBolusNowBtn: document.getElementById('giveBolusNowBtn'),
+        speed1xBtn: document.getElementById('speed1xBtn'),
+        speed60xBtn: document.getElementById('speed60xBtn'),
+        undoBolusBtn: document.getElementById('undoBolusBtn'),
+        resetTimerBtn: document.getElementById('resetTimerBtn'),
+        extubationMinInput: document.getElementById('extubationMinInput'),
+        extubationCountdownBadge: document.getElementById('extubationCountdownBadge'),
+        extubationAlertText: document.getElementById('extubationAlertText'),
+        doseLogStrip: document.getElementById('doseLogStrip')
+      };
+
+      // Helper to clamp numbers safely
+      function clamp(val, min, max) {
+        if (isNaN(val)) return min;
+        return Math.min(Math.max(val, min), max);
+      }
+
+      // Compute Two-Compartment Parameters & Curves for any given interval or explicit bolus events [{min, mcg}]
+      function runPkSimulation(customIntervalMin, customBolusEvents) {
+        const intervalMin = customIntervalMin !== undefined ? customIntervalMin : state.intervalMin;
+        const V1 = state.v1PerKg * state.weightKg;
+        const Vss = Math.max(state.vssPerKg * state.weightKg, V1 + 0.1);
+
+        const alpha = Math.LN2 / (state.tHalfAlphaMin / 60);
+        const beta = Math.LN2 / state.tHalfBetaHr;
+        const ke0 = Math.LN2 / (state.tHalfKe0Min / 60);
+
+        const k21 = (alpha * beta * Vss) / V1;
+        const k10 = (alpha * beta) / k21;
+        const k12 = alpha + beta - k21 - k10;
+
+        const denom = (alpha - beta) || 1e-6;
+        const unitA = (1 / V1) * (alpha - k21) / denom;
+        const unitB = (1 / V1) * (k21 - beta) / denom;
+
+        const bolusEvents = [];
+        const bolusTimesMin = [];
+        if (Array.isArray(customBolusEvents)) {
+          for (let i = 0; i < customBolusEvents.length; i++) {
+            const ev = customBolusEvents[i];
+            bolusTimesMin.push(ev.min);
+            bolusEvents.push({ hr: ev.min / 60, mcg: ev.mcg });
+          }
+        } else {
+          for (let i = 0; i < state.numBoluses; i++) {
+            const tMin = i * intervalMin;
+            bolusTimesMin.push(tMin);
+            bolusEvents.push({ hr: tMin / 60, mcg: state.bolusMcg });
+          }
+        }
+
+        // Simulate 0 to 360 minutes at 0.5-minute resolution (721 points)
+        const totalMin = 360;
+        const stepMin = 0.5;
+        const numSteps = Math.floor(totalMin / stepMin) + 1;
+
+        const timesMin = new Array(numSteps);
+        const cpArr = new Array(numSteps);
+        const ceArr = new Array(numSteps);
+
+        let peakCp = 0;
+        let peakCpMin = 0;
+        let peakCe = 0;
+        let peakCeMin = 0;
+        let stepsInWindow = 0;
+
+        for (let idx = 0; idx < numSteps; idx++) {
+          const tMin = idx * stepMin;
+          const tHr = tMin / 60;
+          let cp = 0;
+          let ce = 0;
+
+          for (let b = 0; b < bolusEvents.length; b++) {
+            const ti = bolusEvents[b].hr;
+            const doseMcg = bolusEvents[b].mcg;
+            if (tHr >= ti) {
+              const dt = tHr - ti;
+              const A = doseMcg * unitA;
+              const B = doseMcg * unitB;
+              const expAlpha = Math.exp(-alpha * dt);
+              const expBeta = Math.exp(-beta * dt);
+              const expKe0 = Math.exp(-ke0 * dt);
+
+              cp += A * expAlpha + B * expBeta;
+
+              // Term 1 (alpha) with resonance guard when |ke0 - alpha| < 1e-5
+              let termAlpha;
+              if (Math.abs(ke0 - alpha) < 1e-5) {
+                termAlpha = A * ke0 * dt * expAlpha;
+              } else {
+                termAlpha = ke0 * (A / (ke0 - alpha)) * (expAlpha - expKe0);
+              }
+
+              // Term 2 (beta) with resonance guard when |ke0 - beta| < 1e-5
+              let termBeta;
+              if (Math.abs(ke0 - beta) < 1e-5) {
+                termBeta = B * ke0 * dt * expBeta;
+              } else {
+                termBeta = ke0 * (B / (ke0 - beta)) * (expBeta - expKe0);
+              }
+
+              ce += termAlpha + termBeta;
+            }
+          }
+
+          timesMin[idx] = tMin;
+          cpArr[idx] = cp;
+          ceArr[idx] = ce;
+
+          if (cp > peakCp) {
+            peakCp = cp;
+            peakCpMin = tMin;
+          }
+          if (ce > peakCe) {
+            peakCe = ce;
+            peakCeMin = tMin;
+          }
+          if (ce >= 0.2 && ce <= 1.5) {
+            stepsInWindow++;
+          }
+        }
+
+        const windowDurationMin = stepsInWindow * stepMin;
+
+        return {
+          V1, Vss, alpha, beta, ke0, k10, k12, k21,
+          timesMin, cpArr, ceArr, bolusTimesMin,
+          peakCp, peakCpMin, peakCe, peakCeMin, windowDurationMin
+        };
+      }
+
+      // Auto-Calculate Optimal Interval (minimum safe interval in 5..60 min keeping Peak Ce <= 1.5 ng/mL)
+      function autoCalculateOptimalInterval() {
+        if (state.numBoluses === 1) {
+          const res = runPkSimulation(state.intervalMin);
+          if (res.peakCe > 1.5) {
+            els.autoIntervalStatus.textContent = `Single bolus Peak Ce (${res.peakCe.toFixed(2)} ng/mL) already exceeds 1.5 ng/mL; reduce bolus size.`;
+          } else {
+            els.autoIntervalStatus.textContent = `Single bolus regime: Peak Ce is ${res.peakCe.toFixed(2)} ng/mL (interval not applicable).`;
+          }
+          return;
+        }
+
+        let bestInterval = null;
+        let bestRes = null;
+
+        for (let testInt = 5; testInt <= 60; testInt++) {
+          const res = runPkSimulation(testInt);
+          if (res.peakCe <= 1.5) {
+            bestInterval = testInt;
+            bestRes = res;
+            break;
+          }
+        }
+
+        if (bestInterval !== null) {
+          state.intervalMin = bestInterval;
+          els.intervalSlider.value = bestInterval;
+          els.intervalNum.value = bestInterval;
+          els.autoIntervalStatus.textContent = `Optimal interval set to ${bestInterval} min (Peak Ce: ${bestRes.peakCe.toFixed(2)} ng/mL ≤ 1.5 ng/mL).`;
+        } else {
+          state.intervalMin = 60;
+          els.intervalSlider.value = 60;
+          els.intervalNum.value = 60;
+          const res60 = runPkSimulation(60);
+          els.autoIntervalStatus.textContent = `Even at max 60 min interval, Peak Ce reaches ${res60.peakCe.toFixed(2)} ng/mL (> 1.5). Reduce bolus size or count.`;
+        }
+
+        updateAll();
+      }
+
+      // Update UI Readouts & Run Simulation
+      function updateAll() {
+        // 1. Sync Control Labels
+        els.weightReadout.textContent = `${state.weightKg} kg`;
+        const bolusVolMl = state.bolusMcg / 15;
+        els.bolusReadout.textContent = `${state.bolusMcg} mcg (${bolusVolMl.toFixed(1)} mL)`;
+        els.countReadout.textContent = `${state.numBoluses} ${state.numBoluses === 1 ? 'bolus' : 'boluses'}`;
+        els.intervalReadout.textContent = `${state.intervalMin} min`;
+        els.tHalfBetaReadout.textContent = `${state.tHalfBetaHr.toFixed(1)} h`;
+
+        // Preset highlights
+        els.renalNormalBtn.classList.toggle('active', Math.abs(state.tHalfBetaHr - 12) < 0.01);
+        els.renalImpairedBtn.classList.toggle('active', Math.abs(state.tHalfBetaHr - 30) < 0.01);
+        els.pushRapidBtn.classList.toggle('active', state.pushSec === 2);
+        els.pushSlowBtn.classList.toggle('active', state.pushSec === 30);
+
+        const coMlSec = (state.coLMin * 1000) / 60;
+        els.coReadout.textContent = `${state.coLMin.toFixed(1)} L/min (${coMlSec.toFixed(1)} mL/s)`;
+        els.pushReadout.textContent = `${state.pushSec} s`;
+
+        const vTransit = state.vVenous + state.vRightHeart + state.vPulmonary + state.vLeftHeart;
+        els.vTransitTotalReadout.textContent = `Total: ${vTransit.toLocaleString()} mL`;
+
+        // 2. Part 1: Cumulative Dose & Syringe Limits
+        const totalMcg = state.bolusMcg * state.numBoluses;
+        const totalMl = totalMcg / 15;
+        const mcgPerKg = totalMcg / state.weightKg;
+
+        els.cumulativeSummaryBadge.textContent = `${totalMcg} mcg • ${totalMl.toFixed(1)} mL • ${mcgPerKg.toFixed(2)} mcg/kg`;
+        const pctSyringe = (totalMl / 10) * 100;
+        els.syringeVolText.textContent = `${totalMl.toFixed(1)} / 10.0 mL (${Math.round(pctSyringe)}%)`;
+        els.syringeFillBar.style.width = `${Math.min(pctSyringe, 100)}%`;
+        els.syringeFillBar.classList.toggle('overflow', totalMl > 10.0);
+
+        els.weightDoseText.textContent = `${mcgPerKg.toFixed(2)} mcg/kg`;
+        // Map 0..4 mcg/kg to 0..100% bar position (2.0 is at 50%, 3.0 is at 75%)
+        const markerPct = Math.min((mcgPerKg / 4.0) * 100, 99);
+        els.weightDoseMarker.style.left = `${markerPct}%`;
+
+        // Safety alert styling
+        els.weightSafetyAlert.className = 'alert-box';
+        if (mcgPerKg < 2.0) {
+          els.weightSafetyAlert.classList.add('alert-green');
+          els.weightSafetyAlert.textContent = 'Within standard intraoperative antihypertensive titration range (< 2.0 mcg/kg).';
+        } else if (mcgPerKg <= 3.0) {
+          els.weightSafetyAlert.classList.add('alert-amber');
+          els.weightSafetyAlert.textContent = 'Caution: Exceeds 2.0 mcg/kg — increased risk of delayed emergence, postoperative sedation, and bradycardia.';
+        } else {
+          els.weightSafetyAlert.classList.add('alert-red');
+          els.weightSafetyAlert.textContent = 'Warning: Exceeds 3.0 mcg/kg cumulative intraoperative cap — high risk of prolonged hypotension, bradycardia, and delayed extubation.';
+        }
+
+        if (totalMl > 10.0) {
+          els.syringeVolumeAlert.style.display = 'flex';
+        } else {
+          els.syringeVolumeAlert.style.display = 'none';
+        }
+
+        // 3. Part 2: Front-End Cardiopulmonary Transit & First-Pass Arterial Peak
+        const tTransitSec = vTransit / coMlSec;
+        const tDispSec = Math.max(state.pushSec, 4) + 2;
+        const cArtPeak = (state.bolusMcg * 1000) / (coMlSec * tDispSec);
+
+        els.tDispBadge.textContent = `T_disp: ${tDispSec.toFixed(1)} s`;
+        els.transitTimeVal.textContent = `${tTransitSec.toFixed(1)} s`;
+        els.transitVolSub.textContent = `Transit delay`;
+        els.artPeakVal.textContent = `${cArtPeak.toFixed(1)} ng/mL`;
+        els.singleBolusVal.textContent = `${state.bolusMcg} mcg`;
+        els.singleBolusVolSub.textContent = `${bolusVolMl.toFixed(1)} mL over ${state.pushSec} s`;
+
+        els.firstPassAlert.className = 'alert-box';
+        if (cArtPeak > 15.0) {
+          els.firstPassAlert.classList.add('alert-red');
+          els.artPeakVal.style.color = 'var(--ce-color)';
+          els.firstPassTitle.innerHTML = `High Paradoxical Pressor Spike Risk (C<sub>art,peak</sub> = ${cArtPeak.toFixed(1)} ng/mL &gt; 15 ng/mL)`;
+          els.firstPassDesc.innerHTML = `Rapid arterial arrival exceeds 15 ng/mL, risking transient peripheral &alpha;<sub>1</sub>/&alpha;<sub>2B</sub> vasoconstriction and acute hypertension before central sympatholysis develops.`;
+        } else {
+          els.firstPassAlert.classList.add('alert-green');
+          els.artPeakVal.style.color = 'var(--text-main)';
+          els.firstPassTitle.innerHTML = `Smooth Vascular Profile (C<sub>art,peak</sub> = ${cArtPeak.toFixed(1)} ng/mL &le; 15 ng/mL)`;
+          els.firstPassDesc.innerHTML = `Controlled dilution across the pulmonary capillary bed avoids acute peripheral &alpha;<sub>1</sub>/&alpha;<sub>2B</sub> pressor spikes prior to central sympatholysis.`;
+        }
+
+        // 4. Part 3: Two-Compartment Multi-Dose Superposition
+        const plannedSim = runPkSimulation();
+        const isLiveMode = timerState.bolusEvents.length > 0;
+        const nowMin = timerState.totalCaseSec / 60;
+
+        let activeSim = plannedSim;
+        let ghostCeArr = [];
+
+        if (isLiveMode) {
+          const actualEventsMin = timerState.bolusEvents.map((ev) => ({ min: ev.sec / 60, mcg: ev.mcg }));
+          activeSim = runPkSimulation(undefined, actualEventsMin);
+
+          // Simulate "If Redosed Now" ghost trajectory from current case time using current syringe bolus size
+          const ghostSim = runPkSimulation(undefined, [...actualEventsMin, { min: nowMin, mcg: state.bolusMcg }]);
+          ghostCeArr = ghostSim.ceArr;
+
+          els.chartMainTitle.innerHTML = 'Live Case PK/PD Tracking &amp; Redose Preview (0–360 Minutes)';
+          els.chartSubTitle.innerHTML = 'Solid curves show actual administered doses &bull; Vertical cursor = NOW &bull; Dashed red line = projected C<sub>e</sub> if redosed right now';
+          els.ghostLegendItem.style.display = 'flex';
+        } else {
+          els.chartMainTitle.innerHTML = 'Two-Compartment Plasma &amp; Effect-Site Simulation (0–360 Minutes)';
+          els.chartSubTitle.innerHTML = 'Hover or touch anywhere along the timeline to inspect exact C<sub>p</sub>(t) and C<sub>e</sub>(t) values';
+          els.ghostLegendItem.style.display = 'none';
+        }
+
+        // Update PK summary cards (reflecting Live Case when active, or Planned Regimen beforehand)
+        els.peakCpVal.textContent = `${activeSim.peakCp.toFixed(2)} ng/mL`;
+        els.peakCpTime.textContent = `At t = ${activeSim.peakCpMin.toFixed(1)} min`;
+
+        els.peakCeVal.textContent = `${activeSim.peakCe.toFixed(2)} ng/mL`;
+        if (activeSim.peakCe > 1.5) {
+          els.peakCeVal.style.color = 'var(--ce-color)';
+          els.peakCeStatus.textContent = 'Overshoots > 1.5 ng/mL (sedation/vasoconstriction)';
+          els.peakCeStatus.style.color = 'var(--red-text)';
+        } else if (activeSim.peakCe < 0.2) {
+          els.peakCeVal.style.color = 'var(--amber-text)';
+          els.peakCeStatus.textContent = 'Subtherapeutic (< 0.2 ng/mL target)';
+          els.peakCeStatus.style.color = 'var(--amber-text)';
+        } else {
+          els.peakCeVal.style.color = 'var(--green-text)';
+          els.peakCeStatus.textContent = 'Optimal: inside 0.2–1.5 ng/mL window';
+          els.peakCeStatus.style.color = 'var(--green-text)';
+        }
+
+        els.tPeakVal.textContent = `${activeSim.peakCeMin.toFixed(1)} min`;
+        const lastBolusMin = activeSim.bolusTimesMin.length > 0
+          ? activeSim.bolusTimesMin[activeSim.bolusTimesMin.length - 1]
+          : 0;
+        els.tPeakDetail.textContent = activeSim.bolusTimesMin.length > 1
+          ? `+${(activeSim.peakCeMin - lastBolusMin).toFixed(1)} min after latest bolus`
+          : `From bolus administration at t = 0`;
+
+        els.windowDurVal.textContent = `${Math.round(activeSim.windowDurationMin)} min`;
+        els.windowDurDetail.textContent = `${Math.round((activeSim.windowDurationMin / 360) * 100)}% of 360-min simulation`;
+
+        // Update micro-constants bar
+        els.mcV1.textContent = `${activeSim.V1.toFixed(1)} L`;
+        els.mcVss.textContent = `${activeSim.Vss.toFixed(1)} L`;
+        els.mcAlpha.innerHTML = `${activeSim.alpha.toFixed(3)} h<sup>-1</sup>`;
+        els.mcBeta.innerHTML = `${activeSim.beta.toFixed(3)} h<sup>-1</sup>`;
+        els.mcKe0.innerHTML = `${activeSim.ke0.toFixed(3)} h<sup>-1</sup>`;
+        els.mcK10.innerHTML = `${activeSim.k10.toFixed(3)} h<sup>-1</sup>`;
+        els.mcK12.innerHTML = `${activeSim.k12.toFixed(3)} h<sup>-1</sup>`;
+        els.mcK21.innerHTML = `${activeSim.k21.toFixed(3)} h<sup>-1</sup>`;
+
+        // Store simulation cache and render chart
+        const maxGhost = ghostCeArr.length > 0 ? Math.max(...ghostCeArr) : 0;
+        const rawMax = Math.max(activeSim.peakCp, activeSim.peakCe, maxGhost, 1.8);
+        const maxY = Math.ceil(rawMax * 1.15 * 4) / 4; // clean 0.25 step ceiling
+        simCache = {
+          timesMin: activeSim.timesMin,
+          cpArr: activeSim.cpArr,
+          ceArr: activeSim.ceArr,
+          ghostCeArr,
+          plannedCeArr: plannedSim.ceArr,
+          bolusTimesMin: activeSim.bolusTimesMin,
+          isLiveMode,
+          nowMin,
+          extubationMin: timerState.extubationMin,
+          maxY
+        };
+
+        updateRedoseTimerUI();
+        drawChart();
+      }
+
+      // Format seconds as MM:SS
+      function formatMMSS(sec) {
+        const s = Math.max(0, Math.floor(sec));
+        const mins = Math.floor(s / 60);
+        const remSec = s % 60;
+        return `${String(mins).padStart(2, '0')}:${String(remSec).padStart(2, '0')}`;
+      }
+
+      // Compute exact Ce at a given case time from actual logged timer boluses + optional hypothetical bolus now
+      function evaluateLoggedCe(caseSec, includeHypotheticalNow, checkFutureWindow) {
+        const V1 = state.v1PerKg * state.weightKg;
+        const Vss = Math.max(state.vssPerKg * state.weightKg, V1 + 0.1);
+        const alpha = Math.LN2 / (state.tHalfAlphaMin / 60);
+        const beta = Math.LN2 / state.tHalfBetaHr;
+        const ke0 = Math.LN2 / (state.tHalfKe0Min / 60);
+        const k21 = (alpha * beta * Vss) / V1;
+        const denom = (alpha - beta) || 1e-6;
+        const unitA = (1 / V1) * (alpha - k21) / denom;
+        const unitB = (1 / V1) * (k21 - beta) / denom;
+
+        const events = [...timerState.bolusEvents];
+        if (includeHypotheticalNow) {
+          events.push({ sec: caseSec, mcg: state.bolusMcg });
+        }
+
+        // Check peak Ce over the next 45 minutes if evaluating hypothetical redose
+        const checkOffsetsMin = (includeHypotheticalNow || checkFutureWindow) ? [0, 5, 10, 15, 20, 25, 30, 40] : [0];
+        let maxCe = 0;
+
+        for (const offsetMin of checkOffsetsMin) {
+          const tHr = (caseSec / 3600) + (offsetMin / 60);
+          let ce = 0;
+          for (const ev of events) {
+            const ti = ev.sec / 3600;
+            if (tHr >= ti) {
+              const dt = tHr - ti;
+              const A = ev.mcg * unitA;
+              const B = ev.mcg * unitB;
+              const expAlpha = Math.exp(-alpha * dt);
+              const expBeta = Math.exp(-beta * dt);
+              const expKe0 = Math.exp(-ke0 * dt);
+              const termAlpha = Math.abs(ke0 - alpha) < 1e-5
+                ? A * ke0 * dt * expAlpha
+                : ke0 * (A / (ke0 - alpha)) * (expAlpha - expKe0);
+              const termBeta = Math.abs(ke0 - beta) < 1e-5
+                ? B * ke0 * dt * expBeta
+                : ke0 * (B / (ke0 - beta)) * (expBeta - expKe0);
+              ce += termAlpha + termBeta;
+            }
+          }
+          if (ce > maxCe) maxCe = ce;
+        }
+        return maxCe;
+      }
+
+      // Update Live Intraoperative Timer, Extubation Guardrail & Redose Readiness Banner
+      function updateRedoseTimerUI() {
+        const count = timerState.bolusEvents.length;
+        const bolusVolMl = (state.bolusMcg / 15).toFixed(1);
+        const loggedTotalMcg = timerState.bolusEvents.reduce((acc, ev) => acc + ev.mcg, 0);
+        const loggedTotalMl = (loggedTotalMcg / 15).toFixed(1);
+
+        els.timerDosesGivenBadge.textContent = count > 0
+          ? `Logged: ${count} dose${count === 1 ? '' : 's'} (${loggedTotalMcg} mcg / ${loggedTotalMl} mL)`
+          : `Doses Logged: 0 / ${state.numBoluses}`;
+        els.timerTotalElapsed.textContent = `Total Case: ${formatMMSS(timerState.totalCaseSec)}`;
+        els.undoBolusBtn.disabled = count === 0;
+
+        // Render Variable Dose Log Pill Strip
+        if (count > 0) {
+          els.doseLogStrip.style.display = 'flex';
+          els.doseLogStrip.innerHTML = `<span style="font-size:0.72rem; font-weight:700; color:var(--text-light);">Log:</span>` +
+            timerState.bolusEvents.map((ev, i) => {
+              const m = formatMMSS(ev.sec);
+              const ml = (ev.mcg / 15).toFixed(1);
+              return `<span class="dose-pill">#${i + 1} @ ${m} &rarr; ${ev.mcg} mcg (${ml} mL)</span>`;
+            }).join('');
+        } else {
+          els.doseLogStrip.style.display = 'none';
+          els.doseLogStrip.innerHTML = '';
+        }
+
+        // Extubation Guardrail Check
+        const nowMin = timerState.totalCaseSec / 60;
+        const minToExtubation = timerState.extubationMin - nowMin;
+        els.extubationCountdownBadge.textContent = minToExtubation >= 0
+          ? `(${Math.round(minToExtubation)}m left)`
+          : `(+${Math.round(Math.abs(minToExtubation))}m past)`;
+
+        const activeEventsForExtub = count > 0
+          ? timerState.bolusEvents
+          : Array.from({ length: state.numBoluses }, (_, i) => ({ sec: i * state.intervalMin * 60, mcg: state.bolusMcg }));
+
+        // Evaluate Ce at extubation
+        const V1 = state.v1PerKg * state.weightKg;
+        const Vss = Math.max(state.vssPerKg * state.weightKg, V1 + 0.1);
+        const alpha = Math.LN2 / (state.tHalfAlphaMin / 60);
+        const beta = Math.LN2 / state.tHalfBetaHr;
+        const ke0 = Math.LN2 / (state.tHalfKe0Min / 60);
+        const k21 = (alpha * beta * Vss) / V1;
+        const denom = (alpha - beta) || 1e-6;
+        const unitA = (1 / V1) * (alpha - k21) / denom;
+        const unitB = (1 / V1) * (k21 - beta) / denom;
+
+        let ceAtExtub = 0;
+        const tExtubHr = timerState.extubationMin / 60;
+        for (const ev of activeEventsForExtub) {
+          const ti = ev.sec / 3600;
+          if (tExtubHr >= ti) {
+            const dt = tExtubHr - ti;
+            const A = ev.mcg * unitA;
+            const B = ev.mcg * unitB;
+            const expAlpha = Math.exp(-alpha * dt);
+            const expBeta = Math.exp(-beta * dt);
+            const expKe0 = Math.exp(-ke0 * dt);
+            const termAlpha = Math.abs(ke0 - alpha) < 1e-5 ? A * ke0 * dt * expAlpha : ke0 * (A / (ke0 - alpha)) * (expAlpha - expKe0);
+            const termBeta = Math.abs(ke0 - beta) < 1e-5 ? B * ke0 * dt * expBeta : ke0 * (B / (ke0 - beta)) * (expBeta - expKe0);
+            ceAtExtub += termAlpha + termBeta;
+          }
+        }
+
+        if (minToExtubation >= 0 && minToExtubation < 45) {
+          els.extubationAlertText.innerHTML = `<span style="color: var(--red-text);">Late-Case Warning (&lt;45m to wake-up):</span> C<sub>e</sub> at extubation = <strong>${ceAtExtub.toFixed(2)} ng/mL</strong> (delayed emergence risk).`;
+        } else if (ceAtExtub > 1.2) {
+          els.extubationAlertText.innerHTML = `<span style="color: var(--amber-text);">High Emergence C<sub>e</sub>:</span> <strong>${ceAtExtub.toFixed(2)} ng/mL</strong> at ${timerState.extubationMin}m (monitor for PACU sedation).`;
+        } else {
+          els.extubationAlertText.innerHTML = `Predicted C<sub>e</sub> at extubation (${timerState.extubationMin}m): <strong style="font-family: var(--font-mono);">${ceAtExtub.toFixed(2)} ng/mL</strong>`;
+        }
+
+        if (count === 0) {
+          els.timerElapsedDisplay.textContent = '00:00';
+          els.timerStatusBanner.className = 'timer-status-banner alert-green';
+          els.timerStatusTitle.innerHTML = `Ready for Initial Bolus (${state.bolusMcg} mcg / ${bolusVolMl} mL)`;
+          els.timerStatusDesc.innerHTML = `Log your first bolus when starting a slow push; wait ~15–20 min for peak effect-site (C<sub>e</sub>) equilibration before judging BP response.`;
+          return;
+        }
+
+        const lastBolus = timerState.bolusEvents[count - 1];
+        const sinceLastSec = Math.max(0, timerState.totalCaseSec - lastBolus.sec);
+        const sinceLastMin = sinceLastSec / 60;
+        els.timerElapsedDisplay.textContent = formatMMSS(sinceLastSec);
+
+        // Calculate single-bolus T_peak (time where a single dose hits max Ce)
+        const approxTpeakMin = Math.abs(ke0 - alpha) < 1e-5
+          ? (1 / alpha) * 60
+          : (Math.log(ke0 / alpha) / (ke0 - alpha)) * 60;
+        const minSafeWaitMin = Math.max(15, Math.round(approxTpeakMin));
+
+        const currentCe = evaluateLoggedCe(timerState.totalCaseSec, false, false);
+        const projectedPeakCe = evaluateLoggedCe(timerState.totalCaseSec, true, true);
+        const nextTotalMcg = loggedTotalMcg + state.bolusMcg;
+        const nextMcgPerKg = nextTotalMcg / state.weightKg;
+
+        els.timerStatusBanner.className = 'timer-status-banner';
+
+        if (sinceLastMin < minSafeWaitMin) {
+          const remainSec = (minSafeWaitMin * 60) - sinceLastSec;
+          els.timerStatusBanner.classList.add('alert-red');
+          els.timerStatusTitle.innerHTML = `HOLD REDOSE &mdash; Peak Equilibration in ${formatMMSS(remainSec)}`;
+          els.timerStatusDesc.innerHTML = `Current C<sub>e</sub>: <strong>${currentCe.toFixed(2)} ng/mL</strong> (still climbing toward ~${minSafeWaitMin} min peak).<div class="bridge-tip">Bridge Tip: Use esmolol/labetalol or volatile/analgesia for immediate BP spikes rather than stacking early.</div>`;
+        } else if (projectedPeakCe > 1.5 || nextMcgPerKg > 3.0) {
+          els.timerStatusBanner.classList.add('alert-amber');
+          els.timerStatusTitle.innerHTML = `CAUTION &mdash; Stacking Risk if Redosed (${state.bolusMcg} mcg)`;
+          els.timerStatusDesc.innerHTML = `Equilibration time met (${Math.floor(sinceLastMin)} min elapsed, current C<sub>e</sub> ${currentCe.toFixed(2)} ng/mL), but another ${state.bolusMcg} mcg bolus projects C<sub>e</sub> to <strong>${projectedPeakCe.toFixed(2)} ng/mL</strong> (${nextMcgPerKg.toFixed(2)} mcg/kg total). Consider smaller 15 mcg step.`;
+        } else {
+          els.timerStatusBanner.classList.add('alert-green');
+          els.timerStatusTitle.innerHTML = `SAFE TO REDOSE &mdash; Peak Equilibration Reached (${Math.floor(sinceLastMin)} min elapsed)`;
+          els.timerStatusDesc.innerHTML = `Current C<sub>e</sub> is <strong>${currentCe.toFixed(2)} ng/mL</strong>. If BP remains elevated, administering ${state.bolusMcg} mcg (${bolusVolMl} mL) projects peak C<sub>e</sub> to <strong>${projectedPeakCe.toFixed(2)} ng/mL</strong> (inside 0.2–1.5 ng/mL target).`;
+        }
+      }
+
+      // Animation Loop for Live Timer
+      function timerTick(nowMs) {
+        if (timerState.running) {
+          if (timerState.lastTickMs !== null) {
+            const deltaSec = (nowMs - timerState.lastTickMs) / 1000;
+            timerState.totalCaseSec += deltaSec * timerState.speedMultiplier;
+            simCache.nowMin = timerState.totalCaseSec / 60;
+            updateRedoseTimerUI();
+
+            // Throttle canvas redraw to ~15 fps during live ticking for crisp, smooth cursor motion
+            if (nowMs - lastChartDrawMs > 65) {
+              lastChartDrawMs = nowMs;
+              drawChart();
+            }
+          }
+          timerState.lastTickMs = nowMs;
+          requestAnimationFrame(timerTick);
+        }
+      }
+
+      // Render High-DPI Canvas Time-Concentration Chart
+      function drawChart() {
+        const canvas = els.canvas;
+        const rect = els.chartWrapper.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+        const styles = getComputedStyle(document.documentElement);
+
+        const cGrid = styles.getPropertyValue('--chart-grid').trim() || '#e2e8f0';
+        const cAxisText = styles.getPropertyValue('--chart-axis-text').trim() || '#64748b';
+        const cTitleText = styles.getPropertyValue('--chart-title-text').trim() || '#475569';
+        const cBorder = styles.getPropertyValue('--chart-border').trim() || '#cbd5e1';
+        const cWinFill = styles.getPropertyValue('--chart-win-fill').trim() || 'rgba(34, 197, 94, 0.14)';
+        const cWinStroke = styles.getPropertyValue('--chart-win-stroke').trim() || 'rgba(22, 163, 74, 0.55)';
+        const cWinText = styles.getPropertyValue('--chart-win-text').trim() || '#15803d';
+        const cWarnStroke = styles.getPropertyValue('--chart-warn-stroke').trim() || '#d97706';
+        const cWarnText = styles.getPropertyValue('--chart-warn-text').trim() || '#b45309';
+        const cCp = styles.getPropertyValue('--cp-color').trim() || '#2563eb';
+        const cCe = styles.getPropertyValue('--ce-color').trim() || '#dc2626';
+
+        canvas.width = rect.width * dpr;
+        canvas.height = rect.height * dpr;
+
+        const ctx = canvas.getContext('2d');
+        ctx.scale(dpr, dpr);
+
+        const width = rect.width;
+        const height = rect.height;
+
+        const pad = { top: 26, right: 24, bottom: 42, left: 56 };
+        const plotW = width - pad.left - pad.right;
+        const plotH = height - pad.top - pad.bottom;
+
+        ctx.clearRect(0, 0, width, height);
+
+        const maxX = 360;
+        const maxY = simCache.maxY || 2.0;
+
+        const xToPx = (t) => pad.left + (t / maxX) * plotW;
+        const yToPx = (c) => pad.top + plotH - (c / maxY) * plotH;
+
+        // 1. Shade Antihypertensive Therapeutic Window (0.2 - 1.5 ng/mL)
+        const yTopWin = yToPx(Math.min(1.5, maxY));
+        const yBotWin = yToPx(0.2);
+        if (yBotWin > yTopWin) {
+          ctx.fillStyle = cWinFill;
+          ctx.fillRect(pad.left, yTopWin, plotW, yBotWin - yTopWin);
+        }
+
+        // 2. Grid Lines & Axes
+        ctx.strokeStyle = cGrid;
+        ctx.lineWidth = 1;
+        ctx.font = '11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        ctx.fillStyle = cAxisText;
+
+        // Horizontal grid lines (Y-axis)
+        const yStep = maxY <= 2.5 ? 0.25 : 0.5;
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        for (let yVal = 0; yVal <= maxY + 1e-6; yVal += yStep) {
+          const py = yToPx(yVal);
+          ctx.beginPath();
+          ctx.moveTo(pad.left, py);
+          ctx.lineTo(pad.left + plotW, py);
+          ctx.stroke();
+
+          ctx.fillStyle = cAxisText;
+          ctx.fillText(yVal.toFixed(2), pad.left - 8, py);
+        }
+
+        // Vertical grid lines (X-axis every 60 minutes)
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        for (let tVal = 0; tVal <= maxX; tVal += 60) {
+          const px = xToPx(tVal);
+          ctx.beginPath();
+          ctx.moveTo(px, pad.top);
+          ctx.lineTo(px, pad.top + plotH);
+          ctx.stroke();
+
+          ctx.fillStyle = cAxisText;
+          ctx.fillText(`${tVal}m`, px, pad.top + plotH + 8);
+        }
+
+        // Axis Titles
+        ctx.fillStyle = cTitleText;
+        ctx.font = '600 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Time After Initial Bolus (minutes)', pad.left + plotW / 2, height - 12);
+
+        ctx.save();
+        ctx.translate(15, pad.top + plotH / 2);
+        ctx.rotate(-Math.PI / 2);
+        ctx.fillText('Concentration (ng/mL)', 0, 0);
+        ctx.restore();
+
+        // 3. Therapeutic Window Label
+        if (yBotWin - yTopWin > 18) {
+          ctx.fillStyle = cWinText;
+          ctx.font = '600 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+          ctx.textAlign = 'right';
+          ctx.textBaseline = 'bottom';
+          ctx.fillText('Antihypertensive Window (0.2–1.5 ng/mL)', pad.left + plotW - 8, yBotWin - 4);
+        }
+
+        // 4. Dashed Warning Threshold at 1.5 ng/mL
+        if (1.5 <= maxY) {
+          const yWarn = yToPx(1.5);
+          ctx.save();
+          ctx.strokeStyle = cWarnStroke;
+          ctx.lineWidth = 1.6;
+          ctx.setLineDash([6, 4]);
+          ctx.beginPath();
+          ctx.moveTo(pad.left, yWarn);
+          ctx.lineTo(pad.left + plotW, yWarn);
+          ctx.stroke();
+
+          ctx.fillStyle = cWarnText;
+          ctx.font = '600 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+          ctx.textAlign = 'left';
+          ctx.textBaseline = 'bottom';
+          ctx.fillText('1.5 ng/mL — Peripheral α1/α2B Vasoconstriction & Sedation Threshold', pad.left + 8, yWarn - 4);
+          ctx.restore();
+        }
+
+        // 5. Bolus Administration Markers along X-axis
+        simCache.bolusTimesMin.forEach((bMin, idx) => {
+          if (bMin <= maxX) {
+            const bx = xToPx(bMin);
+            ctx.save();
+            ctx.strokeStyle = 'rgba(100, 116, 139, 0.45)';
+            ctx.setLineDash([2, 3]);
+            ctx.beginPath();
+            ctx.moveTo(bx, pad.top);
+            ctx.lineTo(bx, pad.top + plotH);
+            ctx.stroke();
+
+            ctx.fillStyle = cTitleText;
+            ctx.font = '700 10px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'bottom';
+            ctx.fillText(`B${idx + 1}`, bx, pad.top - 3);
+            ctx.restore();
+          }
+        });
+
+        // 6. Plot Plasma Concentration Cp(t) & Effect-Site Concentration Ce(t)
+        const { timesMin, cpArr, ceArr, ghostCeArr, plannedCeArr, isLiveMode, nowMin, extubationMin } = simCache;
+        if (timesMin.length > 0) {
+          // If in Live Case Mode, draw faint planned Ce reference curve in background
+          if (isLiveMode && plannedCeArr && plannedCeArr.length > 0) {
+            ctx.save();
+            ctx.strokeStyle = cAxisText;
+            ctx.globalAlpha = 0.25;
+            ctx.lineWidth = 1.5;
+            ctx.setLineDash([3, 3]);
+            ctx.beginPath();
+            for (let i = 0; i < timesMin.length; i++) {
+              const px = xToPx(timesMin[i]);
+              const py = yToPx(plannedCeArr[i]);
+              if (i === 0) ctx.moveTo(px, py);
+              else ctx.lineTo(px, py);
+            }
+            ctx.stroke();
+            ctx.restore();
+          }
+
+          // Plasma Concentration Cp(t) (Blue Line)
+          ctx.save();
+          ctx.strokeStyle = cCp;
+          ctx.lineWidth = 2.2;
+          ctx.lineJoin = 'round';
+          ctx.beginPath();
+          for (let i = 0; i < timesMin.length; i++) {
+            const px = xToPx(timesMin[i]);
+            const py = yToPx(cpArr[i]);
+            if (i === 0) ctx.moveTo(px, py);
+            else ctx.lineTo(px, py);
+          }
+          ctx.stroke();
+          ctx.restore();
+
+          // Effect-Site Concentration Ce(t) (Red Line)
+          ctx.save();
+          ctx.strokeStyle = cCe;
+          ctx.lineWidth = 2.6;
+          ctx.lineJoin = 'round';
+          ctx.beginPath();
+          for (let i = 0; i < timesMin.length; i++) {
+            const px = xToPx(timesMin[i]);
+            const py = yToPx(ceArr[i]);
+            if (i === 0) ctx.moveTo(px, py);
+            else ctx.lineTo(px, py);
+          }
+          ctx.stroke();
+          ctx.restore();
+
+          // Dashed "If Redosed Now" Ghost Curve extending forward from NOW
+          if (isLiveMode && ghostCeArr && ghostCeArr.length > 0 && nowMin <= maxX) {
+            const startIdx = clamp(Math.floor(nowMin / 0.5), 0, timesMin.length - 1);
+            ctx.save();
+            ctx.strokeStyle = cCe;
+            ctx.globalAlpha = 0.85;
+            ctx.lineWidth = 2.0;
+            ctx.setLineDash([5, 4]);
+            ctx.lineJoin = 'round';
+            ctx.beginPath();
+            for (let i = startIdx; i < timesMin.length; i++) {
+              const px = xToPx(timesMin[i]);
+              const py = yToPx(ghostCeArr[i]);
+              if (i === startIdx) ctx.moveTo(px, py);
+              else ctx.lineTo(px, py);
+            }
+            ctx.stroke();
+            ctx.restore();
+          }
+        }
+
+        // 7b. Live "NOW" Playhead Cursor & Current Concentration Dots
+        if (isLiveMode && nowMin >= 0 && nowMin <= maxX && timesMin.length > 0) {
+          const nowX = xToPx(nowMin);
+          const exactIdx = nowMin / 0.5;
+          const idx0 = clamp(Math.floor(exactIdx), 0, timesMin.length - 1);
+          const idx1 = clamp(idx0 + 1, 0, timesMin.length - 1);
+          const frac = exactIdx - idx0;
+
+          const curCp = cpArr[idx0] + (cpArr[idx1] - cpArr[idx0]) * frac;
+          const curCe = ceArr[idx0] + (ceArr[idx1] - ceArr[idx0]) * frac;
+
+          // Subtle shaded future zone to the right of NOW
+          ctx.save();
+          ctx.fillStyle = 'rgba(148, 163, 184, 0.06)';
+          ctx.fillRect(nowX, pad.top, (pad.left + plotW) - nowX, plotH);
+
+          // Vertical NOW line
+          ctx.strokeStyle = '#0ea5e9';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(nowX, pad.top);
+          ctx.lineTo(nowX, pad.top + plotH);
+          ctx.stroke();
+
+          // NOW pill badge at top of playhead
+          const badgeText = `NOW (${nowMin.toFixed(1)}m)`;
+          ctx.font = '700 10px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+          const badgeW = ctx.measureText(badgeText).width + 10;
+          const badgeX = clamp(nowX - badgeW / 2, pad.left + 2, pad.left + plotW - badgeW - 2);
+          ctx.fillStyle = '#0284c7';
+          ctx.beginPath();
+          ctx.roundRect(badgeX, pad.top + 4, badgeW, 17, 4);
+          ctx.fill();
+
+          ctx.fillStyle = '#ffffff';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(badgeText, badgeX + badgeW / 2, pad.top + 12.5);
+
+          // Glowing current Ce & Cp markers on the curves
+          const cyCp = yToPx(curCp);
+          const cyCe = yToPx(curCe);
+
+          ctx.fillStyle = cCp;
+          ctx.beginPath();
+          ctx.arc(nowX, cyCp, 4.5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+
+          ctx.fillStyle = cCe;
+          ctx.beginPath();
+          ctx.arc(nowX, cyCe, 5.5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 1.8;
+          ctx.stroke();
+          ctx.restore();
+        }
+
+        // 7c. Estimated Extubation Vertical Marker Line
+        if (extubationMin >= 0 && extubationMin <= maxX) {
+          const extX = xToPx(extubationMin);
+          ctx.save();
+          ctx.strokeStyle = '#8b5cf6';
+          ctx.lineWidth = 1.6;
+          ctx.setLineDash([4, 4]);
+          ctx.beginPath();
+          ctx.moveTo(extX, pad.top);
+          ctx.lineTo(extX, pad.top + plotH);
+          ctx.stroke();
+
+          ctx.fillStyle = '#8b5cf6';
+          ctx.font = '700 10px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+          ctx.textAlign = extX > pad.left + plotW - 75 ? 'right' : 'left';
+          const labelX = extX > pad.left + plotW - 75 ? extX - 5 : extX + 5;
+          ctx.fillText(`Extub (${extubationMin}m)`, labelX, pad.top + plotH - 8);
+          ctx.restore();
+        }
+
+        // 8. Hover Crosshair & Points
+        if (hoverIndex !== null && timesMin[hoverIndex] !== undefined) {
+          const t = timesMin[hoverIndex];
+          const cp = cpArr[hoverIndex];
+          const ce = ceArr[hoverIndex];
+          const hx = xToPx(t);
+          const hyCp = yToPx(cp);
+          const hyCe = yToPx(ce);
+
+          ctx.save();
+          ctx.strokeStyle = cAxisText;
+          ctx.lineWidth = 1;
+          ctx.setLineDash([3, 3]);
+          ctx.beginPath();
+          ctx.moveTo(hx, pad.top);
+          ctx.lineTo(hx, pad.top + plotH);
+          ctx.stroke();
+          ctx.restore();
+
+          // Cp dot
+          ctx.fillStyle = cCp;
+          ctx.beginPath();
+          ctx.arc(hx, hyCp, 4.5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+
+          // Ce dot
+          ctx.fillStyle = cCe;
+          ctx.beginPath();
+          ctx.arc(hx, hyCe, 5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+        }
+
+        // Border box around plot area
+        ctx.strokeStyle = cBorder;
+        ctx.lineWidth = 1;
+        ctx.strokeRect(pad.left, pad.top, plotW, plotH);
+      }
+
+      // Interactive Chart Hover / Touch Handler
+      function handleChartPointer(clientX, clientY) {
+        const rect = els.chartWrapper.getBoundingClientRect();
+        const pad = { top: 26, right: 24, bottom: 42, left: 56 };
+        const plotW = rect.width - pad.left - pad.right;
+
+        const relX = clientX - rect.left - pad.left;
+        if (relX < 0 || relX > plotW || simCache.timesMin.length === 0) {
+          hideTooltip();
+          return;
+        }
+
+        const tMin = (relX / plotW) * 360;
+        const idx = clamp(Math.round(tMin / 0.5), 0, simCache.timesMin.length - 1);
+        hoverIndex = idx;
+
+        const exactT = simCache.timesMin[idx];
+        const cp = simCache.cpArr[idx];
+        const ce = simCache.ceArr[idx];
+        const ghostCe = (simCache.isLiveMode && simCache.ghostCeArr && exactT >= simCache.nowMin)
+          ? simCache.ghostCeArr[idx]
+          : null;
+
+        let zoneBadge = '';
+        if (ce > 1.5) {
+          zoneBadge = '<span style="color:#fca5a5;">Above Window (&gt;1.5)</span>';
+        } else if (ce >= 0.2) {
+          zoneBadge = '<span style="color:#86efac;">Therapeutic Window</span>';
+        } else {
+          zoneBadge = '<span style="color:#cbd5e1;">Subtherapeutic (&lt;0.2)</span>';
+        }
+
+        const ghostRowHtml = ghostCe !== null
+          ? `<div class="tooltip-row" style="border-top:1px dashed rgba(255,255,255,0.2); padding-top:3px; margin-top:3px;">
+               <span style="color:#fcd34d;">If Redosed Now:</span>
+               <strong>${ghostCe.toFixed(3)} ng/mL</strong>
+             </div>`
+          : '';
+
+        els.tooltip.innerHTML = `
+          <div style="font-weight:700; border-bottom:1px solid rgba(255,255,255,0.15); padding-bottom:3px; margin-bottom:4px; display:flex; justify-content:space-between;">
+            <span>t = ${exactT.toFixed(1)} min</span>
+            ${zoneBadge}
+          </div>
+          <div class="tooltip-row">
+            <span style="color:#93c5fd;">Plasma C<sub>p</sub>:</span>
+            <strong>${cp.toFixed(3)} ng/mL</strong>
+          </div>
+          <div class="tooltip-row">
+            <span style="color:#fca5a5;">Effect C<sub>e</sub>:</span>
+            <strong>${ce.toFixed(3)} ng/mL</strong>
+          </div>
+          ${ghostRowHtml}
+        `;
+
+        els.tooltip.style.display = 'block';
+        const tipW = els.tooltip.offsetWidth || 185;
+        const tipH = els.tooltip.offsetHeight || 75;
+
+        let leftPos = clientX - rect.left + 14;
+        if (leftPos + tipW > rect.width - 10) {
+          leftPos = clientX - rect.left - tipW - 14;
+        }
+        let topPos = clientY - rect.top - tipH / 2;
+        topPos = clamp(topPos, 8, rect.height - tipH - 8);
+
+        els.tooltip.style.left = `${leftPos}px`;
+        els.tooltip.style.top = `${topPos}px`;
+
+        drawChart();
+      }
+
+      function hideTooltip() {
+        hoverIndex = null;
+        els.tooltip.style.display = 'none';
+        drawChart();
+      }
+
+      // Bind Synchronized Slider & Number Input Pairs
+      function bindSliderPair(sliderEl, numEl, stateKey, min, max, step, isFloat) {
+        sliderEl.addEventListener('input', () => {
+          const val = isFloat ? parseFloat(sliderEl.value) : parseInt(sliderEl.value, 10);
+          state[stateKey] = val;
+          numEl.value = val;
+          els.autoIntervalStatus.textContent = '';
+          updateAll();
+        });
+
+        numEl.addEventListener('input', () => {
+          let val = isFloat ? parseFloat(numEl.value) : parseInt(numEl.value, 10);
+          if (isNaN(val)) return;
+          val = clamp(val, min, max);
+          // Snap bolus size to 15 mcg increments if needed
+          if (stateKey === 'bolusMcg') {
+            val = Math.round(val / 15) * 15;
+            val = clamp(val, 15, 75);
+          }
+          state[stateKey] = val;
+          sliderEl.value = val;
+          els.autoIntervalStatus.textContent = '';
+          updateAll();
+        });
+
+        numEl.addEventListener('blur', () => {
+          numEl.value = state[stateKey];
+        });
+      }
+
+      // Initialize Event Listeners
+      function initEvents() {
+        // Clinical Bedside Scenario Presets
+        function applyBedsidePreset(targetMcgPerKg, intervalMin, numBoluses, label) {
+          const rawMcg = state.weightKg * targetMcgPerKg;
+          const snappedMcg = clamp(Math.round(rawMcg / 15) * 15, 15, 75);
+          state.bolusMcg = snappedMcg;
+          state.intervalMin = intervalMin;
+          state.numBoluses = numBoluses;
+
+          els.bolusSlider.value = snappedMcg;
+          els.bolusNum.value = snappedMcg;
+          els.intervalSlider.value = intervalMin;
+          els.intervalNum.value = intervalMin;
+          els.countSlider.value = numBoluses;
+          els.countNum.value = numBoluses;
+          els.autoIntervalStatus.textContent = `Applied ${label}: ${snappedMcg} mcg (${(snappedMcg / 15).toFixed(1)} mL) × ${numBoluses} every ${intervalMin} min.`;
+          updateAll();
+        }
+
+        els.presetFrailBtn.addEventListener('click', () => applyBedsidePreset(0.4, 25, 2, 'Frail / Elderly'));
+        els.presetStandardBtn.addEventListener('click', () => applyBedsidePreset(0.5, 20, 3, 'Standard Adult'));
+        els.presetHighToneBtn.addEventListener('click', () => applyBedsidePreset(0.85, 20, 3, 'High Sympathetic Tone'));
+
+        bindSliderPair(els.weightSlider, els.weightNum, 'weightKg', 40, 150, 1, false);
+        bindSliderPair(els.bolusSlider, els.bolusNum, 'bolusMcg', 15, 75, 15, false);
+        bindSliderPair(els.countSlider, els.countNum, 'numBoluses', 1, 6, 1, false);
+        bindSliderPair(els.intervalSlider, els.intervalNum, 'intervalMin', 5, 60, 1, false);
+        bindSliderPair(els.tHalfBetaSlider, els.tHalfBetaNum, 'tHalfBetaHr', 6, 40, 0.5, true);
+        bindSliderPair(els.coSlider, els.coNum, 'coLMin', 2.0, 8.0, 0.1, true);
+        bindSliderPair(els.pushSlider, els.pushNum, 'pushSec', 2, 60, 1, false);
+
+        // Auto-Calculate Optimal Interval
+        els.autoIntervalBtn.addEventListener('click', autoCalculateOptimalInterval);
+
+        // Renal Function Presets
+        els.renalNormalBtn.addEventListener('click', () => {
+          state.tHalfBetaHr = 12;
+          els.tHalfBetaSlider.value = 12;
+          els.tHalfBetaNum.value = 12;
+          els.autoIntervalStatus.textContent = '';
+          updateAll();
+        });
+
+        els.renalImpairedBtn.addEventListener('click', () => {
+          state.tHalfBetaHr = 30;
+          els.tHalfBetaSlider.value = 30;
+          els.tHalfBetaNum.value = 30;
+          els.autoIntervalStatus.textContent = '';
+          updateAll();
+        });
+
+        // Push Duration Presets
+        els.pushRapidBtn.addEventListener('click', () => {
+          state.pushSec = 2;
+          els.pushSlider.value = 2;
+          els.pushNum.value = 2;
+          updateAll();
+        });
+
+        els.pushSlowBtn.addEventListener('click', () => {
+          state.pushSec = 30;
+          els.pushSlider.value = 30;
+          els.pushNum.value = 30;
+          updateAll();
+        });
+
+        // Cardiopulmonary Chamber Volumes
+        const chamberInputs = [
+          { el: els.vVenous, key: 'vVenous', min: 10, max: 500 },
+          { el: els.vRightHeart, key: 'vRightHeart', min: 50, max: 1000 },
+          { el: els.vPulmonary, key: 'vPulmonary', min: 100, max: 1500 },
+          { el: els.vLeftHeart, key: 'vLeftHeart', min: 50, max: 1000 }
+        ];
+        chamberInputs.forEach(({ el, key, min, max }) => {
+          el.addEventListener('input', () => {
+            const val = parseFloat(el.value);
+            if (!isNaN(val)) {
+              state[key] = clamp(val, min, max);
+              updateAll();
+            }
+          });
+          el.addEventListener('blur', () => {
+            el.value = state[key];
+          });
+        });
+
+        // Panel C: Advanced PK/PD Constants
+        const pkInputs = [
+          { el: els.v1PerKg, key: 'v1PerKg', min: 0.1, max: 1.5 },
+          { el: els.vssPerKg, key: 'vssPerKg', min: 0.5, max: 6.0 },
+          { el: els.tHalfAlpha, key: 'tHalfAlphaMin', min: 2, max: 60 },
+          { el: els.tHalfKe0, key: 'tHalfKe0Min', min: 2, max: 60 }
+        ];
+        pkInputs.forEach(({ el, key, min, max }) => {
+          el.addEventListener('input', () => {
+            const val = parseFloat(el.value);
+            if (!isNaN(val)) {
+              state[key] = clamp(val, min, max);
+              updateAll();
+            }
+          });
+          el.addEventListener('blur', () => {
+            el.value = state[key];
+          });
+        });
+
+        els.resetPkBtn.addEventListener('click', () => {
+          state.v1PerKg = 0.35;
+          state.vssPerKg = 2.10;
+          state.tHalfAlphaMin = 15;
+          state.tHalfKe0Min = 15;
+          els.v1PerKg.value = 0.35;
+          els.vssPerKg.value = 2.10;
+          els.tHalfAlpha.value = 15;
+          els.tHalfKe0.value = 15;
+          updateAll();
+        });
+
+        // Chart Mouse & Touch Events
+        els.canvas.addEventListener('mousemove', (e) => {
+          handleChartPointer(e.clientX, e.clientY);
+        });
+        els.canvas.addEventListener('mouseleave', hideTooltip);
+
+        els.canvas.addEventListener('touchstart', (e) => {
+          if (e.touches.length > 0) {
+            handleChartPointer(e.touches[0].clientX, e.touches[0].clientY);
+          }
+        }, { passive: true });
+        els.canvas.addEventListener('touchmove', (e) => {
+          if (e.touches.length > 0) {
+            handleChartPointer(e.touches[0].clientX, e.touches[0].clientY);
+          }
+        }, { passive: true });
+        els.canvas.addEventListener('touchend', hideTooltip);
+
+        // Responsive Resize
+        window.addEventListener('resize', drawChart);
+
+        // Theme Toggle Sync
+        function syncThemeButton() {
+          const isDark = document.documentElement.classList.contains('dark');
+          els.themeIcon.innerHTML = isDark ? '&#9790;' : '&#9728;';
+          els.themeLabel.textContent = isDark ? 'Dark Mode' : 'Light Mode';
+        }
+        syncThemeButton();
+
+        els.themeToggleBtn.addEventListener('click', () => {
+          document.documentElement.classList.toggle('dark');
+          syncThemeButton();
+          drawChart();
+        });
+
+        // Live Intraoperative Timer Controls
+        els.giveBolusNowBtn.addEventListener('click', () => {
+          timerState.bolusEvents.push({
+            sec: timerState.totalCaseSec,
+            mcg: state.bolusMcg
+          });
+          if (!timerState.running) {
+            timerState.running = true;
+            timerState.lastTickMs = performance.now();
+            requestAnimationFrame(timerTick);
+          }
+          updateAll();
+        });
+
+        els.undoBolusBtn.addEventListener('click', () => {
+          if (timerState.bolusEvents.length > 0) {
+            timerState.bolusEvents.pop();
+            if (timerState.bolusEvents.length === 0) {
+              timerState.running = false;
+              timerState.lastTickMs = null;
+              timerState.totalCaseSec = 0;
+            }
+            updateAll();
+          }
+        });
+
+        els.extubationMinInput.addEventListener('input', () => {
+          const val = parseInt(els.extubationMinInput.value, 10);
+          if (!isNaN(val)) {
+            timerState.extubationMin = clamp(val, 15, 360);
+            updateAll();
+          }
+        });
+
+        els.extubationMinInput.addEventListener('blur', () => {
+          els.extubationMinInput.value = timerState.extubationMin;
+        });
+
+        els.speed1xBtn.addEventListener('click', () => {
+          timerState.speedMultiplier = 1;
+          els.speed1xBtn.classList.add('active');
+          els.speed60xBtn.classList.remove('active');
+        });
+
+        els.speed60xBtn.addEventListener('click', () => {
+          timerState.speedMultiplier = 60;
+          els.speed60xBtn.classList.add('active');
+          els.speed1xBtn.classList.remove('active');
+        });
+
+        els.resetTimerBtn.addEventListener('click', () => {
+          timerState.running = false;
+          timerState.lastTickMs = null;
+          timerState.totalCaseSec = 0;
+          timerState.bolusEvents = [];
+          updateAll();
+        });
+      }
+
+      // Boot Application
+      initEvents();
+      updateAll();
+    })();
+  </script>
+</body>
+</html>
